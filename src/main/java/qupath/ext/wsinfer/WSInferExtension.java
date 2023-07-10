@@ -1,4 +1,4 @@
-package qupath.ext.template;
+package qupath.ext.wsinfer;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.scene.control.MenuItem;
@@ -23,14 +23,14 @@ import qupath.lib.gui.prefs.PathPrefs;
  *     /resources/META-INF/services/qupath.lib.gui.extensions.QuPathExtension
  * </pre>
  */
-public class DemoExtension implements QuPathExtension {
+public class WSInferExtension implements QuPathExtension {
 	
-	private final static Logger logger = LoggerFactory.getLogger(DemoExtension.class);
+	private final static Logger logger = LoggerFactory.getLogger(WSInferExtension.class);
 
 	/**
 	 * Display name for your extension
 	 */
-	private final static String EXTENSION_NAME = "My Java extension";
+	private final static String EXTENSION_NAME = "WSInfer Extension";
 
 	/**
 	 * Short description, used under 'Extensions > Installed extensions'
@@ -41,7 +41,7 @@ public class DemoExtension implements QuPathExtension {
 	 * QuPath version that the extension is designed to work with.
 	 * This allows QuPath to inform the user if it seems to be incompatible.
 	 */
-	private final static Version EXTENSION_QUPATH_VERSION = Version.parse("v0.4.0");
+	private final static Version EXTENSION_QUPATH_VERSION = Version.parse("v0.4.3");
 
 	/**
 	 * Flag whether the extension is already installed (might not be needed... but we'll do it anyway)
@@ -84,10 +84,10 @@ public class DemoExtension implements QuPathExtension {
 	 */
 	private void addMenuItem(QuPathGUI qupath) {
 		var menu = qupath.getMenu("Extensions>" + EXTENSION_NAME, true);
-		MenuItem menuItem = new MenuItem("My menu item");
+		MenuItem menuItem = new MenuItem("WSInfer");
 		menuItem.setOnAction(e -> {
 			Dialogs.showMessageDialog(EXTENSION_NAME,
-					"Hello! This is my Java extension.");
+					"WSInfer extension.");
 		});
 		menuItem.disableProperty().bind(enableExtensionProperty.not());
 		menu.getItems().add(menuItem);
@@ -109,4 +109,8 @@ public class DemoExtension implements QuPathExtension {
 		return EXTENSION_QUPATH_VERSION;
 	}
 
+	public static void main(String[] args){
+		//Fetch and parse the HF JSON
+		WSInferParsing.parsing();
+	}
 }
