@@ -1,4 +1,4 @@
-package qupath.ext.wsinfer;
+package qupath.ext.wsinfer.models;
 
 import com.google.gson.annotations.SerializedName;
 
