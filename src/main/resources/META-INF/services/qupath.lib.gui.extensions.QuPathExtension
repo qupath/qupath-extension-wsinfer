@@ -1,2 +1,2 @@
-qupath.ext.template.DemoExtension
-qupath.ext.template.DemoGroovyExtension
+qupath.ext.wsinfer.WSInferExtension
+qupath.ext.wsinfer.DemoGroovyExtension
