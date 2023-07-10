@@ -4,13 +4,14 @@ import javafx.beans.property.BooleanProperty;
 import javafx.scene.control.MenuItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import qupath.ext.wsinfer.models.WSInferParsing;
 import qupath.ext.wsinfer.ui.WSInferCommand;
 import qupath.ext.wsinfer.ui.WSInferPrefs;
 import qupath.lib.common.Version;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.extensions.QuPathExtension;
 import qupath.lib.gui.prefs.PathPrefs;
+
+import java.util.Map;
 
 
 /**
@@ -87,8 +88,4 @@ public class WSInferExtension implements QuPathExtension {
 		return EXTENSION_QUPATH_VERSION;
 	}
 
-	public static void main(String[] args){
-		//Fetch and parse the HF JSON
-		WSInferParsing.parsing();
-	}
 }

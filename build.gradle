@@ -1,8 +1,6 @@
 plugins {
   // Main gradle plugin for building a Java library
   id 'java-library'
-  // Support writing the extension in Groovy (remove this if you don't want to)
-  id 'groovy'
   // To create a shadow/fat jar that bundle up all dependencies
   id 'com.github.johnrengelman.shadow' version '7.1.2'
   // Include this plugin to avoid downloading JavaCPP dependencies for all platforms
@@ -10,11 +8,11 @@ plugins {
 }
 
 // TODO: Change the module name
-ext.moduleName = 'io.github.qupath.extension.template'
+ext.moduleName = 'io.github.qupath.extension.wsinfer'
 
 // TODO: Define the extension version & provide a short description
-version = "0.1.0-SNAPSHOT"
-description = 'A simple QuPath extension template'
+version = "0.1.0"
+description = 'An extension to run WSInfer in QuPath'
 
 // TODO: Specify the QuPath version, compatible with the extension.
 // The default 'gradle.ext.qupathVersion' reads this from settings.gradle.
@@ -23,6 +21,8 @@ ext.qupathVersion = gradle.ext.qupathVersion
 // TODO: Specify the Java version compatible with the extension
 // Generally 11 for QuPath v0.4.3, but will be 17 for QuPath v0.5.0
 ext.qupathJavaVersion = 11
+
+def djlVersion = libs.versions.deepJavaLibrary.get()
 
 /**
  * Define dependencies.
@@ -46,11 +46,10 @@ dependencies {
     // See https://docs.gradle.org/current/userguide/platforms.html
     shadow libs.slf4j
 
-    // If you aren't using Groovy, this can be removed
-    shadow libs.bundles.groovy
-
     testImplementation "io.github.qupath:qupath-gui-fx:${qupathVersion}"
     testImplementation libs.junit
+
+    implementation "ai.djl:api:$djlVersion"
 }
 
 
