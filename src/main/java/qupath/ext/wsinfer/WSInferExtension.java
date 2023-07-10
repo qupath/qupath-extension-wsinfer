@@ -4,48 +4,28 @@ import javafx.beans.property.BooleanProperty;
 import javafx.scene.control.MenuItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import qupath.ext.wsinfer.models.WSInferParsing;
+import qupath.ext.wsinfer.ui.WSInferCommand;
+import qupath.ext.wsinfer.ui.WSInferPrefs;
 import qupath.lib.common.Version;
 import qupath.lib.gui.QuPathGUI;
-import qupath.lib.gui.dialogs.Dialogs;
 import qupath.lib.gui.extensions.QuPathExtension;
 import qupath.lib.gui.prefs.PathPrefs;
 
 
 /**
- * This is a demo to provide a template for creating a new QuPath extension.
- * <p>
- * It doesn't do much - it just shows how to add a menu item and a preference.
- * See the code and comments below for more info.
- * <p>
- * <b>Important!</b> For your extension to work in QuPath, you need to make sure the name & package
- * of this class is consistent with the file
- * <pre>
- *     /resources/META-INF/services/qupath.lib.gui.extensions.QuPathExtension
- * </pre>
+ * The main WSInfer extension class.
  */
 public class WSInferExtension implements QuPathExtension {
 	
 	private final static Logger logger = LoggerFactory.getLogger(WSInferExtension.class);
 
-	/**
-	 * Display name for your extension
-	 */
 	private final static String EXTENSION_NAME = "WSInfer Extension";
 
-	/**
-	 * Short description, used under 'Extensions > Installed extensions'
-	 */
 	private final static String EXTENSION_DESCRIPTION = "This is just a demo to show how extensions work";
 
-	/**
-	 * QuPath version that the extension is designed to work with.
-	 * This allows QuPath to inform the user if it seems to be incompatible.
-	 */
-	private final static Version EXTENSION_QUPATH_VERSION = Version.parse("v0.4.3");
+	private final static Version EXTENSION_QUPATH_VERSION = Version.parse("v0.4.0");
 
-	/**
-	 * Flag whether the extension is already installed (might not be needed... but we'll do it anyway)
-	 */
 	private boolean isInstalled = false;
 
 	/**
@@ -61,34 +41,32 @@ public class WSInferExtension implements QuPathExtension {
 			return;
 		}
 		isInstalled = true;
-		addPreference(qupath);
-		addMenuItem(qupath);
+		addPreferences(qupath);
+		addMenuItems(qupath);
 	}
 
 	/**
 	 * Demo showing how to add a persistent preference to the QuPath preferences pane.
 	 * @param qupath
 	 */
-	private void addPreference(QuPathGUI qupath) {
+	private void addPreferences(QuPathGUI qupath) {
 		qupath.getPreferencePane().addPropertyPreference(
-				enableExtensionProperty,
-				Boolean.class,
-				"Enable my extension",
+				WSInferPrefs.modelDirectoryProperty(),
+				String.class,
+				"WSInfer model directory",
 				EXTENSION_NAME,
-				"Enable my extension");
+				"Directory to store WSInfer cached models (leave blank to use the default)");
 	}
 
 	/**
 	 * Demo showing how a new command can be added to a QuPath menu.
 	 * @param qupath
 	 */
-	private void addMenuItem(QuPathGUI qupath) {
+	private void addMenuItems(QuPathGUI qupath) {
 		var menu = qupath.getMenu("Extensions>" + EXTENSION_NAME, true);
 		MenuItem menuItem = new MenuItem("WSInfer");
-		menuItem.setOnAction(e -> {
-			Dialogs.showMessageDialog(EXTENSION_NAME,
-					"WSInfer extension.");
-		});
+		WSInferCommand command = new WSInferCommand(qupath);
+		menuItem.setOnAction(e -> command.run());
 		menuItem.disableProperty().bind(enableExtensionProperty.not());
 		menu.getItems().add(menuItem);
 	}

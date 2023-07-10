@@ -1,7 +1,6 @@
-package qupath.ext.wsinfer;
+package qupath.ext.wsinfer.models;
 
-import com.google.gson.GsonBuilder;
-
+import qupath.ext.wsinfer.models.ModelCollection;
 import qupath.lib.io.GsonTools;
 
 import java.net.URI;
