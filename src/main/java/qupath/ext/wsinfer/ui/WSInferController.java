@@ -6,8 +6,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import qupath.ext.wsinfer.models.ModelCollection;
-import qupath.ext.wsinfer.models.WSIModelHandler;
+import qupath.ext.wsinfer.models.WSInferModelCollection;
+import qupath.ext.wsinfer.models.WSInferModelHandler;
 import qupath.ext.wsinfer.models.WSInferUtils;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.images.ImageData;
@@ -33,28 +33,29 @@ public class WSInferController {
     @FXML
     private Button forceRefreshButton;
 
-    private WSIModelHandler currentRunner;
+    private WSInferModelHandler currentRunner;
     private ImageData imageData;
-
 
     @FXML
     private void initialize() {
         logger.info("Initializing...");
-        ModelCollection models = WSInferUtils.parseModels();
+        WSInferModelCollection models = WSInferUtils.parseModels();
         imageData = QuPathGUI.getInstance().getImageData();
         imageData.getHistoryWorkflow()
                 .addStep(
-                        new DefaultScriptableWorkflowStep("Parse WSInfer model JSON", "ModelCollection models = WSInferUtils.parseModels();"
+                        new DefaultScriptableWorkflowStep(
+                                "Parse WSInfer model JSON",
+                                "ModelCollection models = WSInferUtils.parseModels();"
                 ));
-        Map<String, WSIModelHandler> runners = new HashMap<>();
+        Map<String, WSInferModelHandler> runners = new HashMap<>();
         for (String key: models.getModels().keySet()) {
-            WSIModelHandler runner = new WSIModelHandler(models.getModels().get(key));
+            WSInferModelHandler runner = new WSInferModelHandler(models.getModels().get(key));
             runners.put(key, runner);
             modelChoiceBox.getItems().add(key);
         }
         modelChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             currentRunner = runners.get(newValue);
-            WSIModelHandler oldRunner = runners.get(oldValue);
+            WSInferModelHandler oldRunner = runners.get(oldValue);
             if (oldRunner != null) {
                 oldRunner.modelIsReadyProperty().removeListener(this::changed);
             }
@@ -73,18 +74,24 @@ public class WSInferController {
 
     public void run() {
         WSInferCommand.runInference(currentRunner.getModel());
-        String mName = currentRunner.getModel().getName();
+        String mName = modelChoiceBox.getValue();
+        imageData.getHistoryWorkflow()
+                .addStep(
+                        new DefaultScriptableWorkflowStep(
+                                "Define model name",
+                                "def modelName = " + mName + ";"
+                        ));
         imageData.getHistoryWorkflow()
                 .addStep(
                         new DefaultScriptableWorkflowStep(
                                 "Fetch WSInfer model",
-                                "models.get(" + mName + ").fetchModel()"
+                                "models.getModels().get(modelName).fetchModel();"
                 ));
         imageData.getHistoryWorkflow()
                 .addStep(
                         new DefaultScriptableWorkflowStep(
                                 "Run WSInfer model",
-                                "WSInferCommand.runInference(models.get(" + mName + ");"
+                                "WSInferCommand.runInference(models.getModels().get(modelName));"
                 ));
     }
 

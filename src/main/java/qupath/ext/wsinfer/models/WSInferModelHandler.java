@@ -4,12 +4,12 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import qupath.lib.gui.dialogs.Dialogs;
 
-public class WSIModelHandler {
-    private final WSIModel wsiModel;
+public class WSInferModelHandler {
+    private final WSInferModel wsiModel;
     private final BooleanProperty downloadRequestedProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty modelIsReadyProperty = new SimpleBooleanProperty(false);
     
-    public WSIModelHandler(WSIModel wsiModel) {
+    public WSInferModelHandler(WSInferModel wsiModel) {
         this.wsiModel = wsiModel;
         this.downloadRequestedProperty.addListener((v, o, n) -> {
             if (n) {
@@ -22,7 +22,7 @@ public class WSIModelHandler {
         });
     }
 
-    public WSIModel getModel() {
+    public WSInferModel getModel() {
         return wsiModel;
     }
 

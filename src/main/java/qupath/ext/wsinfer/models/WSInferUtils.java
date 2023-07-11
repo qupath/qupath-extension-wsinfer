@@ -57,7 +57,7 @@ public class WSInferUtils {
         return null;
     }
 
-    public static ModelCollection parseModels() {
+    public static WSInferModelCollection parseModels() {
         String json = null;
         try {
             URI uri = new URI("https://huggingface.co/datasets/kaczmarj/wsinfer-model-zoo-json/raw/main/wsinfer-zoo-registry.json");
@@ -65,6 +65,6 @@ public class WSInferUtils {
         } catch (URISyntaxException e) {
             logger.error("Malformed URI", e);
         }
-        return GsonTools.getInstance().fromJson(json, ModelCollection.class);
+        return GsonTools.getInstance().fromJson(json, WSInferModelCollection.class);
     }
 }

@@ -21,7 +21,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import qupath.ext.wsinfer.models.WSIModel;
+import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.dialogs.Dialogs;
 import qupath.lib.images.ImageData;
@@ -89,11 +89,11 @@ public class WSInferCommand implements Runnable {
         return stage;
     }
 
-    public static void runInference(WSIModel wsiModel) {
+    public static void runInference(WSInferModel wsiModel) {
         Map<String, Object> pluginArgs = new HashMap<>();
         pluginArgs.put("tileSizeMicrons", wsiModel.getConfiguration().getTileSizeMicrons());
-        pluginArgs.put("trimToRoi", false);
-        pluginArgs.put("makeAnnotation", false);
+        pluginArgs.put("trimToROI", false);
+        pluginArgs.put("makeAnnotations", false);
         pluginArgs.put("removeParentAnnotation", false);
         try {
             QP.runPlugin("qupath.lib.algorithms.TilerPlugin", pluginArgs);
@@ -105,7 +105,7 @@ public class WSInferCommand implements Runnable {
                 .optSynset(wsiModel.getConfiguration().getClassNames())
                 .optApplySoftmax(true);
 
-        for (WSIModel.Transform transform: wsiModel.getConfiguration().getTransform()) {
+        for (WSInferModel.Transform transform: wsiModel.getConfiguration().getTransform()) {
             switch(transform.getName()) {
                 case "Resize":
                     logger.info("Adding resize");

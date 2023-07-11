@@ -3,10 +3,10 @@ import java.util.Collections;
 import java.util.Map;
 
 // Defines a map where the top level element is "models", which is itself a map of "name" -> WSIModel.
-public class ModelCollection {
-    private Map<String, WSIModel> models;
+public class WSInferModelCollection {
+    private Map<String, WSInferModel> models;
 
-    public Map<String, WSIModel> getModels() {
+    public Map<String, WSInferModel> getModels() {
         return Collections.unmodifiableMap(models);
     }
 }
