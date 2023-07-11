@@ -90,6 +90,11 @@ public class WSInferCommand implements Runnable {
     }
 
     public static void runInference(WSInferModel wsiModel) {
+        if (QP.getAnnotationObjects().size() == 0) {
+            Dialogs.showErrorMessage("WSInfer plugin", "Cannot run WSInfer extension without annotations.");
+            return;
+        }
+
         Map<String, Object> pluginArgs = new HashMap<>();
         pluginArgs.put("tileSizeMicrons", wsiModel.getConfiguration().getTileSizeMicrons());
         pluginArgs.put("trimToROI", false);
@@ -175,6 +180,7 @@ public class WSInferCommand implements Runnable {
                 logger.info("No tiles selected, so I'll try all of them");
             }
             int total = tiles.size();
+
             logger.info("{} tiles in total", total);
             Dialogs.showPlainNotification("WSInfer plugin", "Running " + wsiModel.getName() + " on " + total + " tiles");
             Queue<PathObject> tileQueue = new LinkedList<>(tiles);
@@ -265,7 +271,6 @@ public class WSInferCommand implements Runnable {
                 while (!pathObjects.isEmpty()) {
                     inputs.clear();
                     toProcess.clear();
-
                     for (int i = 0; i < maxBatchSize; i++) {
                         PathObject pathObject = pathObjects.poll();
                         if (pathObject == null) {
@@ -285,9 +290,9 @@ public class WSInferCommand implements Runnable {
                         Image input = BufferedImageFactory.getInstance().fromImage(img);
                         inputs.add(input);
                     }
-
                     if (inputs.isEmpty()) {
-                        return;
+                        logger.info("Process q: {}", toProcess.size());
+                        continue;
                     }
                     List<Classifications> predictions = predictor.batchPredict(inputs);
                     for (int i = 0; i < inputs.size(); i++) {
@@ -300,7 +305,6 @@ public class WSInferCommand implements Runnable {
                         }
                     }
                 }
-
             } catch (Exception e) {
                 logger.error(e.getLocalizedMessage(), e);
             }

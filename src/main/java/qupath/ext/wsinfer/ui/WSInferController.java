@@ -15,6 +15,7 @@ import qupath.lib.gui.commands.Commands;
 import qupath.lib.gui.dialogs.Dialogs;
 import qupath.lib.images.ImageData;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
+import qupath.lib.scripting.QP;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,14 +45,16 @@ public class WSInferController {
     private void initialize() {
         logger.info("Initializing...");
         WSInferModelCollection models = WSInferUtils.parseModels();
-        imageData = QuPathGUI.getInstance().getImageData();
+        imageData = QP.getCurrentImageData();
         Map<String, WSInferModelHandler> runners = new HashMap<>();
         for (String key: models.getModels().keySet()) {
             WSInferModelHandler runner = new WSInferModelHandler(models.getModels().get(key));
             runners.put(key, runner);
             modelChoiceBox.getItems().add(key);
         }
+
         forceRefreshButton.setDisable(true);
+
         modelChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             forceRefreshButton.setDisable(false);
             currentRunner = runners.get(newValue);
@@ -73,11 +76,13 @@ public class WSInferController {
     }
 
     public void run() {
-        WSInferCommand.runInference(currentRunner.getModel());
-        String mName = modelChoiceBox.getValue();
+        imageData = QP.getCurrentImageData();
         if (imageData == null) {
             Dialogs.showErrorMessage("WSInfer plugin", "Cannot run WSInfer plugin without ImageData.");
+            return;
         }
+        WSInferCommand.runInference(currentRunner.getModel());
+        String mName = modelChoiceBox.getValue();
         imageData.getHistoryWorkflow()
                 .addStep(
                         new DefaultScriptableWorkflowStep(
