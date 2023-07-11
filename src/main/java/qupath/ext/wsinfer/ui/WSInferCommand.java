@@ -18,22 +18,18 @@ import ai.djl.translate.Translator;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.models.WSIModel;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.dialogs.Dialogs;
-import qupath.lib.gui.tools.PaneTools;
 import qupath.lib.images.ImageData;
 import qupath.lib.images.servers.ImageServer;
 import qupath.lib.objects.PathObject;
 import qupath.lib.objects.hierarchy.PathObjectHierarchy;
 import qupath.lib.roi.interfaces.ROI;
 import qupath.lib.scripting.QP;
-import javafx.scene.control.ProgressBar;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -272,7 +268,7 @@ public class WSInferCommand implements Runnable {
                             break;
                         }
                         int count = total - countdown.decrementAndGet();
-                        if (total % 100 == 0) {
+                        if (count % 100 == 0) {
                             logger.info("Processing {}/{}", count, total);
                         }
                         toProcess.add(pathObject);

@@ -8,6 +8,6 @@
    <children>
       <ChoiceBox fx:id="modelChoiceBox" layoutX="14.0" layoutY="12.0" />
       <Button fx:id="runButton" layoutX="497.0" layoutY="12.0" onAction="#run" text="Run model" />
-      <Button fx:id="measurementMapButton" layoutX="406.0" layoutY="57.0" mnemonicParsing="false" text="Show measurement map" />
+      <Button fx:id="forceRefreshButton" onAction="#forceRefresh" layoutX="383.0" layoutY="12.0" mnemonicParsing="false" text="Force refresh" />
    </children>
 </AnchorPane>

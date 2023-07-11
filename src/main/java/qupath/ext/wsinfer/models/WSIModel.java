@@ -64,6 +64,11 @@ public class WSIModel {
         return configuration;
     }
 
+    public void removeCache() {
+        getTSFile().delete();
+        getCFFile().delete();
+    }
+
     public static class ModelConfiguration {
         String spec_version;
         String architecture;
@@ -108,10 +113,17 @@ public class WSIModel {
     }
 
     public File getTSFile() {
-        String ts = "torchscript_model.pt";
+        return getFile("torchscript_model.pt");
+    }
+
+    public File getCFFile() {
+        return getFile("config.json");
+    }
+
+    public File getFile(String f) {
         String dir = WSInferPrefs.modelDirectoryProperty().get();
         String modPath = String.format("%s" + File.separator + "%s" + File.separator + "/%s", dir, hfRepoId, hfRevision);
-        return new File(String.format("%s/%s", modPath, ts));
+        return new File(String.format("%s/%s", modPath, f));
     }
 
     public void fetchModel() {
