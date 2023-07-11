@@ -12,6 +12,7 @@ import qupath.ext.wsinfer.models.WSInferModelHandler;
 import qupath.ext.wsinfer.models.WSInferUtils;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
+import qupath.lib.gui.dialogs.Dialogs;
 import qupath.lib.images.ImageData;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
@@ -44,12 +45,6 @@ public class WSInferController {
         logger.info("Initializing...");
         WSInferModelCollection models = WSInferUtils.parseModels();
         imageData = QuPathGUI.getInstance().getImageData();
-        imageData.getHistoryWorkflow()
-                .addStep(
-                        new DefaultScriptableWorkflowStep(
-                                "Parse WSInfer model JSON",
-                                "ModelCollection models = WSInferUtils.parseModels();"
-                ));
         Map<String, WSInferModelHandler> runners = new HashMap<>();
         for (String key: models.getModels().keySet()) {
             WSInferModelHandler runner = new WSInferModelHandler(models.getModels().get(key));
@@ -80,6 +75,15 @@ public class WSInferController {
     public void run() {
         WSInferCommand.runInference(currentRunner.getModel());
         String mName = modelChoiceBox.getValue();
+        if (imageData == null) {
+            Dialogs.showErrorMessage("WSInfer plugin", "Cannot run WSInfer plugin without ImageData.");
+        }
+        imageData.getHistoryWorkflow()
+                .addStep(
+                        new DefaultScriptableWorkflowStep(
+                                "Parse WSInfer model JSON",
+                                "ModelCollection models = WSInferUtils.parseModels();"
+                        ));
         imageData.getHistoryWorkflow()
                 .addStep(
                         new DefaultScriptableWorkflowStep(
