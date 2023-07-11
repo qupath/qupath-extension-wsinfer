@@ -1,7 +1,5 @@
 package qupath.ext.wsinfer.ui;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -11,10 +9,7 @@ import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.models.ModelCollection;
 import qupath.ext.wsinfer.models.WSIModel;
 import qupath.ext.wsinfer.models.WSInferUtils;
-import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.dialogs.Dialogs;
-
-import java.io.IOException;
 
 /**
  * Controller for the WSInfer user interface, which is defined in wsinfer_control.fxml
@@ -28,6 +23,9 @@ public class WSInferController {
 
     @FXML
     private ChoiceBox<String> modelChoiceBox;
+    @FXML
+    private Button runButton;
+
     private WSIModel model;
 
     @FXML
@@ -39,14 +37,12 @@ public class WSInferController {
         }
         modelChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             model = models.getModels().get(newValue);
-//            runButton.setDisable(true);
-//            prepButton.setDisable(true);
+            runButton.setDisable(true);
             new Thread(() -> {
                 Dialogs.showPlainNotification("WSInfer", String.format("Fetching model: %s", model.getName()));
                 model.fetchModel();
                 Dialogs.showPlainNotification("WSInfer", String.format("Model available: %s", model.getName()));
-//                runButton.setDisable(false);
-//                prepButton.setDisable(false);
+                runButton.setDisable(false);
             }).start();
         });
     }

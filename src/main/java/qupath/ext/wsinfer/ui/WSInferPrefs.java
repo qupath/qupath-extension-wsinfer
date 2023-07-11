@@ -21,12 +21,14 @@ public class WSInferPrefs {
 
     /**
      * String storing the preferred directory to cache models.
-     * @return
      */
     public static StringProperty modelDirectoryProperty() {
         return modelDirectoryProperty;
     }
 
+    /**
+     * String storing the preferred device to use for model inference.
+     */
     public static StringProperty deviceProperty() {
         return deviceProperty;
     }

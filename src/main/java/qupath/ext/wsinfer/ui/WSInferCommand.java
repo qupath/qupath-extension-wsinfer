@@ -12,16 +12,13 @@ import qupath.lib.gui.dialogs.Dialogs;
 import java.io.IOException;
 import java.util.ResourceBundle;
 
-/**
- * Main WSInfer command.
- */
 public class WSInferCommand implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(WSInferController.class);
 
-    private QuPathGUI qupath;
+    private final QuPathGUI qupath;
 
-    private ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
+    private final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 
     private Stage stage;
 

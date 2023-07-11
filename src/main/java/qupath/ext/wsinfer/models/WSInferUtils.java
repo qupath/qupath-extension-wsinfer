@@ -11,11 +11,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.http.HttpClient;
-import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.util.Objects;
 
 public class WSInferUtils {
     private static final Logger logger = LoggerFactory.getLogger(WSInferUtils.class);
@@ -47,12 +47,10 @@ public class WSInferUtils {
             logger.error("Error in HTTP request for URI {}", uri, e);
         }
 
-        HttpHeaders headers = response.headers();
-        int code = response.statusCode();
+        int code = Objects.requireNonNull(response).statusCode();
 
         if (code == 200) {
-            String json = (String) response.body();
-            return json;
+            return (String) response.body();
         } else if (code == 304) {
             logger.error("Error code 304 downloading {}", uri);
         }
@@ -69,7 +67,4 @@ public class WSInferUtils {
         }
         return GsonTools.getInstance().fromJson(json, ModelCollection.class);
     }
-
-
-
 }

@@ -11,28 +11,20 @@ import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.extensions.QuPathExtension;
 import qupath.lib.gui.prefs.PathPrefs;
 
-import java.util.Map;
 
-
-/**
- * The main WSInfer extension class.
- */
 public class WSInferExtension implements QuPathExtension {
 	
 	private final static Logger logger = LoggerFactory.getLogger(WSInferExtension.class);
 
 	private final static String EXTENSION_NAME = "WSInfer Extension";
 
-	private final static String EXTENSION_DESCRIPTION = "This is just a demo to show how extensions work";
+	private final static String EXTENSION_DESCRIPTION = "Deep learning inference on tiled whole slide images using WSInfer.";
 
 	private final static Version EXTENSION_QUPATH_VERSION = Version.parse("v0.4.0");
 
 	private boolean isInstalled = false;
 
-	/**
-	 * A 'persistent preference' - showing how to create a property that is stored whenever QuPath is closed
-	 */
-	private BooleanProperty enableExtensionProperty = PathPrefs.createPersistentPreference(
+	private final BooleanProperty enableExtensionProperty = PathPrefs.createPersistentPreference(
 			"enableExtension", true);
 
 	@Override
@@ -46,10 +38,6 @@ public class WSInferExtension implements QuPathExtension {
 		addMenuItems(qupath);
 	}
 
-	/**
-	 * Demo showing how to add a persistent preference to the QuPath preferences pane.
-	 * @param qupath
-	 */
 	private void addPreferences(QuPathGUI qupath) {
 		qupath.getPreferencePane().addPropertyPreference(
 				WSInferPrefs.modelDirectoryProperty(),
@@ -57,12 +45,14 @@ public class WSInferExtension implements QuPathExtension {
 				"WSInfer model directory",
 				EXTENSION_NAME,
 				"Directory to store WSInfer cached models (leave blank to use the default)");
+		qupath.getPreferencePane().addPropertyPreference(
+				WSInferPrefs.deviceProperty(),
+				String.class,
+				"WSInfer preferred device",
+				EXTENSION_NAME,
+				"Device to use for WSInfer inference");
 	}
 
-	/**
-	 * Demo showing how a new command can be added to a QuPath menu.
-	 * @param qupath
-	 */
 	private void addMenuItems(QuPathGUI qupath) {
 		var menu = qupath.getMenu("Extensions>" + EXTENSION_NAME, true);
 		MenuItem menuItem = new MenuItem("WSInfer");
@@ -71,7 +61,6 @@ public class WSInferExtension implements QuPathExtension {
 		menuItem.disableProperty().bind(enableExtensionProperty.not());
 		menu.getItems().add(menuItem);
 	}
-	
 	
 	@Override
 	public String getName() {

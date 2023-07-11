@@ -19,7 +19,6 @@ import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.ui.WSInferPrefs;
-import qupath.lib.algorithms.TilerPlugin;
 import qupath.lib.images.ImageData;
 import qupath.lib.images.servers.ImageServer;
 import qupath.lib.io.GsonTools;
@@ -36,14 +35,13 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 
-//Class to store components of parsed hugging face json
+// Equivalent to config.json files from hugging face
 public class WSIModel {
 
     private final Logger logger = LoggerFactory.getLogger(WSIModel.class);
@@ -81,7 +79,7 @@ public class WSIModel {
     }
 
     public void runModel() {
-        Map pluginArgs = new HashMap();
+        Map<String, Object> pluginArgs = new HashMap<>();
         pluginArgs.put("tileSizeMicrons", configuration.getTileSizeMicrons());
         pluginArgs.put("trimToRoi", false);
         pluginArgs.put("makeAnnotation", false);
@@ -140,7 +138,7 @@ public class WSIModel {
                 .optEngine("PyTorch")
                 .optTranslator(translator)
                 .setTypes(Image.class, Classifications.class)
-                .optDevice(Device.cpu())
+                .optDevice(dev)
                 .build();
         long startTime = System.currentTimeMillis();
         try (ZooModel<Image, Classifications> model = criteria.loadModel()) {
@@ -191,11 +189,8 @@ public class WSIModel {
 
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
-//            System.out.println(
-//                    "Done! Processed "+ total + " tiles in " +
-//                    duration + " seconds; " + duration/total + " ms per tile"
-//            );
-            logger.info("Finished {} tiles in {} seconds", total, duration);
+
+            logger.info("Finished {} tiles in {} seconds ({} ms per tile)", total, duration/1000, duration/total);
         } catch (InterruptedException | IOException | ModelNotFoundException | MalformedModelException e) {
             logger.error("Error running model {}", getName(), e);
         }
@@ -211,8 +206,8 @@ public class WSIModel {
     public void fetchModel() {
         String ts = "torchscript_model.pt";
         String cf = "config.json";
-        URL tsURL = null;
-        URL cfURL = null;
+        URL tsURL;
+        URL cfURL;
         try {
             tsURL = new URL(String.format("https://huggingface.co/%s/resolve/%s/%s", hfRepoId, hfRevision, ts));
             cfURL = new URL(String.format("https://huggingface.co/%s/resolve/%s/%s", hfRepoId, hfRevision, cf));
@@ -248,18 +243,18 @@ public class WSIModel {
 
     class PredictionWorker implements Runnable {
 
-        Queue<PathObject> pathObjects;
-        int maxBatchSize = 128;
-        ZooModel<Image, Classifications> model;
+        final Queue<PathObject> pathObjects;
+        final int maxBatchSize;
+        final ZooModel<Image, Classifications> model;
 
-        ImageServer<BufferedImage> server;
-        double downsample;
-        int width;
-        int height;
-        List<String> classNames;
+        final ImageServer<BufferedImage> server;
+        final double downsample;
+        final int width;
+        final int height;
+        final List<String> classNames;
 
-        int total;
-        AtomicInteger countdown;
+        final int total;
+        final AtomicInteger countdown;
 
         PredictionWorker(
             Queue<PathObject> pathObjects,
