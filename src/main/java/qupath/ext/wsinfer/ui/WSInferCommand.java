@@ -291,7 +291,6 @@ public class WSInferCommand implements Runnable {
                         inputs.add(input);
                     }
                     if (inputs.isEmpty()) {
-                        logger.info("Process q: {}", toProcess.size());
                         continue;
                     }
                     List<Classifications> predictions = predictor.batchPredict(inputs);
