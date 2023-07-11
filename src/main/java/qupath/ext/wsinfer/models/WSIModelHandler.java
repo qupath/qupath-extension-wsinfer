@@ -4,14 +4,12 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import qupath.lib.gui.dialogs.Dialogs;
 
-import java.util.ArrayList;
-
-public class WSIModelRunner {
+public class WSIModelHandler {
     private final WSIModel wsiModel;
     private final BooleanProperty downloadRequestedProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty modelIsReadyProperty = new SimpleBooleanProperty(false);
     
-    public WSIModelRunner(WSIModel wsiModel) {
+    public WSIModelHandler(WSIModel wsiModel) {
         this.wsiModel = wsiModel;
         this.downloadRequestedProperty.addListener((v, o, n) -> {
             if (n) {

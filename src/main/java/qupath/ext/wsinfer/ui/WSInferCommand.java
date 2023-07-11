@@ -175,6 +175,7 @@ public class WSInferCommand implements Runnable {
             }
             int total = tiles.size();
             logger.info("{} tiles in total", total);
+            Dialogs.showPlainNotification("WSInfer plugin", "Running " + wsiModel.getName() + " on " + total + " tiles");
             Queue<PathObject> tileQueue = new LinkedList<>(tiles);
 
             double downsample = wsiModel.getConfiguration().getSpacingMicronPerPixel() / (double)server.getPixelCalibration().getAveragedPixelSize();
@@ -212,6 +213,7 @@ public class WSInferCommand implements Runnable {
         } catch (InterruptedException | IOException | ModelNotFoundException | MalformedModelException e) {
             logger.error("Error running model {}", wsiModel.getName(), e);
         }
+        Dialogs.showPlainNotification("WSInfer plugin", "Finished running " + wsiModel.getName());
     }
 
     static class PredictionWorker implements Runnable {
