@@ -12,7 +12,7 @@ public class WSInferPrefs {
 
     private static final StringProperty modelDirectoryProperty = PathPrefs.createPersistentPreference(
             "wsinfer.model.dir",
-            System.getProperty("user.home") + File.separator + ".qupath" + File.separator + "wsinfer"
+            System.getProperty("user.home") + File.separator + ".cache" + File.separator + "qupath" + File.separator + "wsinfer"
     );
     private static final StringProperty deviceProperty = PathPrefs.createPersistentPreference(
             "wsinfer.device",

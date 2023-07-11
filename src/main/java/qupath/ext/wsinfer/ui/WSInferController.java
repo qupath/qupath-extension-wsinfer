@@ -48,6 +48,6 @@ public class WSInferController {
     }
 
     public void run(ActionEvent actionEvent) {
-        this.model.runModel();
+        WSInferCommand.runInference(model);
     }
 }
