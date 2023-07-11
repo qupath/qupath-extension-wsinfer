@@ -169,6 +169,7 @@ public class WSInferCommand implements Runnable {
                     .stream()
                     .filter(PathObject::isTile).
                     collect(Collectors.toList());
+
             if (tiles.size() == 0) {
                 tiles = hierarchy.getTileObjects();
                 logger.info("No tiles selected, so I'll try all of them");
@@ -264,15 +265,18 @@ public class WSInferCommand implements Runnable {
                 while (!pathObjects.isEmpty()) {
                     inputs.clear();
                     toProcess.clear();
+
                     for (int i = 0; i < maxBatchSize; i++) {
                         PathObject pathObject = pathObjects.poll();
                         if (pathObject == null) {
                             break;
                         }
+
                         int count = total - countdown.decrementAndGet();
                         if (count % 100 == 0) {
                             logger.info("Processing {}/{}", count, total);
                         }
+
                         toProcess.add(pathObject);
                         ROI roi = pathObject.getROI();
                         int x = (int) Math.round(roi.getCentroidX() - width / 2.0);
@@ -288,6 +292,7 @@ public class WSInferCommand implements Runnable {
                     List<Classifications> predictions = predictor.batchPredict(inputs);
                     for (int i = 0; i < inputs.size(); i++) {
                         Classifications classifications = predictions.get(i);
+
                         for (String c : classNames) {
                             double prob = classifications.get(c).getProbability();
                             toProcess.get(i).getMeasurements().put(c, prob);

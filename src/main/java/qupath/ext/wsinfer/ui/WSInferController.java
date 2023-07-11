@@ -4,12 +4,14 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.models.WSInferModelCollection;
 import qupath.ext.wsinfer.models.WSInferModelHandler;
 import qupath.ext.wsinfer.models.WSInferUtils;
 import qupath.lib.gui.QuPathGUI;
+import qupath.lib.gui.commands.Commands;
 import qupath.lib.images.ImageData;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
@@ -35,6 +37,7 @@ public class WSInferController {
 
     private WSInferModelHandler currentRunner;
     private ImageData imageData;
+    private Stage measurementMapsStage;
 
     @FXML
     private void initialize() {
@@ -53,7 +56,9 @@ public class WSInferController {
             runners.put(key, runner);
             modelChoiceBox.getItems().add(key);
         }
+        forceRefreshButton.setDisable(true);
         modelChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            forceRefreshButton.setDisable(false);
             currentRunner = runners.get(newValue);
             WSInferModelHandler oldRunner = runners.get(oldValue);
             if (oldRunner != null) {
@@ -93,6 +98,7 @@ public class WSInferController {
                                 "Run WSInfer model",
                                 "WSInferCommand.runInference(models.getModels().get(modelName));"
                 ));
+        openMeasurementMaps();
     }
 
     public void forceRefresh() {
@@ -106,5 +112,13 @@ public class WSInferController {
 
     private void changed(ObservableValue<? extends Boolean> v, Boolean o, Boolean n) {
         runButton.setDisable(!n);
+    }
+
+    @FXML
+    private void openMeasurementMaps() {
+        if (measurementMapsStage == null) {
+            measurementMapsStage = Commands.createMeasurementMapDialog(QuPathGUI.getInstance());
+        }
+        measurementMapsStage.show();
     }
 }

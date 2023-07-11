@@ -7,7 +7,8 @@
 <AnchorPane prefHeight="206.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
    <children>
       <ChoiceBox fx:id="modelChoiceBox" layoutX="14.0" layoutY="12.0" />
-      <Button fx:id="runButton" layoutX="497.0" layoutY="12.0" onAction="#run" text="Run model" />
-      <Button fx:id="forceRefreshButton" onAction="#forceRefresh" layoutX="383.0" layoutY="12.0" mnemonicParsing="false" text="Force refresh" />
+      <Button fx:id="runButton" layoutX="497.0" layoutY="12.0" onAction="#run" text="%ui.run-model" />
+      <Button fx:id="forceRefreshButton" layoutX="383.0" layoutY="12.0" mnemonicParsing="false" onAction="#forceRefresh" text="%ui.force-download" />
+      <Button layoutX="394.0" layoutY="54.0" mnemonicParsing="false" text="%ui.open-measurement-maps" onAction="#openMeasurementMaps"/>
    </children>
 </AnchorPane>
