@@ -21,6 +21,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import qupath.ext.wsinfer.models.Transform;
 import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.dialogs.Dialogs;
@@ -110,7 +111,7 @@ public class WSInferCommand implements Runnable {
                 .optSynset(wsiModel.getConfiguration().getClassNames())
                 .optApplySoftmax(true);
 
-        for (WSInferModel.Transform transform: wsiModel.getConfiguration().getTransform()) {
+        for (Transform transform: wsiModel.getConfiguration().getTransform()) {
             switch(transform.getName()) {
                 case "Resize":
                     logger.info("Adding resize");

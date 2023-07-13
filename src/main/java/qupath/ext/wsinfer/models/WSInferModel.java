@@ -12,7 +12,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
 
 // Equivalent to config.json files from hugging face
 public class WSInferModel {
@@ -39,49 +38,6 @@ public class WSInferModel {
     public void removeCache() {
         getTSFile().delete();
         getCFFile().delete();
-    }
-
-    public static class ModelConfiguration {
-        String spec_version;
-        String architecture;
-        int num_classes;
-        List<String> class_names;
-        int patch_size_pixels;
-        float spacing_um_px;
-        List<Transform> transform;
-
-        public float getTileSizeMicrons() {
-            return patch_size_pixels * spacing_um_px;
-        }
-
-        public List<String> getClassNames() {
-            return class_names;
-        }
-
-        public List<Transform> getTransform() {
-            return transform;
-        }
-
-        public float getPatchSizePixels() {
-            return patch_size_pixels;
-        }
-
-        public float getSpacingMicronPerPixel() {
-            return spacing_um_px;
-        }
-    }
-
-    public static class Transform {
-        String name;
-        Map<String, Object> arguments;
-
-        public String getName() {
-            return name;
-        }
-
-        public Map<String, Object> getArguments() {
-            return arguments;
-        }
     }
 
     public File getTSFile() {

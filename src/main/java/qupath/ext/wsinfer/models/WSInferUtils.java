@@ -18,6 +18,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.Objects;
 
 public class WSInferUtils {
+
     private static final Logger logger = LoggerFactory.getLogger(WSInferUtils.class);
 
     public static void downloadURLToFile(URL url, File file) {

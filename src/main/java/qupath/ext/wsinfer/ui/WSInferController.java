@@ -8,14 +8,11 @@ import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.models.WSInferModelCollection;
-import qupath.ext.wsinfer.models.WSInferModelHandler;
 import qupath.ext.wsinfer.models.WSInferUtils;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
 import qupath.lib.gui.dialogs.Dialogs;
-import qupath.lib.images.ImageData;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
-import qupath.lib.scripting.QP;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,14 +35,12 @@ public class WSInferController {
     private Button forceRefreshButton;
 
     private WSInferModelHandler currentRunner;
-    private ImageData imageData;
     private Stage measurementMapsStage;
 
     @FXML
     private void initialize() {
         logger.info("Initializing...");
         WSInferModelCollection models = WSInferUtils.parseModels();
-        imageData = QP.getCurrentImageData();
         Map<String, WSInferModelHandler> runners = new HashMap<>();
         for (String key: models.getModels().keySet()) {
             WSInferModelHandler runner = new WSInferModelHandler(models.getModels().get(key));
@@ -76,7 +71,7 @@ public class WSInferController {
     }
 
     public void run() {
-        imageData = QP.getCurrentImageData();
+        var imageData = QuPathGUI.getInstance().getImageData();
         if (imageData == null) {
             Dialogs.showErrorMessage("WSInfer plugin", "Cannot run WSInfer plugin without ImageData.");
             return;

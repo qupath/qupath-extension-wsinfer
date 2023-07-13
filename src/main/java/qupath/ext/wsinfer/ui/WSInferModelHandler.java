@@ -1,10 +1,12 @@
-package qupath.ext.wsinfer.models;
+package qupath.ext.wsinfer.ui;
 
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.lib.gui.dialogs.Dialogs;
 
 public class WSInferModelHandler {
+
     private final WSInferModel wsiModel;
     private final BooleanProperty downloadRequestedProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty modelIsReadyProperty = new SimpleBooleanProperty(false);
@@ -36,4 +38,5 @@ public class WSInferModelHandler {
     public BooleanProperty modelIsReadyProperty() {
         return this.modelIsReadyProperty;
     }
+
 }
