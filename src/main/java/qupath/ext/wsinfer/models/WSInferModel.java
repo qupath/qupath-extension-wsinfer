@@ -12,7 +12,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.*;
 
 // Equivalent to config.json files from hugging face
 public class WSInferModel {
@@ -20,7 +19,7 @@ public class WSInferModel {
     private final Logger logger = LoggerFactory.getLogger(WSInferModel.class);
 
     private String description;
-    private ModelConfiguration configuration;
+    private WSInferModelConfiguration configuration;
 
     @SerializedName("hf_repo_id")
     private String hfRepoId;
@@ -32,56 +31,13 @@ public class WSInferModel {
         return hfRepoId;
     }
 
-    public ModelConfiguration getConfiguration() {
+    public WSInferModelConfiguration getConfiguration() {
         return configuration;
     }
 
     public void removeCache() {
         getTSFile().delete();
         getCFFile().delete();
-    }
-
-    public static class ModelConfiguration {
-        String spec_version;
-        String architecture;
-        int num_classes;
-        List<String> class_names;
-        int patch_size_pixels;
-        float spacing_um_px;
-        List<Transform> transform;
-
-        public float getTileSizeMicrons() {
-            return patch_size_pixels * spacing_um_px;
-        }
-
-        public List<String> getClassNames() {
-            return class_names;
-        }
-
-        public List<Transform> getTransform() {
-            return transform;
-        }
-
-        public float getPatchSizePixels() {
-            return patch_size_pixels;
-        }
-
-        public float getSpacingMicronPerPixel() {
-            return spacing_um_px;
-        }
-    }
-
-    public static class Transform {
-        String name;
-        Map<String, Object> arguments;
-
-        public String getName() {
-            return name;
-        }
-
-        public Map<String, Object> getArguments() {
-            return arguments;
-        }
     }
 
     public File getTSFile() {
@@ -133,6 +89,6 @@ public class WSInferModel {
         } catch (IOException e) {
             logger.error("Cannot read file {}", cfFile, e);
         }
-        this.configuration = GsonTools.getInstance().fromJson(json, ModelConfiguration.class);
+        this.configuration = GsonTools.getInstance().fromJson(json, WSInferModelConfiguration.class);
     }
 }
