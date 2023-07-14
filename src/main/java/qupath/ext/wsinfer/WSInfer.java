@@ -74,8 +74,15 @@ public class WSInfer {
      * @throws IllegalArgumentException if no model is found with the given name.
      */
     private static WSInferModel loadModel(String modelName) throws IllegalArgumentException {
-        var modelCollection = WSInferUtils.parseModels();
+        Objects.requireNonNull(modelName, "Model name cannot be null");
+        var modelCollection = WSInferUtils.getModelCollection();
         var model = modelCollection.getModels().getOrDefault(modelName, null);
+        if (model == null && modelName.contains("/")) {
+            String shortModelName = modelName.substring(modelName.lastIndexOf("/") + 1);
+            model = modelCollection.getModels().getOrDefault(shortModelName, null);
+            if (model != null)
+                logger.warn("Using short model name {} instead of {}", shortModelName, modelName);
+        }
         if (model == null) {
             throw new IllegalArgumentException("No model found with name: " + modelName);
         }

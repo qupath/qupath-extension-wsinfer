@@ -1,5 +1,6 @@
 package qupath.ext.wsinfer.ui;
 
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Task;
@@ -53,7 +54,7 @@ public class WSInferController {
     @FXML
     private void initialize() {
         logger.info("Initializing...");
-        WSInferModelCollection models = WSInferUtils.parseModels();
+        WSInferModelCollection models = WSInferUtils.getModelCollection();
         Map<String, WSInferModelHandler> runners = new HashMap<>();
         for (String key: models.getModels().keySet()) {
             WSInferModelHandler runner = new WSInferModelHandler(models.getModels().get(key));
@@ -158,13 +159,13 @@ public class WSInferController {
         @Override
         protected Void call() throws Exception {
             try {
-                Dialogs.showInfoNotification(getTitle(), "Requesting inference for " + model.getName());
+                Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), "Requesting inference for " + model.getName()));
                 WSInfer.runInference(imageData, model);
                 addToHistoryWorkflow(imageData, model.getName());
             } catch (InterruptedException e) {
-                Dialogs.showErrorNotification(getTitle(), e.getLocalizedMessage());
+                Platform.runLater(() -> Dialogs.showErrorNotification(getTitle(), e.getLocalizedMessage()));
             } catch (Exception e) {
-                Dialogs.showErrorMessage(getTitle(), e.getLocalizedMessage());
+                Platform.runLater(() -> Dialogs.showErrorMessage(getTitle(), e.getLocalizedMessage()));
             }
             return null;
         }

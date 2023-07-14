@@ -104,7 +104,6 @@ class MpsSupport {
             List<Double> probabilities = new ArrayList<>();
             for (float p : array.toFloatArray())
                 probabilities.add((double)p);
-            System.err.println(probabilities);
             return new Classifications(classes, probabilities);
         }
 

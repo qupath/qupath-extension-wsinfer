@@ -24,6 +24,8 @@ public class WSInferUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(WSInferUtils.class);
 
+    private static WSInferModelCollection cachedModelCollection;
+
     public static void downloadURLToFile(URL url, File file) {
         ReadableByteChannel readableByteChannel = null;
         try {
@@ -60,7 +62,34 @@ public class WSInferUtils {
         return null;
     }
 
-    public static WSInferModelCollection parseModels() {
+    /**
+     * Get the model collection, downloading it if necessary.
+     * @return
+     */
+    public static WSInferModelCollection getModelCollection() {
+        if (cachedModelCollection == null) {
+            synchronized (WSInferUtils.class) {
+                if (cachedModelCollection == null)
+                    cachedModelCollection = downloadModelCollection();
+            }
+        }
+        return cachedModelCollection;
+    }
+
+    /**
+     * Download the model collection from the hugging face repo.
+     * This replaces any previously cached version.
+     * Usually, {@link #getModelCollection()} should be used instead, so that the model collection is only downloaded
+     * if it is not already cached.
+     * @return
+     */
+    public static WSInferModelCollection downloadModelCollection() {
+        cachedModelCollection = downloadModelCollectionImpl();
+        return cachedModelCollection;
+    }
+
+
+    private static WSInferModelCollection downloadModelCollectionImpl() {
         String json = null;
         try {
             URI uri = new URI("https://huggingface.co/datasets/kaczmarj/wsinfer-model-zoo-json/raw/main/wsinfer-zoo-registry.json");
