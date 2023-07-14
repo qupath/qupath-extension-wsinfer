@@ -1,4 +1,5 @@
 package qupath.ext.wsinfer.models;
+
 import java.util.Collections;
 import java.util.Map;
 

@@ -26,7 +26,7 @@ public class WSInferUtils {
 
     private static WSInferModelCollection cachedModelCollection;
 
-    public static void downloadURLToFile(URL url, File file) {
+    static void downloadURLToFile(URL url, File file) {
         ReadableByteChannel readableByteChannel = null;
         try {
             readableByteChannel = Channels.newChannel(url.openStream());
@@ -41,7 +41,7 @@ public class WSInferUtils {
         }
     }
 
-    public static String downloadJSON(URI uri) {
+    static String downloadJSON(URI uri) {
         HttpRequest request = HttpRequest.newBuilder(uri)
                 .GET()
                 .build();

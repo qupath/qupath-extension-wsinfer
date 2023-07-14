@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+/**
+ * Command to open the QuPath-WSInfer user interface.
+ */
 public class WSInferCommand implements Runnable {
 
     private static final Logger logger = LoggerFactory.getLogger(WSInferController.class);
