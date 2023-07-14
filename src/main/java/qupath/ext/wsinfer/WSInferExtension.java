@@ -11,7 +11,10 @@ import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.extensions.QuPathExtension;
 import qupath.lib.gui.prefs.PathPrefs;
 
-
+/**
+ * QuPath extension to run patch-based deep learning inference with WSInfer.
+ * See https://wsinfer.readthedocs.io for more info.
+ */
 public class WSInferExtension implements QuPathExtension {
 	
 	private final static Logger logger = LoggerFactory.getLogger(WSInferExtension.class);

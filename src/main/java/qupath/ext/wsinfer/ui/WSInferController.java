@@ -95,7 +95,10 @@ public class WSInferController {
         });
     }
 
-    public void run() {
+    /**
+     * Try to run inference on the current image using the current model and parameters.
+     */
+    public void runInference() {
         var imageData = QuPathGUI.getInstance().getImageData();
         if (imageData == null) {
             Dialogs.showErrorMessage("WSInfer plugin", "Cannot run WSInfer plugin without ImageData.");
