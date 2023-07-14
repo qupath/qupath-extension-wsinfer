@@ -2,7 +2,7 @@ package qupath.ext.wsinfer.models;
 
 import java.util.Map;
 
-public class Transform {
+public class WSInferTransform {
 
     private String name;
     private Map<String, Object> arguments;

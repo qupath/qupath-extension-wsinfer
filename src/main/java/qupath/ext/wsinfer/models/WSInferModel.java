@@ -19,7 +19,7 @@ public class WSInferModel {
     private final Logger logger = LoggerFactory.getLogger(WSInferModel.class);
 
     private String description;
-    private ModelConfiguration configuration;
+    private WSInferModelConfiguration configuration;
 
     @SerializedName("hf_repo_id")
     private String hfRepoId;
@@ -31,7 +31,7 @@ public class WSInferModel {
         return hfRepoId;
     }
 
-    public ModelConfiguration getConfiguration() {
+    public WSInferModelConfiguration getConfiguration() {
         return configuration;
     }
 
@@ -89,6 +89,6 @@ public class WSInferModel {
         } catch (IOException e) {
             logger.error("Cannot read file {}", cfFile, e);
         }
-        this.configuration = GsonTools.getInstance().fromJson(json, ModelConfiguration.class);
+        this.configuration = GsonTools.getInstance().fromJson(json, WSInferModelConfiguration.class);
     }
 }

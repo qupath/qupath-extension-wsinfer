@@ -17,6 +17,9 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.util.Objects;
 
+/**
+ * Utility class to help with working with WSInfer models.
+ */
 public class WSInferUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(WSInferUtils.class);
@@ -37,9 +40,9 @@ public class WSInferUtils {
     }
 
     public static String downloadJSON(URI uri) {
-        HttpRequest.Builder builder = HttpRequest.newBuilder(uri).GET();
-
-        HttpRequest request = builder.build();
+        HttpRequest request = HttpRequest.newBuilder(uri)
+                .GET()
+                .build();
         HttpResponse response = null;
         try {
             response = HttpClient.newHttpClient()
@@ -49,7 +52,6 @@ public class WSInferUtils {
         }
 
         int code = Objects.requireNonNull(response).statusCode();
-
         if (code == 200) {
             return (String) response.body();
         } else if (code == 304) {
