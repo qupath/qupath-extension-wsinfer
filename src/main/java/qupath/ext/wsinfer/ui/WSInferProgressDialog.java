@@ -49,6 +49,7 @@ class WSInferProgressDialog extends AnchorPane implements ProgressListener {
             logger.error("Cannot find FXML for class WSInferProgressDialog", e);
         }
         stage = new Stage();
+        stage.setResizable(false);
         stage.initOwner(owner);
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setScene(new Scene(this));
