@@ -31,13 +31,7 @@ import qupath.lib.scripting.QP;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +40,7 @@ import java.util.stream.Collectors;
 public class WSInfer {
 
     private static final Logger logger = LoggerFactory.getLogger(WSInfer.class);
+    private static final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 
     private static final String title = "WSInfer";
 
@@ -213,10 +208,9 @@ public class WSInfer {
 
             double completedTiles = 0;
             double totalTiles = tiles.size();
-            if (totalTiles == 1.0)
-                progressListener.updateProgress("Processing 1 tiles", completedTiles/totalTiles);
-            else
-                progressListener.updateProgress("Processing " + Math.round(totalTiles) + " tiles", completedTiles/totalTiles);
+            progressListener.updateProgress(
+                    String.format(resources.getString("ui.progress"), Math.round(completedTiles), Math.round(totalTiles)),
+                    completedTiles/totalTiles);
 
             try (Predictor<Image, Classifications> predictor = model.newPredictor()) {
                 var batchQueue = tileLoader.getBatchQueue();
@@ -248,12 +242,16 @@ public class WSInfer {
                             pathObject.setPathClass(PathClass.fromString(name));
                     }
                     completedTiles += inputs.size();
-                    progressListener.updateProgress("Processing " + Math.round(completedTiles) + " tiles", completedTiles/totalTiles);
+                    progressListener.updateProgress(
+                            String.format(resources.getString("ui.progress"), Math.round(completedTiles), Math.round(totalTiles)),
+                            completedTiles/totalTiles);
                 }
             }
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
-            progressListener.updateProgress("Completed " + Math.round(completedTiles) + " tiles", 1.0);
+            progressListener.updateProgress(
+                    String.format(resources.getString("ui.progress-completed"), Math.round(completedTiles), Math.round(totalTiles)),
+                    1.0);
 
             imageData.getHierarchy().fireObjectClassificationsChangedEvent(WSInfer.class, tiles);
             long durationSeconds = duration/1000;
