@@ -68,8 +68,6 @@ public class WSInferController {
         modelChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             forceRefreshButton.setDisable(false);
             currentRunner = runners.get(newValue);
-            WSInferModelHandler oldRunner = runners.get(oldValue);
-
             new Thread(() -> currentRunner.queueDownload(false)).start();
         });
 
