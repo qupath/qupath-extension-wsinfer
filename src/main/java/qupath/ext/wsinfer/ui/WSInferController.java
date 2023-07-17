@@ -48,9 +48,9 @@ public class WSInferController {
     private WSInferModelHandler currentRunner;
     private Stage measurementMapsStage;
 
-    private ExecutorService pool = Executors.newSingleThreadExecutor(ThreadTools.createThreadFactory("wsinfer", true));
+    private final ExecutorService pool = Executors.newSingleThreadExecutor(ThreadTools.createThreadFactory("wsinfer", true));
 
-    private ObjectProperty<WSInferTask> pendingTask = new SimpleObjectProperty<>();
+    private final ObjectProperty<WSInferTask> pendingTask = new SimpleObjectProperty<>();
 
     @FXML
     private void initialize() {
@@ -69,18 +69,8 @@ public class WSInferController {
             forceRefreshButton.setDisable(false);
             currentRunner = runners.get(newValue);
             WSInferModelHandler oldRunner = runners.get(oldValue);
-//            if (oldRunner != null) {
-//                oldRunner.modelIsReadyProperty().removeListener(this::changed);
-//            }
 
-            new Thread(() -> {
-                currentRunner.queueDownload(false);
-                if (currentRunner.modelIsReadyProperty().get()) {
-//                    changed(null, false, true);
-                } else {
-//                    currentRunner.modelIsReadyProperty().addListener(this::changed);
-                }
-            }).start();
+            new Thread(() -> currentRunner.queueDownload(false)).start();
         });
 
         // Disable the run button while a task is pending, or we have no model selected
@@ -134,7 +124,6 @@ public class WSInferController {
         new Thread(() -> {
             currentRunner.modelIsReadyProperty().set(false);
             currentRunner.queueDownload(true);
-//            currentRunner.modelIsReadyProperty().addListener(this::changed);
         }).start();
     }
 
