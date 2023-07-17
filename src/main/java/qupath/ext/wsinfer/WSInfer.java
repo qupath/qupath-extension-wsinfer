@@ -124,6 +124,21 @@ public class WSInfer {
      * @throws TranslateException
      */
     public static void runInference(ImageData<BufferedImage> imageData, WSInferModel wsiModel) throws InterruptedException, ModelNotFoundException, MalformedModelException, IOException, TranslateException {
+        runInference(imageData, wsiModel, new ProgressLogger(logger));
+    }
+
+    /**
+     * Run inference on the specified image data using the given model with a custom progress listener.
+     * @param imageData image data to run inference on (required)
+     * @param wsiModel model to use for inference (required)
+     * @param progressListener the progress listener to report what is happening (required)
+     * @throws InterruptedException
+     * @throws ModelNotFoundException
+     * @throws MalformedModelException
+     * @throws IOException
+     * @throws TranslateException
+     */
+    public static void runInference(ImageData<BufferedImage> imageData, WSInferModel wsiModel, ProgressListener progressListener) throws InterruptedException, ModelNotFoundException, MalformedModelException, IOException, TranslateException {
         Objects.requireNonNull(wsiModel, "Model cannot be null");
         if (imageData == null) {
             Dialogs.showNoImageError(title);
@@ -183,6 +198,8 @@ public class WSInfer {
             // Make a guess at a batch size currently... *must* be 1 for MPS
             // FIXME: Make batch size adjustable when using a GPU (or CPU?)
             int batchSize = isMPS(device) || !device.isGpu() ? 1 : 4;
+            if (device == Device.cpu())
+                batchSize = 4;
 
             var tileLoader = TileLoader.builder()
                     .batchSize(batchSize)
@@ -193,6 +210,13 @@ public class WSInfer {
                     .tiles(tiles)
                     .resizeTile(resize, resize)
                     .build();
+
+            double completedTiles = 0;
+            double totalTiles = tiles.size();
+            if (totalTiles == 1.0)
+                progressListener.updateProgress("Processing 1 tiles", completedTiles/totalTiles);
+            else
+                progressListener.updateProgress("Processing " + Math.round(totalTiles) + " tiles", completedTiles/totalTiles);
 
             try (Predictor<Image, Classifications> predictor = model.newPredictor()) {
                 var batchQueue = tileLoader.getBatchQueue();
@@ -223,18 +247,25 @@ public class WSInfer {
                         else
                             pathObject.setPathClass(PathClass.fromString(name));
                     }
+                    completedTiles += inputs.size();
+                    progressListener.updateProgress("Processing " + Math.round(completedTiles) + " tiles", completedTiles/totalTiles);
                 }
             }
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
+            progressListener.updateProgress("Completed " + Math.round(completedTiles) + " tiles", 1.0);
 
             imageData.getHierarchy().fireObjectClassificationsChangedEvent(WSInfer.class, tiles);
-            logger.info("Finished {} tiles in {} seconds ({} ms per tile)", nTiles, duration/1000, duration/nTiles);
+            long durationSeconds = duration/1000;
+            String seconds = durationSeconds == 1 ? "second" : "seconds";
+            logger.info("Finished {} tiles in {} {} ({} ms per tile)", nTiles, durationSeconds, seconds, duration/nTiles);
         } catch (InterruptedException e) {
             logger.error("Model inference interrupted {}", wsiModel.getName(), e);
+            progressListener.updateProgress("Inference interrupted!", 1.0);
             throw e;
         } catch (IOException | ModelNotFoundException | MalformedModelException | TranslateException e) {
             logger.error("Error running model {}", wsiModel.getName(), e);
+            progressListener.updateProgress("Inference failed!", 1.0);
             throw e;
         }
     }
