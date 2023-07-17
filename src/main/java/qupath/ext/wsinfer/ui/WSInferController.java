@@ -11,6 +11,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import qupath.ext.wsinfer.ProgressListener;
 import qupath.ext.wsinfer.WSInfer;
 import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.ext.wsinfer.models.WSInferModelCollection;
@@ -153,17 +154,28 @@ public class WSInferController {
 
         private final ImageData<BufferedImage> imageData;
         private final WSInferModel model;
+        private final ProgressListener progressListener;
 
         private WSInferTask(ImageData<BufferedImage> imageData, WSInferModel model) {
             this.imageData = imageData;
             this.model = model;
+            this.progressListener = new WSInferProgressDialog(QuPathGUI.getInstance().getStage(), e -> {
+                cancel(true);
+                e.consume();
+                // TODO: Figure out how to prompt... dialogs don't play nicely with modality,
+                // and it isn't possible to easily show a new dialog that doesn't 'fall below' the progress dialog
+//                if (Dialogs.showYesNoDialog("WSInfer". "Stop all running tasks?") {
+//                    cancel(true);
+//                    e.consume();
+//                }
+            });
         }
 
         @Override
         protected Void call() throws Exception {
             try {
                 Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), "Requesting inference for " + model.getName()));
-                WSInfer.runInference(imageData, model);
+                WSInfer.runInference(imageData, model, progressListener);
                 addToHistoryWorkflow(imageData, model.getName());
             } catch (InterruptedException e) {
                 Platform.runLater(() -> Dialogs.showErrorNotification(getTitle(), e.getLocalizedMessage()));
