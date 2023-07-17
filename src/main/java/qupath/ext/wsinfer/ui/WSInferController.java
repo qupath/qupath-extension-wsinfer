@@ -160,14 +160,10 @@ public class WSInferController {
             this.imageData = imageData;
             this.model = model;
             this.progressListener = new WSInferProgressDialog(QuPathGUI.getInstance().getStage(), e -> {
-                cancel(true);
-                e.consume();
-                // TODO: Figure out how to prompt... dialogs don't play nicely with modality,
-                // and it isn't possible to easily show a new dialog that doesn't 'fall below' the progress dialog
-//                if (Dialogs.showYesNoDialog("WSInfer". "Stop all running tasks?") {
-//                    cancel(true);
-//                    e.consume();
-//                }
+                if (Dialogs.showYesNoDialog("WSInfer", "Stop all running tasks?")) {
+                    cancel(true);
+                    e.consume();
+                }
             });
         }
 

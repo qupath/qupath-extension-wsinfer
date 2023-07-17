@@ -1,36 +1,59 @@
 package qupath.ext.wsinfer.ui;
 
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.ProgressBar;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.stage.Window;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.ProgressListener;
 
-/**
- * Implementation of {@link ProgressListener} that shows a JavaFX progress dialog.
- */
-class WSInferProgressDialog implements ProgressListener {
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
 
-    private Dialog<Void> dialog;
-    private ProgressBar progressBar = new ProgressBar();
+
+/**
+ * Implementation of {@link ProgressListener} that shows a JavaFX progress bar.
+ */
+class WSInferProgressDialog extends AnchorPane implements ProgressListener {
+
+    private static final Logger logger = LoggerFactory.getLogger(WSInferProgressDialog.class);
+    private final Stage stage;
+    @FXML
+    private ProgressBar progressBar;
+    @FXML
+    private Label progressLabel;
+    @FXML
+    private Button btnCancel;
 
     public WSInferProgressDialog(Window owner, EventHandler<ActionEvent> cancelHandler) {
-        dialog = new Dialog<>();
-        dialog.initOwner(owner);
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.getDialogPane().setPrefWidth(200);
-        dialog.setTitle("WSInfer");
-        dialog.getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL);
-        dialog.getDialogPane().setContent(progressBar);
-        if (cancelHandler != null) {
-            var btnCancel = (Button)dialog.getDialogPane().lookupButton(ButtonType.CANCEL);
-            btnCancel.setOnAction(cancelHandler);
+        URL url = getClass().getResource("progress_dialog.fxml");
+        ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
+        FXMLLoader loader = new FXMLLoader(url, resources);
+        loader.setRoot(this);
+        loader.setController(this);
+        try {
+            loader.load();
+        } catch (IOException e) {
+            logger.error("Cannot find FXML for class WSInferProgressDialog", e);
         }
+        stage = new Stage();
+        stage.initOwner(owner);
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setScene(new Scene(this));
+        stage.show();
+        btnCancel.setOnAction(cancelHandler);
     }
 
 
@@ -38,13 +61,14 @@ class WSInferProgressDialog implements ProgressListener {
     public void updateProgress(String message, Double progress) {
         if (Platform.isFxApplicationThread()) {
             if (message != null)
-                dialog.setHeaderText(message);
+                progressLabel.setText(message);
             if (progress != null) {
                 progressBar.setProgress(progress);
-                if (progress.doubleValue() >= 1.0)
-                    dialog.hide();
-                else
-                    dialog.show();
+                if (progress.doubleValue() >= 1.0) {
+                    stage.hide();
+                } else {
+                    stage.show();
+                }
             }
         } else {
             Platform.runLater(() -> updateProgress(message, progress));

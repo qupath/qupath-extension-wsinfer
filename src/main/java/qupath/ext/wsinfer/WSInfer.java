@@ -209,7 +209,7 @@ public class WSInfer {
             double completedTiles = 0;
             double totalTiles = tiles.size();
             progressListener.updateProgress(
-                    String.format(resources.getString("ui.progress"), Math.round(completedTiles), Math.round(totalTiles)),
+                    String.format(resources.getString("ui.processing-progress"), Math.round(completedTiles), Math.round(totalTiles)),
                     completedTiles/totalTiles);
 
             try (Predictor<Image, Classifications> predictor = model.newPredictor()) {
@@ -243,14 +243,14 @@ public class WSInfer {
                     }
                     completedTiles += inputs.size();
                     progressListener.updateProgress(
-                            String.format(resources.getString("ui.progress"), Math.round(completedTiles), Math.round(totalTiles)),
+                            String.format(resources.getString("ui.processing-progress"), Math.round(completedTiles), Math.round(totalTiles)),
                             completedTiles/totalTiles);
                 }
             }
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
             progressListener.updateProgress(
-                    String.format(resources.getString("ui.progress-completed"), Math.round(completedTiles), Math.round(totalTiles)),
+                    String.format(resources.getString("ui.processing-completed"), Math.round(completedTiles), Math.round(totalTiles)),
                     1.0);
 
             imageData.getHierarchy().fireObjectClassificationsChangedEvent(WSInfer.class, tiles);
