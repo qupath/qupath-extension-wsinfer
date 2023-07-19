@@ -1,0 +1,18 @@
+/* Title */
+.title {
+  -fx-font-size: 150%;
+  -fx-font-weight: bold;
+  -fx-fill: -fx-text-base-color;
+}
+
+/* Sub-title */
+.sub-title {
+  -fx-fill: -fx-text-base-color;
+  -fx-text-base-color: -fx-text-base-color;
+  -fx-opacity:0.6;
+}
+
+/* Regular Text */
+.text {
+    -fx-font-color: green;
+}

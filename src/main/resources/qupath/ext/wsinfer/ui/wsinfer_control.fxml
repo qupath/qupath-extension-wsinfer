@@ -1,14 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ChoiceBox?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="206.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
+<AnchorPane prefHeight="266.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
    <children>
-      <ChoiceBox fx:id="modelChoiceBox" layoutX="15.0" layoutY="15.0" />
-      <Button fx:id="runButton" layoutX="500.0" layoutY="15.0" onAction="#runInference" text="%ui.run-model" disable="true"/>
-      <Button fx:id="forceRefreshButton" layoutX="380.0" layoutY="15.0" mnemonicParsing="false" onAction="#forceRefresh" text="%ui.force-download" />
-      <Button layoutX="385.0" layoutY="50.0" mnemonicParsing="false" text="%ui.open-measurement-maps" onAction="#openMeasurementMaps"/>
+      <BorderPane prefHeight="293.0" prefWidth="500.0" stylesheets="@wsinferstyles.css">
+         <center>
+            <VBox alignment="CENTER" prefHeight="276.0" prefWidth="500.0" spacing="10.0" BorderPane.alignment="CENTER">
+               <children>
+                  <VBox alignment="CENTER" spacing="10.0">
+                     <children>
+                        <Label style="-fx-font-family: System; -fx-font-style: System Bold;" styleClass="title" text="WSInfer" />
+                        <Label styleClass="sub-title" text="Blazingly fast inference on whole slide images" />
+                     </children>
+                  </VBox>
+                  <Separator prefWidth="200.0" />
+                  <VBox alignment="CENTER" spacing="5.0">
+                     <children>
+                        <Label styleClass="regular" text="Model" />
+                        <HBox alignment="CENTER" spacing="10.0">
+                           <children>
+                              <ChoiceBox fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
+                              <Button fx:id="forceRefreshButton" mnemonicParsing="false" onAction="#forceRefresh" prefHeight="31.0" prefWidth="39.0" text="%ui.force-download" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+                  <Separator prefWidth="200.0" />
+                  <HBox alignment="CENTER">
+                     <children>
+                        <Button fx:id="runButton" disable="true" onAction="#runInference" prefHeight="31.0" prefWidth="252.0" text="%ui.run-model" />
+                     </children>
+                  </HBox>
+                  <Separator prefWidth="200.0" />
+                  <VBox alignment="CENTER">
+                     <children>
+                        <Label styleClass="regular" text="Results" />
+                        <HBox alignment="CENTER" prefHeight="83.0" prefWidth="490.0" spacing="10.0">
+                           <children>
+                              <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.open-measurement-maps" />
+                              <Button mnemonicParsing="false" prefHeight="31.0" prefWidth="34.0" text="Button" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </VBox>
+         </center>
+      </BorderPane>
    </children>
 </AnchorPane>
