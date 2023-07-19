@@ -3,55 +3,55 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="266.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
-   <children>
-      <BorderPane prefHeight="293.0" prefWidth="500.0" stylesheets="@wsinferstyles.css">
-         <center>
-            <VBox alignment="CENTER" prefHeight="276.0" prefWidth="500.0" spacing="10.0" BorderPane.alignment="CENTER">
+<BorderPane prefHeight="300.0" prefWidth="450.0" styleClass="wsinfer" stylesheets="@wsinferstyles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
+   <center>
+      <VBox prefHeight="276.0" prefWidth="500.0" alignment="CENTER">
+         <children>
+            <VBox styleClass="standard-spacing" alignment="CENTER">
                <children>
-                  <VBox alignment="CENTER" spacing="10.0">
+                  <Label alignment="CENTER" styleClass="title" text="%ui.wsinfer-title" />
+                  <Label alignment="CENTER" styleClass="sub-title" text="%ui.wsinfer-description">
+                     <font>
+                        <Font name="System" size="15.0" />
+                     </font></Label>
+               </children>
+            </VBox>
+            <Separator />
+            <VBox alignment="CENTER">
+               <children>
+                  <Label styleClass="regular" text="%ui.model" />
+                  <HBox alignment="CENTER" styleClass="standard-spacing">
                      <children>
-                        <Label style="-fx-font-family: System; -fx-font-style: System Bold;" styleClass="title" text="WSInfer" />
-                        <Label styleClass="sub-title" text="Blazingly fast inference on whole slide images" />
-                     </children>
-                  </VBox>
-                  <Separator prefWidth="200.0" />
-                  <VBox alignment="CENTER" spacing="5.0">
-                     <children>
-                        <Label styleClass="regular" text="Model" />
-                        <HBox alignment="CENTER" spacing="10.0">
-                           <children>
-                              <ChoiceBox fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
-                              <Button fx:id="forceRefreshButton" mnemonicParsing="false" onAction="#forceRefresh" prefHeight="31.0" prefWidth="39.0" text="%ui.force-download" />
-                           </children>
-                        </HBox>
-                     </children>
-                  </VBox>
-                  <Separator prefWidth="200.0" />
-                  <HBox alignment="CENTER">
-                     <children>
-                        <Button fx:id="runButton" disable="true" onAction="#runInference" prefHeight="31.0" prefWidth="252.0" text="%ui.run-model" />
+                        <ChoiceBox fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
+                        <Button fx:id="forceRefreshButton" mnemonicParsing="false" onAction="#forceRefresh" prefHeight="31.0" prefWidth="39.0" text="%ui.force-download" />
                      </children>
                   </HBox>
-                  <Separator prefWidth="200.0" />
-                  <VBox alignment="CENTER">
-                     <children>
-                        <Label styleClass="regular" text="Results" />
-                        <HBox alignment="CENTER" prefHeight="83.0" prefWidth="490.0" spacing="10.0">
-                           <children>
-                              <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.open-measurement-maps" />
-                              <Button mnemonicParsing="false" prefHeight="31.0" prefWidth="34.0" text="Button" />
-                           </children>
-                        </HBox>
-                     </children>
-                  </VBox>
                </children>
-               <padding>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </padding>
             </VBox>
-         </center>
-      </BorderPane>
-   </children>
-</AnchorPane>
+            <Separator />
+            <HBox styleClass="standard-spacing" alignment="CENTER">
+               <children>
+                  <Button fx:id="runButton" disable="true" onAction="#runInference" prefHeight="31.0" prefWidth="252.0" text="%ui.run-model" />
+               </children>
+            </HBox>
+            <Separator />
+            <VBox alignment="CENTER">
+               <children>
+                  <Label styleClass="regular" text="%ui.results" />
+                  <HBox alignment="CENTER" prefHeight="83.0" prefWidth="490.0" styleClass="standard-spacing">
+                     <children>
+                        <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.open-measurement-maps" />
+                        <Button mnemonicParsing="false" prefHeight="31.0" prefWidth="34.0" text="Button" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </VBox>
+   </center>
+   <padding>
+      <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
+   </padding>
+</BorderPane>

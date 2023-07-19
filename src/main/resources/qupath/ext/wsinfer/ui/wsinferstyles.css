@@ -1,18 +1,35 @@
 /* Title */
-.title {
+.wsinfer .title {
   -fx-font-size: 150%;
   -fx-font-weight: bold;
   -fx-fill: -fx-text-base-color;
+/*  -fx-font-style: bold;
+  -fx-font: System bold;*/
 }
 
 /* Sub-title */
-.sub-title {
+.wsinfer .sub-title {
   -fx-fill: -fx-text-base-color;
   -fx-text-base-color: -fx-text-base-color;
   -fx-opacity:0.6;
+  -fx-font-style: italic;
 }
 
-/* Regular Text */
-.text {
-    -fx-font-color: green;
+/* separator */
+.wsinfer .separator {
+  -fx-line-color: -fx-text-base-color;
+  -fx-padding: 5;
 }
+
+/* spacing - current use in HBox*/
+.standard-spacing {
+  -fx-spacing: 10;
+  -fx-padding: 5;
+}
+
+/* alignment */
+/*.standard-alignment {
+  -fx-alignment: center;
+  -fx-background-color: pink;
+}*/
+
