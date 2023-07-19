@@ -25,7 +25,11 @@
                   <HBox alignment="CENTER" styleClass="standard-spacing">
                      <children>
                         <ChoiceBox fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
-                        <Button fx:id="forceRefreshButton" mnemonicParsing="false" onAction="#forceRefresh" prefHeight="31.0" prefWidth="39.0" text="%ui.force-download" />
+                        <Button fx:id="forceRefreshButton" mnemonicParsing="false" onAction="#forceRefresh" prefHeight="31.0" prefWidth="39.0">
+                           <graphic>
+                           <Text styleClass="download-icon">&#xf019;</Text>
+                           </graphic>
+                        </Button>
                      </children>
                   </HBox>
                </children>
@@ -43,7 +47,8 @@
                   <HBox alignment="CENTER" prefHeight="83.0" prefWidth="490.0" styleClass="standard-spacing">
                      <children>
                         <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.open-measurement-maps" />
-                        <Button mnemonicParsing="false" prefHeight="31.0" prefWidth="34.0" text="Button" />
+                        <Button fx:id="annotationsToggle" onAction="#toggleFillAnnotations" mnemonicParsing="false" prefHeight="31.0" prefWidth="34.0">
+                        </Button>
                      </children>
                   </HBox>
                </children>

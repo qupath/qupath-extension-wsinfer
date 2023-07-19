@@ -3,8 +3,6 @@
   -fx-font-size: 150%;
   -fx-font-weight: bold;
   -fx-fill: -fx-text-base-color;
-/*  -fx-font-style: bold;
-  -fx-font: System bold;*/
 }
 
 /* Sub-title */
@@ -27,9 +25,15 @@
   -fx-padding: 5;
 }
 
-/* alignment */
-/*.standard-alignment {
-  -fx-alignment: center;
-  -fx-background-color: pink;
-}*/
+/*download button*/
+.download-btn {
+    -fx-background-image: url("icons/download.png");
+}
+
+.download-icon {
+    -fx-font-family: FontAwesome;
+    -fx-font-size: 14px;
+    -fx-fill: -fx-text-base-color;
+
+}
 

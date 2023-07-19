@@ -5,6 +5,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -20,8 +21,10 @@ import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
 import qupath.lib.gui.dialogs.Dialogs;
+import qupath.lib.gui.viewer.OverlayOptions;
 import qupath.lib.images.ImageData;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
+import qupath.lib.scripting.QP;
 
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
@@ -44,6 +47,9 @@ public class WSInferController {
     private Button runButton;
     @FXML
     private Button forceRefreshButton;
+
+    @FXML
+    private Button fillAnnotaions;
 
     private WSInferModelHandler currentRunner;
     private Stage measurementMapsStage;
@@ -144,6 +150,18 @@ public class WSInferController {
             measurementMapsStage = Commands.createMeasurementMapDialog(QuPathGUI.getInstance());
         }
         measurementMapsStage.show();
+    }
+
+    public QuPathGUI qupath;
+    @FXML
+    public void toggleFillAnnotations(ActionEvent actionEvent) {
+//        if getDetectionObjects() != null {
+//
+//        }
+        OverlayOptions overlayOptions = qupath.getOverlayOptions();
+        var actionManager = qupath.getDefaultActions();
+        overlayOptions.getFillDetections();
+//        actionManager.FILL_DETECTIONS;
     }
 
 
