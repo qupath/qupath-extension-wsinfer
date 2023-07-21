@@ -1,16 +1,15 @@
 package qupath.ext.wsinfer.ui;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -50,11 +49,11 @@ class WSInferProgressDialog extends AnchorPane implements ProgressListener {
         }
         progressLabel.setLabelFor(progressBar);
         stage = new Stage();
+        stage.setTitle(resources.getString("title"));
         stage.setResizable(false);
         stage.initOwner(owner);
         stage.initModality(Modality.APPLICATION_MODAL);
         stage.setScene(new Scene(this));
-        stage.show();
         btnCancel.setOnAction(cancelHandler);
     }
 
