@@ -9,7 +9,9 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ToggleButton;
 import javafx.stage.Stage;
+import org.controlsfx.control.action.ActionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.ProgressListener;
@@ -49,7 +51,7 @@ public class WSInferController {
     private Button forceRefreshButton;
 
     @FXML
-    private Button fillAnnotaions;
+    private ToggleButton annotationsToggle;
 
     private WSInferModelHandler currentRunner;
     private Stage measurementMapsStage;
@@ -68,6 +70,9 @@ public class WSInferController {
             runners.put(key, runner);
             modelChoiceBox.getItems().add(key);
         }
+
+        var qupath = QuPathGUI.getInstance();
+        configureFillDetectionsButton(qupath);
 
         forceRefreshButton.setDisable(true);
 
@@ -89,6 +94,13 @@ public class WSInferController {
             }
         });
     }
+
+    private void configureFillDetectionsButton(QuPathGUI qupath) {
+        var defaultActions = qupath.getDefaultActions();
+        var actionFillDetections = defaultActions.FILL_DETECTIONS;
+        ActionUtils.configureButton(actionFillDetections, annotationsToggle);
+    }
+
 
     /**
      * Try to run inference on the current image using the current model and parameters.

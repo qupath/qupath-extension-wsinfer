@@ -47,8 +47,8 @@
                   <HBox alignment="CENTER" prefHeight="83.0" prefWidth="490.0" styleClass="standard-spacing">
                      <children>
                         <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.open-measurement-maps" />
-                        <Button fx:id="annotationsToggle" onAction="#toggleFillAnnotations" mnemonicParsing="false" prefHeight="31.0" prefWidth="34.0">
-                        </Button>
+                        <ToggleButton fx:id="annotationsToggle" onAction="#toggleFillAnnotations" mnemonicParsing="false" prefHeight="31.0" prefWidth="34.0">
+                        </ToggleButton>
                      </children>
                   </HBox>
                </children>
