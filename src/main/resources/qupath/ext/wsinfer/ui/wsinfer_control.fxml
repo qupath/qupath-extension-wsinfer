@@ -5,20 +5,22 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<BorderPane prefHeight="300.0" prefWidth="450.0" styleClass="wsinfer" stylesheets="@wsinferstyles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
+<BorderPane prefHeight="250.0" prefWidth="550.0" styleClass="wsinfer" stylesheets="@wsinferstyles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
    <center>
-      <VBox prefHeight="276.0" prefWidth="500.0" alignment="CENTER">
+<!--  Main vertical box framework-->
+      <VBox alignment="CENTER" prefHeight="276.0" prefWidth="500.0">
          <children>
-            <VBox styleClass="standard-spacing" alignment="CENTER">
+<!--        **********************Title section**********************-->
+            <VBox alignment="CENTER" styleClass="standard-spacing">
                <children>
-                  <Label alignment="CENTER" styleClass="title" text="%ui.wsinfer-title" />
-                  <Label alignment="CENTER" styleClass="sub-title" text="%ui.wsinfer-description">
-                     <font>
-                        <Font name="System" size="15.0" />
-                     </font></Label>
+<!--                  <Label alignment="CENTER" styleClass="title" text="%ui.wsinfer-title" />-->
+<!--                  <Label alignment="CENTER" styleClass="sub-title" text="%ui.wsinfer-description" />-->
+                  <Label alignment="CENTER" styleClass="sub-title" text="%ui.intro.wsinfer-docs" />
                </children>
             </VBox>
             <Separator />
+
+<!--        **********************Models**********************-->
             <VBox alignment="CENTER">
                <children>
                   <Label styleClass="regular" text="%ui.model" />
@@ -27,7 +29,7 @@
                         <ChoiceBox fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
                         <Button fx:id="forceRefreshButton" mnemonicParsing="false" onAction="#forceRefresh" prefHeight="31.0" prefWidth="39.0">
                            <graphic>
-                           <Text styleClass="download-icon">&#xf019;</Text>
+                           <Text styleClass="download-icon"></Text>
                            </graphic>
                         </Button>
                      </children>
@@ -35,22 +37,59 @@
                </children>
             </VBox>
             <Separator />
-            <HBox styleClass="standard-spacing" alignment="CENTER">
+
+<!--        **********************Selectionsn**********************-->
+            <VBox alignment="CENTER" styleClass="standard-spacing">
                <children>
-                  <Button fx:id="runButton" disable="true" onAction="#runInference" prefHeight="31.0" prefWidth="252.0" text="%ui.run-model" />
+                   <VBox alignment="CENTER" styleClass="standard-spacing">
+                       <Label styleClass="regular" text="%ui.selection.label" />
+                       <Label styleClass="sub-title" text="%ui.selection.sub-label" />
+                   </VBox>
+                  <HBox alignment="CENTER" styleClass="standard-spacing">
+                     <children>
+                        <Button mnemonicParsing="false" text="%ui.selection.all-annotations" />
+                        <Button layoutX="10.0" layoutY="10.0" mnemonicParsing="false" text="%ui.selection.all-detections" />
+                     </children>
+                  </HBox>
                </children>
-            </HBox>
+            </VBox>
+            <Separator prefWidth="200.0" />
+
+ <!--        **********************Run**********************-->
+             <VBox alignment="CENTER" styleClass="standard-spacing">
+                <HBox alignment="CENTER" styleClass="standard-spacing">
+                   <children>
+                      <Button fx:id="runButton" disable="true" onAction="#runInference" prefHeight="31.0" prefWidth="252.0" text="%ui.run" />
+                   </children>
+                </HBox>
+                 <Label styleClass="error-message" text="%ui.error.no-selection" />
+                 <Label styleClass="error-message" text="%ui.error.no-model" />
+             </VBox>
             <Separator />
+
+<!--        **********************Results**********************-->
             <VBox alignment="CENTER">
                <children>
                   <Label styleClass="regular" text="%ui.results" />
-                  <HBox alignment="CENTER" prefHeight="83.0" prefWidth="490.0" styleClass="standard-spacing">
-                     <children>
-                        <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.open-measurement-maps" />
-                        <Button fx:id="annotationsToggle" onAction="#toggleFillAnnotations" mnemonicParsing="false" prefHeight="31.0" prefWidth="34.0">
-                        </Button>
-                     </children>
-                  </HBox>
+                   <VBox alignment="CENTER" styleClass="standard-spacing">
+                       <children>
+                       <HBox alignment="CENTER" styleClass="standard-spacing">
+                           <children>
+                               <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.results.open-measurement-maps" />
+                               <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.results.open-results" />
+                           </children>
+                       </HBox>
+                           <HBox alignment="CENTER"  styleClass="standard-spacing">
+                             <children>
+                                <Button fx:id="annotationsToggle" mnemonicParsing="false" onAction="#toggleFillAnnotations" prefHeight="31.0" prefWidth="34.0" />
+                                 <Button fx:id="annotationsToggle2" mnemonicParsing="false" onAction="#toggleFillAnnotations" prefHeight="31.0" prefWidth="34.0" />
+                                 <Button fx:id="annotationsToggle3" mnemonicParsing="false" onAction="#toggleFillAnnotations" prefHeight="31.0" prefWidth="34.0" />
+                             </children>
+                          </HBox>
+                        <Slider maxWidth="200.0" prefHeight="19.0" prefWidth="200.0" />
+
+                       </children>
+                   </VBox>
                </children>
             </VBox>
          </children>

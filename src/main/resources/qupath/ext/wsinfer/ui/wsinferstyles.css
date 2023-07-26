@@ -13,6 +13,14 @@
   -fx-font-style: italic;
 }
 
+/* Error-message */
+.wsinfer .error-message {
+  -fx-fill: -qp-script-text-color;
+  -fx-text-base-color: -qp-script-text-color;
+  -fx-opacity:0.6;
+  -fx-font-style: italic;
+}
+
 /* separator */
 .wsinfer .separator {
   -fx-line-color: -fx-text-base-color;
