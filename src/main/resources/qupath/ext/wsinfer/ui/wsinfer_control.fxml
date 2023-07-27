@@ -81,9 +81,9 @@
                        </HBox>
                            <HBox alignment="CENTER"  styleClass="standard-spacing">
                              <children>
-                                 <Button fx:id="annotationsToggle1" mnemonicParsing="false" onAction="#toggleFillAnnotations" prefHeight="31.0" prefWidth="34.0" />
-                                 <Button fx:id="annotationsToggle2" mnemonicParsing="false" onAction="#toggleFillAnnotations" prefHeight="31.0" prefWidth="34.0" />
-                                 <Button fx:id="annotationsToggle3" mnemonicParsing="false" onAction="#toggleFillAnnotations" prefHeight="31.0" prefWidth="34.0" />
+                                 <ToggleButton fx:id="annotationsToggle" mnemonicParsing="false" onAction="#toggleFillAnnotations" prefHeight="31.0" prefWidth="34.0" />
+                                 <ToggleButton fx:id="annotationsToggle2" mnemonicParsing="false" onAction="#toggleFillAnnotations" prefHeight="31.0" prefWidth="34.0" />
+                                 <ToggleButton fx:id="annotationsToggle3" mnemonicParsing="false" onAction="#toggleFillAnnotations" prefHeight="31.0" prefWidth="34.0" />
                              </children>
                           </HBox>
                         <Slider maxWidth="200.0" prefHeight="19.0" prefWidth="200.0" />
