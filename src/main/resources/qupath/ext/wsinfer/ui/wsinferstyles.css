@@ -15,8 +15,7 @@
 
 /* Error-message */
 .error-message {
-  -fx-fill: red;
-  -fx-text-base-color: yellow;
+  -fx-text-fill: red;
   -fx-opacity:0.6;
   -fx-background:green;
   -fx-font-style: italic;
