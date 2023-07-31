@@ -2,13 +2,12 @@
 .wsinfer-title {
   -fx-font-size: 150%;
   -fx-font-weight: bold;
-  -fx-fill: -fx-text-base-color;
+  -fx-text-fill: -fx-text-base-color;
 }
 
 /* Sub-title */
 .wsinfer-sub-title {
-  -fx-fill: -fx-text-base-color;
-  -fx-text-base-color: -fx-text-base-color;
+  -fx-text-fill: -fx-text-base-color;
   -fx-opacity:0.6;
   -fx-font-style: italic;
 }
