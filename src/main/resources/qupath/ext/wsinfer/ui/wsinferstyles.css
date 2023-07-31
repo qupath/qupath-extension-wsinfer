@@ -1,12 +1,12 @@
 /* Title */
-.wsinfer .title {
+.wsinfer-title {
   -fx-font-size: 150%;
   -fx-font-weight: bold;
   -fx-fill: -fx-text-base-color;
 }
 
 /* Sub-title */
-.wsinfer .sub-title {
+.wsinfer-sub-title {
   -fx-fill: -fx-text-base-color;
   -fx-text-base-color: -fx-text-base-color;
   -fx-opacity:0.6;
@@ -14,24 +14,28 @@
 }
 
 /* Error-message */
-.wsinfer .error-message {
-  -fx-fill: -qp-script-error-color;
-  -fx-text-base-color: -qp-script-error-color;
+.error-message {
+  -fx-fill: red;
+  -fx-text-base-color: yellow;
   -fx-opacity:0.6;
+  -fx-background:green;
   -fx-font-style: italic;
 }
 
 /* separator */
 .wsinfer .separator {
   -fx-line-color: -fx-text-base-color;
-  -fx-padding: 5;
+  -fx-padding: 15;
 }
 
 /* spacing - current use in HBox*/
 .standard-spacing {
-  -fx-spacing: 10;
-  -fx-padding: 5;
+  -fx-spacing: 7.5;
 }
+
+.standard-padding {
+  -fx-padding: 5;
+  }
 
 /*download button*/
 .download-btn {
@@ -42,6 +46,5 @@
     -fx-font-family: FontAwesome;
     -fx-font-size: 14px;
     -fx-fill: -fx-text-base-color;
-
 }
 

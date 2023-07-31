@@ -26,7 +26,6 @@ import qupath.lib.gui.dialogs.Dialogs;
 import qupath.lib.gui.viewer.OverlayOptions;
 import qupath.lib.images.ImageData;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
-import qupath.lib.scripting.QP;
 
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
@@ -43,15 +42,23 @@ public class WSInferController {
 
     private static final Logger logger = LoggerFactory.getLogger(WSInferController.class);
 
+    public QuPathGUI qupath;
     @FXML
     private ChoiceBox<String> modelChoiceBox;
     @FXML
     private Button runButton;
     @FXML
     private Button forceRefreshButton;
+    @FXML
+    private ChoiceBox<String> hardwareChoiceBox;
+    @FXML
+    private ToggleButton toggleDetectionFill;
 
     @FXML
-    private ToggleButton annotationsToggle;
+    private ToggleButton toggleDetections;
+
+    @FXML
+    private ToggleButton toggleAnnotations;
 
     private WSInferModelHandler currentRunner;
     private Stage measurementMapsStage;
@@ -59,6 +66,9 @@ public class WSInferController {
     private final ExecutorService pool = Executors.newSingleThreadExecutor(ThreadTools.createThreadFactory("wsinfer", true));
 
     private final ObjectProperty<WSInferTask> pendingTask = new SimpleObjectProperty<>();
+
+    private String[] hardwareOptions = {"CPU", "GPU", "MPS"};
+
 
     @FXML
     private void initialize() {
@@ -73,6 +83,8 @@ public class WSInferController {
 
         var qupath = QuPathGUI.getInstance();
         configureFillDetectionsButton(qupath);
+        configureDetectionsButton(qupath);
+        configureAnnotationsButton(qupath);
 
         forceRefreshButton.setDisable(true);
 
@@ -81,6 +93,8 @@ public class WSInferController {
             currentRunner = runners.get(newValue);
             new Thread(() -> currentRunner.queueDownload(false)).start();
         });
+
+        hardwareChoiceBox.getItems().addAll(hardwareOptions);
 
         // Disable the run button while a task is pending, or we have no model selected
         runButton.disableProperty().bind(
@@ -98,9 +112,16 @@ public class WSInferController {
     private void configureFillDetectionsButton(QuPathGUI qupath) {
         var defaultActions = qupath.getDefaultActions();
         var actionFillDetections = defaultActions.FILL_DETECTIONS;
-        ActionUtils.configureButton(actionFillDetections, annotationsToggle);
+        ActionUtils.configureButton(actionFillDetections, toggleDetectionFill);
     }
 
+    private void configureDetectionsButton(QuPathGUI qupath) {
+//TODO
+    }
+
+    private void configureAnnotationsButton(QuPathGUI qupath) {
+//TODO
+    }
 
     /**
      * Try to run inference on the current image using the current model and parameters.
@@ -151,18 +172,22 @@ public class WSInferController {
         measurementMapsStage.show();
     }
 
-    public QuPathGUI qupath;
     @FXML
-    public void toggleFillAnnotations(ActionEvent actionEvent) {
-//        if getDetectionObjects() != null {
-//
-//        }
+    public void toggleFillDetections(ActionEvent actionEvent) {
         OverlayOptions overlayOptions = qupath.getOverlayOptions();
         var actionManager = qupath.getDefaultActions();
         overlayOptions.getFillDetections();
-//        actionManager.FILL_DETECTIONS;
     }
 
+    @FXML
+    public void toggleDetections(ActionEvent actionEvent) {
+//TODO
+    }
+
+    @FXML
+    public void toggleAnnotations(ActionEvent actionEvent) {
+//TODO
+    }
 
     /**
      * Wrapper for an inference task, which can be submitted to the thread pool.

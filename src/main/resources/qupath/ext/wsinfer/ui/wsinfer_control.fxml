@@ -1,108 +1,119 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import org.controlsfx.control.*?>
 
-<ScrollPane fitToHeight="true" fitToWidth="true" prefHeight="600" prefWidth="300" stylesheets="@wsinferstyles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
-<!--<BorderPane prefHeight="250.0" prefWidth="550.0" styleClass="wsinfer" stylesheets="@wsinferstyles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">-->
-<!--    <AnchorPane id="Content">-->
-        <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-            <!-- Setting maxHeight="Infinity" to all makes them all grow as we want, but then they get spaces between, when collapsed (so we do it in code) -->
-            <TitledPane fx:id="pane1" animated="false" VBox.vgrow="ALWAYS" text="Processing">
-                <VBox alignment="CENTER" >
-                    <children>
-                        <!--        **********************Title section**********************-->
-                        <VBox alignment="CENTER" styleClass="standard-spacing">
-                            <children>
-                                <Label alignment="CENTER" styleClass="sub-title" wrapText="true" text="%ui.intro.wsinfer-docs" />
-                            </children>
-                        </VBox>
-                        <Separator />
+<!--</BorderPane>-->
 
-                        <!--        **********************Models**********************-->
-                        <VBox alignment="CENTER">
-                            <children>
-                                <Label styleClass="regular" text="%ui.model" />
-                                <HBox alignment="CENTER" styleClass="standard-spacing">
-                                    <children>
-                                        <ChoiceBox fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
-                                        <Button fx:id="forceRefreshButton" mnemonicParsing="false" onAction="#forceRefresh" prefHeight="31.0" prefWidth="39.0">
-                                            <graphic>
-                                                <Text styleClass="download-icon"></Text>
-                                            </graphic>
-                                        </Button>
-                                    </children>
-                                </HBox>
-                            </children>
-                        </VBox>
-                        <Separator />
-
-                        <!--        **********************Selectionsn**********************-->
-                        <VBox alignment="CENTER" styleClass="standard-spacing">
-                            <children>
-                                <VBox alignment="CENTER" styleClass="standard-spacing">
-                                    <Label styleClass="regular" text="%ui.selection.label" />
-                                    <Label styleClass="sub-title" text="%ui.selection.sub-label" />
-                                </VBox>
-                                <HBox alignment="CENTER" styleClass="standard-spacing">
-                                    <children>
-                                        <Button mnemonicParsing="false" text="%ui.selection.all-annotations" />
-                                        <Button layoutX="10.0" layoutY="10.0" mnemonicParsing="false" text="%ui.selection.all-detections" />
-                                    </children>
-                                </HBox>
-                            </children>
-                        </VBox>
-                        <Separator prefWidth="200.0" />
-
-                        <!--        **********************Run**********************-->
-                        <VBox alignment="CENTER" styleClass="standard-spacing">
-                            <HBox alignment="CENTER" styleClass="standard-spacing">
+<ScrollPane fitToHeight="true" fitToWidth="true" prefWidth="320" stylesheets="@wsinferstyles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
+    <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <TitledPane fx:id="pane1" animated="false" text="Processing" VBox.vgrow="ALWAYS">
+            <VBox alignment="TOP_CENTER" styleClass="standard-spacing ">
+                <children>
+                    <!--        **********************Models**********************-->
+                    <VBox alignment="CENTER">
+                        <children>
+                            <Label styleClass="regular" text="%ui.model" />
+                            <HBox alignment="CENTER" styleClass="standard-spacing standard-padding">
                                 <children>
-                                    <Button fx:id="runButton" disable="true" onAction="#runInference" prefHeight="31.0" prefWidth="252.0" text="%ui.run" />
+                                    <ChoiceBox fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
+                                    <Button fx:id="forceRefreshButton" mnemonicParsing="false" onAction="#forceRefresh" prefHeight="31.0" prefWidth="39.0">
+                                        <graphic>
+                                            <Text styleClass="download-icon"></Text>
+                                        </graphic>
+                                    </Button>
                                 </children>
                             </HBox>
-                            <Label styleClass="error-message" text="%ui.error.no-selection" />
-                            <Label styleClass="error-message" text="%ui.error.no-model" />
-                        </VBox>
-                    </children>
-                </VBox>
-            </TitledPane>
+                        </children>
+                    </VBox>
+                    <Separator />
 
-            <TitledPane fx:id="pane2" animated="false" VBox.vgrow="ALWAYS" expanded="false" maxHeight="Infinity" text="Results">
-                <!--        **********************Results**********************-->
-                <VBox alignment="CENTER">
-                    <children>
-                        <Label styleClass="regular" text="%ui.results" />
-                        <VBox alignment="CENTER" styleClass="standard-spacing">
-                            <children>
-                                <VBox alignment="CENTER" styleClass="standard-spacing">
-                                    <children>
-                                        <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.results.open-measurement-maps" />
-                                        <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.results.open-results" />
-                                    </children>
-                                </VBox>
-                                <HBox alignment="CENTER"  styleClass="standard-spacing">
-                                    <children>
-                                        <ToggleButton fx:id="annotationsToggle" mnemonicParsing="false" onAction="#toggleFillAnnotations" prefHeight="31.0" prefWidth="34.0" />
-                                        <ToggleButton fx:id="annotationsToggle2" mnemonicParsing="false" onAction="#toggleFillAnnotations" prefHeight="31.0" prefWidth="34.0" />
-                                        <ToggleButton fx:id="annotationsToggle3" mnemonicParsing="false" onAction="#toggleFillAnnotations" prefHeight="31.0" prefWidth="34.0" />
-                                    </children>
+                    <!--        **********************Selections**********************-->
+                    <VBox alignment="CENTER" styleClass="standard-spacing standard-padding">
+                        <children>
+                            <VBox alignment="CENTER" styleClass="standard-spacing">
+                                <Label styleClass="regular" text="%ui.selection.label" />
+                                <Label styleClass="wsinfer-sub-title" text="%ui.selection.alt" />
+                                <HBox alignment="CENTER" styleClass="standard-spacing">
+                                   <children>
+                                      <Label styleClass="regular" text="%ui.selection.sub-label" />
+                                       <SegmentedButton fx:id="segButton" maxWidth="500">
+                                           <buttons>
+                                               <ToggleButton fx:id="selectAllAnnotations" text="%ui.selection.all-annotations" />
+                                               <ToggleButton fx:id="selectAllDetections" text="%ui.selection.all-detections" />
+                                           </buttons>
+                                       </SegmentedButton>
+                                   </children>
                                 </HBox>
-                                <Slider maxWidth="200.0" prefHeight="19.0" prefWidth="200.0" />
-                            </children>
-                        </VBox>
-                    </children>
-                </VBox>
-            </TitledPane>
-        </VBox>
-<!--        <padding>-->
-<!--            <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />-->
-<!--        </padding>-->
-<!--    </AnchorPane>-->
-</ScrollPane>
-<!--</BorderPane>-->
+                            </VBox>
+                        </children>
+                    </VBox>
+                    <Separator prefWidth="200.0" />
 
-<!--<BorderPane prefHeight="250.0" prefWidth="550.0" styleClass="wsinfer" stylesheets="@wsinferstyles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">-->
-<!--</BorderPane>-->
+                    <!--        **********************Run**********************-->
+                    <VBox alignment="CENTER" styleClass="standard-spacing standard-padding">
+                        <HBox alignment="CENTER" styleClass="standard-spacing">
+                            <children>
+                                <Button fx:id="runButton" disable="true" onAction="#runInference" prefHeight="31.0" prefWidth="252.0" text="%ui.run" />
+                            </children>
+                        </HBox>
+                        <Label styleClass="error-message" text="%ui.error.no-selection" />
+                        <Label styleClass="error-message" text="%ui.error.no-model" />
+                    </VBox>
+                </children>
+            </VBox>
+        </TitledPane>
+
+        <TitledPane fx:id="pane2" animated="false" expanded="false" text="GPU Options" VBox.vgrow="ALWAYS">
+            <VBox alignment="TOP_CENTER" styleClass="standard-spacing ">
+                <children>
+                   <HBox alignment="CENTER">
+                      <children>
+                          <Label styleClass="regular" text="%ui.hardware.label" />
+                          <ChoiceBox fx:id="hardwareChoiceBox">
+                              <items>
+                              </items>
+                          </ChoiceBox>
+                      </children>
+                   </HBox>
+                    <SegmentedButton fx:id="hardwareButton">
+                        <buttons>
+                            <ToggleButton fx:id="cup" text="%ui.hardware.cpu" />
+                            <ToggleButton fx:id="gpu" text="%ui.hardware.gpu" />
+                            <ToggleButton fx:id="mps" text="%ui.hardware.mps" />
+                        </buttons>
+                    </SegmentedButton>
+                </children>
+            </VBox>
+        </TitledPane>
+
+        <TitledPane fx:id="pane3" animated="false" maxHeight="Infinity" text="Results Viewing Tools" VBox.vgrow="ALWAYS">
+            <!--        **********************Results**********************-->
+            <VBox alignment="TOP_CENTER" styleClass="standard-spacing standard-padding">
+                <children>
+<!--                    <Label styleClass="regular" text="%ui.results" />-->
+                    <VBox alignment="CENTER" styleClass="standard-spacing">
+                        <children>
+                            <VBox alignment="CENTER" styleClass="standard-spacing">
+                                <children>
+                                    <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.results.open-measurement-maps" />
+                                    <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.results.open-results" />
+                                </children>
+                            </VBox>
+                            <HBox alignment="CENTER" styleClass="standard-spacing">
+                                <children>
+                                    <ToggleButton fx:id="toggleDetectionFill" maxWidth="10" mnemonicParsing="false" onAction="#toggleFillDetections" />
+                                    <ToggleButton fx:id="toggleDetection" mnemonicParsing="false" onAction="#toggleDetections" />
+                                    <ToggleButton fx:id="toggleAnnotation" mnemonicParsing="false" onAction="#toggleAnnotations" />
+                                </children>
+                            </HBox>
+                            <Slider maxWidth="200.0" prefHeight="19.0" prefWidth="200.0" />
+                        </children>
+                    </VBox>
+                </children>
+            </VBox>
+        </TitledPane>
+    </VBox>
+</ScrollPane>
