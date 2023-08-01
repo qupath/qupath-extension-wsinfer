@@ -7,7 +7,7 @@
 
 <!--</BorderPane>-->
 
-<ScrollPane fitToHeight="true" fitToWidth="true" prefWidth="320" stylesheets="@wsinferstyles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
+<ScrollPane fitToHeight="true" fitToWidth="true" prefWidth="330" stylesheets="@wsinferstyles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
     <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
 <!--    Processing Pane************************************************************-->
         <TitledPane fx:id="pane1" animated="false" text="%ui.processing.pane" VBox.vgrow="ALWAYS">
@@ -16,7 +16,7 @@
                     <!-- **********************Models**********************-->
                     <VBox alignment="CENTER">
                         <children>
-                            <Label styleClass="regular" text="%ui.model"/>
+                            <Label styleClass="regular" text="%ui.model" />
                             <HBox alignment="CENTER" styleClass="standard-spacing standard-padding">
                                 <children>
                                     <ChoiceBox fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
@@ -66,45 +66,65 @@
                 </children>
             </VBox>
         </TitledPane>
-<!--    Hardware Pane************************************************************-->
-        <TitledPane fx:id="pane2" animated="false" expanded="false" text="%ui.hardware.pane" VBox.vgrow="ALWAYS">
-            <VBox alignment="TOP_CENTER" styleClass="standard-spacing ">
-                <children>
-                   <HBox alignment="CENTER">
-                      <children>
-                          <Label styleClass="regular" text="%ui.hardware.label" />
-                          <ChoiceBox fx:id="hardwareChoiceBox">
-                              <items>
-                              </items>
-                          </ChoiceBox>
-                      </children>
-                   </HBox>
-                </children>
-            </VBox>
-        </TitledPane>
+
 <!--    Results Pane************************************************************-->
-        <TitledPane fx:id="pane3" animated="false" maxHeight="Infinity" text="%ui.results.pane" VBox.vgrow="ALWAYS">
+        <TitledPane fx:id="pane2" animated="false" text="%ui.results.pane" VBox.vgrow="ALWAYS">
             <!--**********************Results**********************-->
             <VBox alignment="TOP_CENTER" styleClass="standard-spacing standard-padding">
                 <children>
                     <VBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
-                            <VBox alignment="CENTER" styleClass="standard-spacing">
+                            <HBox alignment="CENTER" styleClass="standard-spacing">
                                 <children>
                                     <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.results.open-measurement-maps" />
                                     <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.results.open-results" />
                                 </children>
-                            </VBox>
+                            </HBox>
                             <HBox alignment="CENTER" styleClass="standard-spacing">
                                 <children>
-                                    <ToggleButton fx:id="toggleDetectionFill" mnemonicParsing="false" onAction="#toggleFillDetections" />
-                                    <ToggleButton fx:id="toggleDetections" mnemonicParsing="false" onAction="#toggleDetections" />
                                     <ToggleButton fx:id="toggleAnnotations" mnemonicParsing="false" onAction="#toggleAnnotations" />
+                                    <ToggleButton fx:id="toggleDetections" mnemonicParsing="false" onAction="#toggleDetections" />
+                                    <ToggleButton fx:id="toggleDetectionFill" mnemonicParsing="false" onAction="#toggleFillDetections" />
                                 </children>
                             </HBox>
-                            <Slider maxWidth="200.0" prefHeight="19.0" prefWidth="200.0" />
+                            <VBox alignment="CENTER" styleClass="standard-spacing">
+                                <Label styleClass="regular" text="%ui.results.slider" />
+                                <Slider maxWidth="200.0" prefHeight="19.0" prefWidth="200.0" />
+                            </VBox>
                         </children>
                     </VBox>
+                </children>
+            </VBox>
+        </TitledPane>
+
+        <!--    Hardware Pane************************************************************-->
+        <TitledPane fx:id="pane3" animated="false" expanded="false" maxHeight="Infinity" text="%ui.hardware.pane" VBox.vgrow="ALWAYS">
+            <VBox alignment="TOP_CENTER" spacing="7.5" styleClass="standard-padding">
+                <children>
+                    <HBox alignment="CENTER" styleClass="standard-spacing">
+                        <children>
+                            <Label styleClass="regular" text="%ui.hardware.label" />
+                            <ChoiceBox fx:id="hardwareChoiceBox">
+                                <items>
+                                </items>
+                            </ChoiceBox>
+                        </children>
+                    </HBox>
+                    <HBox alignment="CENTER" styleClass="standard-spacing">
+                        <children>
+                            <Label styleClass="regular" text="%ui.hardware.directory" />
+                            <ChoiceBox fx:id="modelDirectoryChoiceBox">
+                                <items>
+                                </items>
+                            </ChoiceBox>
+                        </children>
+                    </HBox>
+                    <HBox alignment="CENTER" styleClass="standard-spacing">
+                        <children>
+                            <Label styleClass="regular" text="%ui.hardware.pworkers" />
+                     <TextField prefWidth="100.0" />
+                        </children>
+                    </HBox>
                 </children>
             </VBox>
         </TitledPane>
