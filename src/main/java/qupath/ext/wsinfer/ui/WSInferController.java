@@ -9,6 +9,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ToggleButton;
 import javafx.stage.Stage;
 import org.controlsfx.control.action.ActionUtils;
@@ -113,14 +114,21 @@ public class WSInferController {
         var defaultActions = qupath.getDefaultActions();
         var actionFillDetections = defaultActions.FILL_DETECTIONS;
         ActionUtils.configureButton(actionFillDetections, toggleDetectionFill);
+        toggleDetectionFill.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
     }
 
     private void configureDetectionsButton(QuPathGUI qupath) {
-//TODO
+        var defaultActions = qupath.getDefaultActions();
+        var actionShowDetections = defaultActions.SHOW_DETECTIONS;
+        ActionUtils.configureButton(actionShowDetections, toggleDetections);
+        toggleDetections.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
     }
 
     private void configureAnnotationsButton(QuPathGUI qupath) {
-//TODO
+        var defaultActions = qupath.getDefaultActions();
+        var actionShowAnnotations = defaultActions.SHOW_ANNOTATIONS;
+        ActionUtils.configureButton(actionShowAnnotations, toggleAnnotations);
+        toggleAnnotations.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
     }
 
     /**

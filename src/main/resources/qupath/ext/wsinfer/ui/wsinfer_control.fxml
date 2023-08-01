@@ -9,13 +9,14 @@
 
 <ScrollPane fitToHeight="true" fitToWidth="true" prefWidth="320" stylesheets="@wsinferstyles.css" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
     <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-        <TitledPane fx:id="pane1" animated="false" text="Processing" VBox.vgrow="ALWAYS">
+<!--    Processing Pane************************************************************-->
+        <TitledPane fx:id="pane1" animated="false" text="%ui.processing.pane" VBox.vgrow="ALWAYS">
             <VBox alignment="TOP_CENTER" styleClass="standard-spacing ">
                 <children>
-                    <!--        **********************Models**********************-->
+                    <!-- **********************Models**********************-->
                     <VBox alignment="CENTER">
                         <children>
-                            <Label styleClass="regular" text="%ui.model" />
+                            <Label styleClass="regular" text="%ui.model"/>
                             <HBox alignment="CENTER" styleClass="standard-spacing standard-padding">
                                 <children>
                                     <ChoiceBox fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
@@ -30,7 +31,7 @@
                     </VBox>
                     <Separator />
 
-                    <!--        **********************Selections**********************-->
+                    <!--**********************Selections**********************-->
                     <VBox alignment="CENTER" styleClass="standard-spacing standard-padding">
                         <children>
                             <VBox alignment="CENTER" styleClass="standard-spacing">
@@ -52,7 +53,7 @@
                     </VBox>
                     <Separator prefWidth="200.0" />
 
-                    <!--        **********************Run**********************-->
+                    <!--**********************Run**********************-->
                     <VBox alignment="CENTER" styleClass="standard-spacing standard-padding">
                         <HBox alignment="CENTER" styleClass="standard-spacing">
                             <children>
@@ -65,8 +66,8 @@
                 </children>
             </VBox>
         </TitledPane>
-
-        <TitledPane fx:id="pane2" animated="false" expanded="false" text="GPU Options" VBox.vgrow="ALWAYS">
+<!--    Hardware Pane************************************************************-->
+        <TitledPane fx:id="pane2" animated="false" expanded="false" text="%ui.hardware.pane" VBox.vgrow="ALWAYS">
             <VBox alignment="TOP_CENTER" styleClass="standard-spacing ">
                 <children>
                    <HBox alignment="CENTER">
@@ -78,22 +79,14 @@
                           </ChoiceBox>
                       </children>
                    </HBox>
-                    <SegmentedButton fx:id="hardwareButton">
-                        <buttons>
-                            <ToggleButton fx:id="cup" text="%ui.hardware.cpu" />
-                            <ToggleButton fx:id="gpu" text="%ui.hardware.gpu" />
-                            <ToggleButton fx:id="mps" text="%ui.hardware.mps" />
-                        </buttons>
-                    </SegmentedButton>
                 </children>
             </VBox>
         </TitledPane>
-
-        <TitledPane fx:id="pane3" animated="false" maxHeight="Infinity" text="Results Viewing Tools" VBox.vgrow="ALWAYS">
-            <!--        **********************Results**********************-->
+<!--    Results Pane************************************************************-->
+        <TitledPane fx:id="pane3" animated="false" maxHeight="Infinity" text="%ui.results.pane" VBox.vgrow="ALWAYS">
+            <!--**********************Results**********************-->
             <VBox alignment="TOP_CENTER" styleClass="standard-spacing standard-padding">
                 <children>
-<!--                    <Label styleClass="regular" text="%ui.results" />-->
                     <VBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
                             <VBox alignment="CENTER" styleClass="standard-spacing">
@@ -104,9 +97,9 @@
                             </VBox>
                             <HBox alignment="CENTER" styleClass="standard-spacing">
                                 <children>
-                                    <ToggleButton fx:id="toggleDetectionFill" maxWidth="10" mnemonicParsing="false" onAction="#toggleFillDetections" />
-                                    <ToggleButton fx:id="toggleDetection" mnemonicParsing="false" onAction="#toggleDetections" />
-                                    <ToggleButton fx:id="toggleAnnotation" mnemonicParsing="false" onAction="#toggleAnnotations" />
+                                    <ToggleButton fx:id="toggleDetectionFill" mnemonicParsing="false" onAction="#toggleFillDetections" />
+                                    <ToggleButton fx:id="toggleDetections" mnemonicParsing="false" onAction="#toggleDetections" />
+                                    <ToggleButton fx:id="toggleAnnotations" mnemonicParsing="false" onAction="#toggleAnnotations" />
                                 </children>
                             </HBox>
                             <Slider maxWidth="200.0" prefHeight="19.0" prefWidth="200.0" />

@@ -37,13 +37,14 @@
   }
 
 /*download button*/
-.download-btn {
+/*.download-btn {
     -fx-background-image: url("icons/download.png");
-}
+}*/
 
 .download-icon {
     -fx-font-family: FontAwesome;
     -fx-font-size: 14px;
     -fx-fill: -fx-text-base-color;
 }
+
 
