@@ -82,9 +82,9 @@
                             </HBox>
                             <HBox alignment="CENTER" styleClass="standard-spacing">
                                 <children>
-                                    <ToggleButton fx:id="toggleAnnotations" mnemonicParsing="false" onAction="#toggleAnnotations" />
-                                    <ToggleButton fx:id="toggleDetections" mnemonicParsing="false" onAction="#toggleDetections" />
-                                    <ToggleButton fx:id="toggleDetectionFill" mnemonicParsing="false" onAction="#toggleFillDetections" />
+                                    <ToggleButton fx:id="toggleAnnotations" mnemonicParsing="false" />
+                                    <ToggleButton fx:id="toggleDetections" mnemonicParsing="false" />
+                                    <ToggleButton fx:id="toggleDetectionFill" mnemonicParsing="false" />
                                 </children>
                             </HBox>
                             <VBox alignment="CENTER" styleClass="standard-spacing">
