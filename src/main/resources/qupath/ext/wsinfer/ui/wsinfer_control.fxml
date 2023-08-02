@@ -122,13 +122,13 @@
                     </HBox>
                     <VBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
+                            <Label styleClass="regular" text="%ui.options.directory" />
                             <AnchorPane prefHeight="0.0" prefWidth="318.0">
                                 <children>
                                     <TextField fx:id="hardwareDirectory" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                                     <Button mnemonicParsing="false" styleClass="folder-icon" text="" AnchorPane.bottomAnchor="4.0" AnchorPane.rightAnchor="4.0" AnchorPane.topAnchor="4.0" />
                                 </children>
                             </AnchorPane>
-                            <Label styleClass="regular" text="%ui.options.directory" />
                         </children>
                     </VBox>
                     <HBox alignment="CENTER" styleClass="standard-spacing">
