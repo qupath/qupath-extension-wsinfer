@@ -10,13 +10,12 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
 <?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 <?import org.controlsfx.control.SegmentedButton?>
-
-<!--</BorderPane>-->
 
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="330" stylesheets="@wsinferstyles.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
 <!--    Processing Pane************************************************************-->
@@ -30,7 +29,10 @@
                             <HBox alignment="CENTER" styleClass="standard-spacing standard-padding">
                                 <children>
                                     <ChoiceBox id="deviceChoices" fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
+                                        <tooltip><Tooltip text="%ui.model.tooltip" /></tooltip>
+                                    </ChoiceBox>
                                     <Button fx:id="forceRefreshButton" mnemonicParsing="false" onAction="#forceRefresh" prefHeight="31.0" prefWidth="39.0">
+                                        <tooltip><Tooltip text="%ui.model.download.tooltip" /></tooltip>
                                         <graphic>
                                             <Text styleClass="download-icon"></Text>
                                         </graphic>
@@ -52,8 +54,12 @@
                                       <Label styleClass="regular" text="%ui.selection.sub-label" />
                                        <SegmentedButton fx:id="segButton" maxWidth="500">
                                            <buttons>
-                                               <ToggleButton fx:id="toggleSelectAllAnnotations" onAction="#selectAllAnnotations" text="%ui.selection.all-annotations" />
-                                               <ToggleButton fx:id="toggleSelectAllDetections" onAction="#selectAllTiles" text="%ui.selection.all-detections" />
+                                               <ToggleButton fx:id="toggleSelectAllAnnotations" onAction="#selectAllAnnotations" text="%ui.selection.all-annotations">
+                                                   <tooltip><Tooltip text="%ui.selection.all-annotations.tooltip" /></tooltip>
+                                               </ToggleButton>
+                                               <ToggleButton fx:id="toggleSelectAllDetections" onAction="#selectAllTiles" text="%ui.selection.all-tiles">
+                                                   <tooltip><Tooltip text="%ui.selection.all-tiles.tooltip" /></tooltip>
+                                               </ToggleButton>
                                            </buttons>
                                        </SegmentedButton>
                                    </children>
@@ -67,7 +73,9 @@
                     <VBox alignment="CENTER" styleClass="standard-spacing standard-padding">
                         <HBox alignment="CENTER" styleClass="standard-spacing">
                             <children>
-                                <Button fx:id="runButton" disable="true" onAction="#runInference" prefHeight="31.0" prefWidth="252.0" text="%ui.run" />
+                                <Button fx:id="runButton" disable="true" onAction="#runInference" prefHeight="31.0" prefWidth="252.0" text="%ui.run">
+                                    <tooltip><Tooltip text="%ui.run.tooltip" /></tooltip>
+                                </Button>
                             </children>
                         </HBox>
                         <Label styleClass="error-message" text="%ui.error.no-selection" />
@@ -86,8 +94,12 @@
                         <children>
                             <HBox alignment="CENTER" styleClass="standard-spacing">
                                 <children>
-                                    <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.results.open-measurement-maps" />
-                                    <Button mnemonicParsing="false" onAction="#openDetectionTable" text="%ui.results.open-results" />
+                                    <Button mnemonicParsing="false" onAction="#openMeasurementMaps" text="%ui.results.open-measurement-maps">
+                                        <tooltip><Tooltip text="%ui.results.maps.tooltip" /></tooltip>
+                                    </Button>
+                                    <Button mnemonicParsing="false" onAction="#openDetectionTable" text="%ui.results.open-results">
+                                        <tooltip><Tooltip text="%ui.results.results.tooltip" /></tooltip>
+                                    </Button>
                                 </children>
                             </HBox>
                             <HBox alignment="CENTER" styleClass="standard-spacing">
@@ -113,8 +125,9 @@
                 <children>
                     <HBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
-                            <Label styleClass="regular" text="%ui.options.label" />
+                            <Label styleClass="regular" text="%ui.options.device" />
                             <ChoiceBox fx:id="deviceChoices">
+                                <tooltip><Tooltip text="%ui.options.device.tooltip" /></tooltip>
                                 <items>
                                 </items>
                             </ChoiceBox>
@@ -123,13 +136,16 @@
                     <VBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
                             <Label styleClass="regular" text="%ui.options.directory" />
-                            <TextField fx:id="tfModelDirectory" />
+                            <TextField fx:id="tfModelDirectory">
+                                <tooltip><Tooltip text="%ui.options.directory.tooltip" /></tooltip>
+                            </TextField>
                         </children>
                     </VBox>
                     <HBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
                             <Label styleClass="regular" text="%ui.options.pworkers" />
                      <Spinner fx:id="spinnerNumWorkers" prefWidth="75.0">
+                         <tooltip><Tooltip text="%ui.options.pworkers.label" /></tooltip>
                          <valueFactory>
                              <SpinnerValueFactory.IntegerSpinnerValueFactory initialValue="1" max="8" min="1" />
                          </valueFactory>
