@@ -28,7 +28,7 @@
                             <Label styleClass="regular" text="%ui.model" />
                             <HBox alignment="CENTER" styleClass="standard-spacing standard-padding">
                                 <children>
-                                    <ChoiceBox id="deviceChoices" fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
+                                    <ChoiceBox id="deviceChoices" fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0">
                                         <tooltip><Tooltip text="%ui.model.tooltip" /></tooltip>
                                     </ChoiceBox>
                                     <Button fx:id="forceRefreshButton" mnemonicParsing="false" onAction="#forceRefresh" prefHeight="31.0" prefWidth="39.0">
