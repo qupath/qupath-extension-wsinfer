@@ -18,7 +18,7 @@ import java.util.ResourceBundle;
  */
 public class WSInferCommand implements Runnable {
 
-    private static final Logger logger = LoggerFactory.getLogger(WSInferController.class);
+    private static final Logger logger = LoggerFactory.getLogger(WSInferCommand.class);
 
     private final QuPathGUI qupath;
 

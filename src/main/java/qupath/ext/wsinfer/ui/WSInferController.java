@@ -5,10 +5,12 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import javafx.stage.Stage;
 import org.controlsfx.control.action.Action;
@@ -25,6 +27,8 @@ import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
 import qupath.lib.gui.dialogs.Dialogs;
 import qupath.lib.images.ImageData;
+import qupath.lib.objects.PathAnnotationObject;
+import qupath.lib.objects.PathTileObject;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
 import java.awt.image.BufferedImage;
@@ -52,13 +56,17 @@ public class WSInferController {
     @FXML
     private ChoiceBox<String> hardwareChoiceBox;
     @FXML
+    private ToggleButton toggleSelectAllAnnotations;
+    @FXML
+    private ToggleButton toggleSelectAllDetections;
+    @FXML
     private ToggleButton toggleDetectionFill;
-
     @FXML
     private ToggleButton toggleDetections;
-
     @FXML
     private ToggleButton toggleAnnotations;
+    @FXML
+    private Slider sliderOpacity;
 
     private WSInferModelHandler currentRunner;
     private Stage measurementMapsStage;
@@ -81,11 +89,11 @@ public class WSInferController {
             modelChoiceBox.getItems().add(key);
         }
 
-        var qupath = QuPathGUI.getInstance();
-        var actions = qupath.getDefaultActions();
-        configureActionToggleButton(actions.FILL_DETECTIONS, toggleDetectionFill);
-        configureActionToggleButton(actions.SHOW_DETECTIONS, toggleDetections);
-        configureActionToggleButton(actions.SHOW_ANNOTATIONS, toggleAnnotations);
+        this.qupath = QuPathGUI.getInstance();
+
+        configureSelectionButtons();
+        configureDisplayToggleButtons();
+        configureOpacitySlider();
 
         forceRefreshButton.setDisable(true);
 
@@ -108,6 +116,29 @@ public class WSInferController {
                 pool.execute(newValue);
             }
         });
+    }
+
+    private void configureDisplayToggleButtons() {
+        var actions = qupath.getDefaultActions();
+        configureActionToggleButton(actions.FILL_DETECTIONS, toggleDetectionFill);
+        configureActionToggleButton(actions.SHOW_DETECTIONS, toggleDetections);
+        configureActionToggleButton(actions.SHOW_ANNOTATIONS, toggleAnnotations);
+    }
+
+    private void configureOpacitySlider() {
+        var opacityProperty = qupath.getOverlayOptions().opacityProperty();
+        sliderOpacity.valueProperty().bindBidirectional(opacityProperty);
+    }
+
+    private void configureSelectionButtons() {
+        overrideToggleSelected(toggleSelectAllAnnotations);
+        overrideToggleSelected(toggleSelectAllDetections);
+    }
+
+    // Hack to prevent the toggle buttons from staying selected
+    // This allows us to use a segmented button with the appearance of regular, non-toggle buttons
+    private void overrideToggleSelected(ToggleButton button) {
+        button.selectedProperty().addListener((value, oldValue, newValue) -> button.setSelected(false));
     }
 
     /**
@@ -162,12 +193,38 @@ public class WSInferController {
     }
 
     @FXML
-    private void openMeasurementMaps() {
+    private void selectAllAnnotations() {
+        Commands.selectObjectsByClass(qupath.getImageData(), PathAnnotationObject.class);
+    }
+
+    @FXML
+    private void selectAllTiles() {
+        Commands.selectObjectsByClass(qupath.getImageData(), PathTileObject.class);
+    }
+
+    @FXML
+    private void openMeasurementMaps(ActionEvent event) {
+        // Try to use existing action, to avoid creating a new stage
+        // TODO: Replace this if QuPath v0.5.0 provides direct access to the action
+        //       since that should be more robust
+        var action = qupath.lookupActionByText("Show measurement maps");
+        if (action != null) {
+            action.handle(event);
+            return;
+        }
+        // Fallback in case we couldn't get the action
         if (measurementMapsStage == null) {
+            logger.warn("Creating a new measurement map stage");
             measurementMapsStage = Commands.createMeasurementMapDialog(QuPathGUI.getInstance());
         }
         measurementMapsStage.show();
     }
+
+    @FXML
+    private void openDetectionTable() {
+        Commands.showDetectionMeasurementTable(qupath, qupath.getImageData());
+    }
+
 
 
     /**
