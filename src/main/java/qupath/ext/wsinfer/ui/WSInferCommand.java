@@ -1,8 +1,9 @@
 package qupath.ext.wsinfer.ui;
 
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,14 +53,20 @@ public class WSInferCommand implements Runnable {
             throw new IOException("Cannot find URL for WSInfer FXML");
         }
 
-        Parent root = FXMLLoader.load(url, resources);
+        VBox root = FXMLLoader.load(url, resources);
 
-        Scene scene = new Scene(root);
+        // There's probably a better approach... but wrapping in a border pane
+        // helped me get the resizing to behave
+        BorderPane pane = new BorderPane(root);
+        Scene scene = new Scene(pane);
 
         Stage stage = new Stage();
         stage.initOwner(qupath.getStage());
         stage.setTitle(resources.getString("title"));
         stage.setScene(scene);
+        stage.setResizable(false);
+
+        root.heightProperty().addListener((v, o, n) -> stage.sizeToScene());
 
         return stage;
     }
