@@ -113,7 +113,7 @@
                     <VBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
                             <Label styleClass="regular" text="%ui.hardware.directory" />
-                            <TextField />
+                            <TextField fx:id="hardwareDirectory"/>
                         </children>
                     </VBox>
                     <HBox alignment="CENTER" styleClass="standard-spacing">
