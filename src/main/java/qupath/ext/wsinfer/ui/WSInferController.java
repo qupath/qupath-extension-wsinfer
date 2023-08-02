@@ -10,8 +10,10 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import javafx.stage.Stage;
+import org.controlsfx.control.action.Action;
 import org.controlsfx.control.action.ActionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +26,9 @@ import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
 import qupath.lib.gui.dialogs.Dialogs;
-import qupath.lib.gui.viewer.OverlayOptions;
 import qupath.lib.images.ImageData;
+import qupath.lib.objects.PathAnnotationObject;
+import qupath.lib.objects.PathTileObject;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
 import java.awt.image.BufferedImage;
@@ -53,13 +56,17 @@ public class WSInferController {
     @FXML
     private ChoiceBox<String> hardwareChoiceBox;
     @FXML
+    private ToggleButton toggleSelectAllAnnotations;
+    @FXML
+    private ToggleButton toggleSelectAllDetections;
+    @FXML
     private ToggleButton toggleDetectionFill;
-
     @FXML
     private ToggleButton toggleDetections;
-
     @FXML
     private ToggleButton toggleAnnotations;
+    @FXML
+    private Slider sliderOpacity;
 
     private WSInferModelHandler currentRunner;
     private Stage measurementMapsStage;
@@ -82,10 +89,11 @@ public class WSInferController {
             modelChoiceBox.getItems().add(key);
         }
 
-        var qupath = QuPathGUI.getInstance();
-        configureFillDetectionsButton(qupath);
-        configureDetectionsButton(qupath);
-        configureAnnotationsButton(qupath);
+        this.qupath = QuPathGUI.getInstance();
+
+        configureSelectionButtons();
+        configureDisplayToggleButtons();
+        configureOpacitySlider();
 
         forceRefreshButton.setDisable(true);
 
@@ -110,25 +118,37 @@ public class WSInferController {
         });
     }
 
-    private void configureFillDetectionsButton(QuPathGUI qupath) {
-        var defaultActions = qupath.getDefaultActions();
-        var actionFillDetections = defaultActions.FILL_DETECTIONS;
-        ActionUtils.configureButton(actionFillDetections, toggleDetectionFill);
-        toggleDetectionFill.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+    private void configureDisplayToggleButtons() {
+        var actions = qupath.getDefaultActions();
+        configureActionToggleButton(actions.FILL_DETECTIONS, toggleDetectionFill);
+        configureActionToggleButton(actions.SHOW_DETECTIONS, toggleDetections);
+        configureActionToggleButton(actions.SHOW_ANNOTATIONS, toggleAnnotations);
     }
 
-    private void configureDetectionsButton(QuPathGUI qupath) {
-        var defaultActions = qupath.getDefaultActions();
-        var actionShowDetections = defaultActions.SHOW_DETECTIONS;
-        ActionUtils.configureButton(actionShowDetections, toggleDetections);
-        toggleDetections.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+    private void configureOpacitySlider() {
+        var opacityProperty = qupath.getOverlayOptions().opacityProperty();
+        sliderOpacity.valueProperty().bindBidirectional(opacityProperty);
     }
 
-    private void configureAnnotationsButton(QuPathGUI qupath) {
-        var defaultActions = qupath.getDefaultActions();
-        var actionShowAnnotations = defaultActions.SHOW_ANNOTATIONS;
-        ActionUtils.configureButton(actionShowAnnotations, toggleAnnotations);
-        toggleAnnotations.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+    private void configureSelectionButtons() {
+        overrideToggleSelected(toggleSelectAllAnnotations);
+        overrideToggleSelected(toggleSelectAllDetections);
+    }
+
+    // Hack to prevent the toggle buttons from staying selected
+    // This allows us to use a segmented button with the appearance of regular, non-toggle buttons
+    private void overrideToggleSelected(ToggleButton button) {
+        button.selectedProperty().addListener((value, oldValue, newValue) -> button.setSelected(false));
+    }
+
+    /**
+     * Configure a toggle button for showing/hiding or filling/unfilling objects.
+     * @param action
+     * @param button
+     */
+    private void configureActionToggleButton(Action action, ToggleButton button) {
+        ActionUtils.configureButton(action, button);
+        button.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
     }
 
     /**
@@ -173,12 +193,38 @@ public class WSInferController {
     }
 
     @FXML
-    private void openMeasurementMaps() {
+    private void selectAllAnnotations() {
+        Commands.selectObjectsByClass(qupath.getImageData(), PathAnnotationObject.class);
+    }
+
+    @FXML
+    private void selectAllTiles() {
+        Commands.selectObjectsByClass(qupath.getImageData(), PathTileObject.class);
+    }
+
+    @FXML
+    private void openMeasurementMaps(ActionEvent event) {
+        // Try to use existing action, to avoid creating a new stage
+        // TODO: Replace this if QuPath v0.5.0 provides direct access to the action
+        //       since that should be more robust
+        var action = qupath.lookupActionByText("Show measurement maps");
+        if (action != null) {
+            action.handle(event);
+            return;
+        }
+        // Fallback in case we couldn't get the action
         if (measurementMapsStage == null) {
+            logger.warn("Creating a new measurement map stage");
             measurementMapsStage = Commands.createMeasurementMapDialog(QuPathGUI.getInstance());
         }
         measurementMapsStage.show();
     }
+
+    @FXML
+    private void openDetectionTable() {
+        Commands.showDetectionMeasurementTable(qupath, qupath.getImageData());
+    }
+
 
 
     /**
