@@ -18,7 +18,7 @@
 
 <!--</BorderPane>-->
 
-<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="330" stylesheets="@wsinferstyles.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
+<VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="330" stylesheets="@wsinferstyles.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
 <!--    Processing Pane************************************************************-->
         <TitledPane fx:id="pane1" animated="false" collapsible="false" text="%ui.processing.pane" VBox.vgrow="NEVER">
             <VBox alignment="TOP_CENTER" styleClass="standard-spacing ">
@@ -108,7 +108,7 @@
         </TitledPane>
 
         <!--    Hardware Pane************************************************************-->
-        <TitledPane fx:id="pane3" expanded="false" maxHeight="Infinity" text="%ui.options.pane" VBox.vgrow="NEVER">
+        <TitledPane fx:id="pane3" animated="false" expanded="false" maxHeight="Infinity" text="%ui.options.pane" VBox.vgrow="NEVER">
             <VBox alignment="TOP_CENTER" spacing="7.5" styleClass="standard-padding">
                 <children>
                     <HBox alignment="CENTER" styleClass="standard-spacing">
@@ -122,8 +122,13 @@
                     </HBox>
                     <VBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
+                            <AnchorPane prefHeight="0.0" prefWidth="318.0">
+                                <children>
+                                    <TextField fx:id="hardwareDirectory" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                                    <Button mnemonicParsing="false" styleClass="folder-icon" text="" AnchorPane.bottomAnchor="4.0" AnchorPane.rightAnchor="4.0" AnchorPane.topAnchor="4.0" />
+                                </children>
+                            </AnchorPane>
                             <Label styleClass="regular" text="%ui.options.directory" />
-                            <TextField fx:id="hardwareDirectory" />
                         </children>
                     </VBox>
                     <HBox alignment="CENTER" styleClass="standard-spacing">

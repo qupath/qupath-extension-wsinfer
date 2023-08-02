@@ -47,4 +47,9 @@
     -fx-fill: -fx-text-base-color;
 }
 
-
+.folder-icon {
+    -fx-font-family: FontAwesome;
+    -fx-font-size: 14px;
+    -fx-opacity: 0.5;
+    -fx-fill: -fx-text-base-color;
+}
