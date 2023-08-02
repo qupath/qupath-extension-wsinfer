@@ -21,6 +21,7 @@ import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.ext.wsinfer.models.WSInferModelConfiguration;
 import qupath.ext.wsinfer.models.WSInferTransform;
 import qupath.ext.wsinfer.models.WSInferUtils;
+import qupath.ext.wsinfer.ui.TileCreator;
 import qupath.ext.wsinfer.ui.WSInferPrefs;
 import qupath.lib.gui.dialogs.Dialogs;
 import qupath.lib.images.ImageData;
@@ -353,27 +354,26 @@ public class WSInfer {
                 .collect(Collectors.toList());
         if (!selectedAnnotations.isEmpty()) {
             var annotationSet = new LinkedHashSet<>(selectedAnnotations); // We want this later
-            Map<String, Object> pluginArgs = new LinkedHashMap<>();
+            double tileSizePx = 0, tileSizeMicrons = 0;
             if (imageData.getServer().getPixelCalibration().hasPixelSizeMicrons()) {
-                pluginArgs.put("tileSizeMicrons", config.getPatchSizePixels() * config.getSpacingMicronPerPixel());
+                tileSizeMicrons = config.getPatchSizePixels() * config.getSpacingMicronPerPixel();
             } else {
                 logger.warn("Pixel calibration not available, so using pixels instead of microns");
-                pluginArgs.put("tileSizePixels", config.getPatchSizePixels());
+                tileSizePx = config.getPatchSizePixels();
             }
-            pluginArgs.put("trimToROI", false);
-            pluginArgs.put("makeAnnotations", false);
-            pluginArgs.put("removeParentAnnotation", false);
-            try {
-                QP.runPlugin("qupath.lib.algorithms.TilerPlugin", imageData, pluginArgs);
-                // We want our new tiles to be selected... but we also want to ensure that any tile object
-                // has a selected annotation as a parent (in case there were other tiles already)
-                return imageData.getHierarchy().getTileObjects()
-                        .stream()
-                        .filter(t -> annotationSet.contains(t.getParent()))
-                        .collect(Collectors.toList());
-            } catch (InterruptedException e) {
-                logger.warn("Tiling interrupted", e);
+            for (var annotation: selectedAnnotations) {
+                TileCreator tileCreator = new TileCreator(imageData,
+                        annotation, tileSizeMicrons, tileSizePx,
+                        false, false, false, true);
+                tileCreator.run();
             }
+
+            // We want our new tiles to be selected... but we also want to ensure that any tile object
+            // has a selected annotation as a parent (in case there were other tiles already)
+            return imageData.getHierarchy().getTileObjects()
+                    .stream()
+                    .filter(t -> annotationSet.contains(t.getParent()))
+                    .collect(Collectors.toList());
         }
         throw new IllegalArgumentException("No tiles or annotations selected!");
     }

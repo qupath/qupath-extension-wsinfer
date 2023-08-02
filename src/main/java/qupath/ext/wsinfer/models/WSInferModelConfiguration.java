@@ -8,7 +8,7 @@ import java.util.List;
  * Class representing the configuration of a WSInfer model.
  * <p>
  * This is a Java representation of the JSON configuration file,
- * and stored the key information needed to run the model (preprocessing, resolution, output classes).
+ * and stores the key information needed to run the model (preprocessing, resolution, output classes).
  * <p>
  * See https://github.com/SBU-BMI/wsinfer-zoo/blob/main/wsinfer_zoo/schemas/model-config.schema.json
  */
