@@ -2,6 +2,8 @@ package qupath.ext.wsinfer.ui;
 
 import ai.djl.engine.Engine;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Task;
@@ -11,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
@@ -40,6 +43,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,6 +58,9 @@ public class WSInferController {
 
     public QuPathGUI qupath;
     private ObjectProperty<ImageData<BufferedImage>> imageDataProperty = new SimpleObjectProperty<>();
+
+    @FXML
+    private Label labelWarning;
     @FXML
     private ChoiceBox<String> modelChoiceBox;
     @FXML
@@ -78,6 +85,8 @@ public class WSInferController {
     private Spinner<Integer> spinnerNumWorkers;
     @FXML
     private TextField tfModelDirectory;
+    @FXML
+    private ResourceBundle resources;
 
     private WSInferModelHandler currentRunner;
     private Stage measurementMapsStage;
@@ -105,6 +114,7 @@ public class WSInferController {
         configureNumWorkers();
 
         configureRunInferenceButton();
+        configureWarningLabel();
 
         configurePendingTaskProperty();
     }
@@ -165,6 +175,25 @@ public class WSInferController {
         return availableDevices;
     }
 
+    private StringBinding createWarningTextBinding() {
+        return Bindings.createStringBinding(this::getWarningText,
+                imageDataProperty,
+                modelChoiceBox.getSelectionModel().selectedItemProperty());
+    }
+
+    private String getWarningText() {
+        if (imageDataProperty.get() == null) {
+            return resources.getString("ui.error.no-image");
+        }
+        if (modelChoiceBox.getSelectionModel().isEmpty())
+            return resources.getString("ui.error.no-model");
+        // TODO: Handle no objects selected
+        return null;
+    }
+
+    private void configureWarningLabel() {
+        labelWarning.textProperty().bind(createWarningTextBinding());
+    }
 
     private void configureRunInferenceButton() {
         // Disable the run button while a task is pending, or we have no model selected

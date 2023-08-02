@@ -78,8 +78,7 @@
                                 </Button>
                             </children>
                         </HBox>
-                        <Label styleClass="error-message" text="%ui.error.no-selection" />
-                        <Label styleClass="error-message" text="%ui.error.no-model" />
+                        <Label id="labelWarning" fx:id="labelWarning" prefHeight="30.0" styleClass="error-message" text="%ui.error.no-selection" VBox.vgrow="ALWAYS" />
                     </VBox>
                 </children>
             </VBox>
