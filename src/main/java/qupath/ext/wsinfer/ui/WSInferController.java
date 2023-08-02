@@ -179,25 +179,7 @@ public class WSInferController {
         }
         measurementMapsStage.show();
     }
-
-    @FXML
-    public void toggleFillDetections(ActionEvent actionEvent) {
-        OverlayOptions overlayOptions = qupath.getOverlayOptions();
-        var actionManager = qupath.getDefaultActions();
-        overlayOptions.getFillDetections();
-    }
-
-    @FXML
-    public void toggleDetections(ActionEvent actionEvent) {
-//TODO
-    }
-
-    @FXML
-    public void toggleAnnotations(ActionEvent actionEvent) {
-//TODO
-    }
-
-
+    
     /**
      * Wrapper for an inference task, which can be submitted to the thread pool.
      */
