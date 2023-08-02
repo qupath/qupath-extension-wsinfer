@@ -5,10 +5,14 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.ToggleButton;
 import javafx.stage.Stage;
+import org.controlsfx.control.action.ActionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.ProgressListener;
@@ -20,6 +24,7 @@ import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
 import qupath.lib.gui.dialogs.Dialogs;
+import qupath.lib.gui.viewer.OverlayOptions;
 import qupath.lib.images.ImageData;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
@@ -38,12 +43,23 @@ public class WSInferController {
 
     private static final Logger logger = LoggerFactory.getLogger(WSInferController.class);
 
+    public QuPathGUI qupath;
     @FXML
     private ChoiceBox<String> modelChoiceBox;
     @FXML
     private Button runButton;
     @FXML
     private Button forceRefreshButton;
+    @FXML
+    private ChoiceBox<String> hardwareChoiceBox;
+    @FXML
+    private ToggleButton toggleDetectionFill;
+
+    @FXML
+    private ToggleButton toggleDetections;
+
+    @FXML
+    private ToggleButton toggleAnnotations;
 
     private WSInferModelHandler currentRunner;
     private Stage measurementMapsStage;
@@ -51,6 +67,9 @@ public class WSInferController {
     private final ExecutorService pool = Executors.newSingleThreadExecutor(ThreadTools.createThreadFactory("wsinfer", true));
 
     private final ObjectProperty<WSInferTask> pendingTask = new SimpleObjectProperty<>();
+
+    private String[] hardwareOptions = {"CPU", "GPU", "MPS"};
+
 
     @FXML
     private void initialize() {
@@ -63,6 +82,11 @@ public class WSInferController {
             modelChoiceBox.getItems().add(key);
         }
 
+        var qupath = QuPathGUI.getInstance();
+        configureFillDetectionsButton(qupath);
+        configureDetectionsButton(qupath);
+        configureAnnotationsButton(qupath);
+
         forceRefreshButton.setDisable(true);
 
         modelChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -70,6 +94,8 @@ public class WSInferController {
             currentRunner = runners.get(newValue);
             new Thread(() -> currentRunner.queueDownload(false)).start();
         });
+
+        hardwareChoiceBox.getItems().addAll(hardwareOptions);
 
         // Disable the run button while a task is pending, or we have no model selected
         runButton.disableProperty().bind(
@@ -82,6 +108,27 @@ public class WSInferController {
                 pool.execute(newValue);
             }
         });
+    }
+
+    private void configureFillDetectionsButton(QuPathGUI qupath) {
+        var defaultActions = qupath.getDefaultActions();
+        var actionFillDetections = defaultActions.FILL_DETECTIONS;
+        ActionUtils.configureButton(actionFillDetections, toggleDetectionFill);
+        toggleDetectionFill.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+    }
+
+    private void configureDetectionsButton(QuPathGUI qupath) {
+        var defaultActions = qupath.getDefaultActions();
+        var actionShowDetections = defaultActions.SHOW_DETECTIONS;
+        ActionUtils.configureButton(actionShowDetections, toggleDetections);
+        toggleDetections.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+    }
+
+    private void configureAnnotationsButton(QuPathGUI qupath) {
+        var defaultActions = qupath.getDefaultActions();
+        var actionShowAnnotations = defaultActions.SHOW_ANNOTATIONS;
+        ActionUtils.configureButton(actionShowAnnotations, toggleAnnotations);
+        toggleAnnotations.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
     }
 
     /**
