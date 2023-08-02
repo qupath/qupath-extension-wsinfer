@@ -108,7 +108,7 @@
         </TitledPane>
 
         <!--    Hardware Pane************************************************************-->
-        <TitledPane fx:id="pane3" expanded="false" maxHeight="Infinity" text="%ui.options.pane" VBox.vgrow="NEVER">
+        <TitledPane fx:id="pane3" animated="false" expanded="false" maxHeight="Infinity" text="%ui.options.pane" VBox.vgrow="NEVER">
             <VBox alignment="TOP_CENTER" spacing="7.5" styleClass="standard-padding">
                 <children>
                     <HBox alignment="CENTER" styleClass="standard-spacing">
