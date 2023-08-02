@@ -110,19 +110,20 @@
                             </ChoiceBox>
                         </children>
                     </HBox>
-                    <HBox alignment="CENTER" styleClass="standard-spacing">
+                    <VBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
                             <Label styleClass="regular" text="%ui.hardware.directory" />
-                            <ChoiceBox fx:id="modelDirectoryChoiceBox">
-                                <items>
-                                </items>
-                            </ChoiceBox>
+                            <TextField />
                         </children>
-                    </HBox>
+                    </VBox>
                     <HBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
                             <Label styleClass="regular" text="%ui.hardware.pworkers" />
-                     <TextField prefWidth="100.0" />
+                     <Spinner prefWidth="75.0">
+                         <valueFactory>
+                             <SpinnerValueFactory.IntegerSpinnerValueFactory initialValue="1" max="8" min="1" />
+                         </valueFactory>
+                     </Spinner>
                         </children>
                     </HBox>
                 </children>
