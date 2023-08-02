@@ -1,5 +1,7 @@
 package qupath.ext.wsinfer.ui;
 
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.Property;
 import javafx.beans.property.StringProperty;
 import qupath.lib.gui.prefs.PathPrefs;
 
@@ -18,6 +20,10 @@ public class WSInferPrefs {
             "wsinfer.device",
             "cpu"
     );
+    private static final Property<Integer> numWorkersProperty = PathPrefs.createPersistentPreference(
+            "wsinfer.numWorkers",
+            1
+    ).asObject();
 
     /**
      * String storing the preferred directory to cache models.
@@ -32,4 +38,12 @@ public class WSInferPrefs {
     public static StringProperty deviceProperty() {
         return deviceProperty;
     }
+
+    /**
+     * Integer storing the preferred number of workers for tile requests.
+     */
+    public static Property<Integer> numWorkersProperty() {
+        return numWorkersProperty;
+    }
+
 }

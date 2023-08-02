@@ -29,7 +29,7 @@
                             <Label styleClass="regular" text="%ui.model" />
                             <HBox alignment="CENTER" styleClass="standard-spacing standard-padding">
                                 <children>
-                                    <ChoiceBox fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
+                                    <ChoiceBox id="deviceChoices" fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0" />
                                     <Button fx:id="forceRefreshButton" mnemonicParsing="false" onAction="#forceRefresh" prefHeight="31.0" prefWidth="39.0">
                                         <graphic>
                                             <Text styleClass="download-icon"></Text>
@@ -114,7 +114,7 @@
                     <HBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
                             <Label styleClass="regular" text="%ui.options.label" />
-                            <ChoiceBox fx:id="hardwareChoiceBox">
+                            <ChoiceBox fx:id="deviceChoices">
                                 <items>
                                 </items>
                             </ChoiceBox>
@@ -123,13 +123,13 @@
                     <VBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
                             <Label styleClass="regular" text="%ui.options.directory" />
-                            <TextField fx:id="hardwareDirectory" />
+                            <TextField fx:id="tfModelDirectory" />
                         </children>
                     </VBox>
                     <HBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
                             <Label styleClass="regular" text="%ui.options.pworkers" />
-                     <Spinner prefWidth="75.0">
+                     <Spinner fx:id="spinnerNumWorkers" prefWidth="75.0">
                          <valueFactory>
                              <SpinnerValueFactory.IntegerSpinnerValueFactory initialValue="1" max="8" min="1" />
                          </valueFactory>

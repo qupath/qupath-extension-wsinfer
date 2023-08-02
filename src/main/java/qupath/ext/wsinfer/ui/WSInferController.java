@@ -1,5 +1,6 @@
 package qupath.ext.wsinfer.ui;
 
+import ai.djl.engine.Engine;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -11,6 +12,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Slider;
+import javafx.scene.control.Spinner;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.stage.Stage;
 import org.controlsfx.control.action.Action;
@@ -22,6 +25,7 @@ import qupath.ext.wsinfer.WSInfer;
 import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.ext.wsinfer.models.WSInferModelCollection;
 import qupath.ext.wsinfer.models.WSInferUtils;
+import qupath.lib.common.GeneralTools;
 import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
@@ -32,7 +36,9 @@ import qupath.lib.objects.PathTileObject;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
 import java.awt.image.BufferedImage;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -47,6 +53,7 @@ public class WSInferController {
     private static final Logger logger = LoggerFactory.getLogger(WSInferController.class);
 
     public QuPathGUI qupath;
+    private ObjectProperty<ImageData<BufferedImage>> imageDataProperty = new SimpleObjectProperty<>();
     @FXML
     private ChoiceBox<String> modelChoiceBox;
     @FXML
@@ -54,7 +61,7 @@ public class WSInferController {
     @FXML
     private Button forceRefreshButton;
     @FXML
-    private ChoiceBox<String> hardwareChoiceBox;
+    private ChoiceBox<String> deviceChoices;
     @FXML
     private ToggleButton toggleSelectAllAnnotations;
     @FXML
@@ -67,6 +74,10 @@ public class WSInferController {
     private ToggleButton toggleAnnotations;
     @FXML
     private Slider sliderOpacity;
+    @FXML
+    private Spinner<Integer> spinnerNumWorkers;
+    @FXML
+    private TextField tfModelDirectory;
 
     private WSInferModelHandler currentRunner;
     private Stage measurementMapsStage;
@@ -75,12 +86,33 @@ public class WSInferController {
 
     private final ObjectProperty<WSInferTask> pendingTask = new SimpleObjectProperty<>();
 
-    private String[] hardwareOptions = {"CPU", "GPU", "MPS"};
-
 
     @FXML
     private void initialize() {
         logger.info("Initializing...");
+
+        this.qupath = QuPathGUI.getInstance();
+        this.imageDataProperty.bind(qupath.imageDataProperty());
+
+        configureModelChoices();
+
+        configureSelectionButtons();
+        configureDisplayToggleButtons();
+        configureOpacitySlider();
+
+        configureAvailableDevices();
+        configureModelDirectory();
+        configureNumWorkers();
+
+        configureRunInferenceButton();
+
+        configurePendingTaskProperty();
+    }
+
+    /**
+     * Populate the available models & configure the UI elements to select and download models.
+     */
+    private void configureModelChoices() {
         WSInferModelCollection models = WSInferUtils.getModelCollection();
         Map<String, WSInferModelHandler> runners = new HashMap<>();
         for (String key: models.getModels().keySet()) {
@@ -88,28 +120,62 @@ public class WSInferController {
             runners.put(key, runner);
             modelChoiceBox.getItems().add(key);
         }
-
-        this.qupath = QuPathGUI.getInstance();
-
-        configureSelectionButtons();
-        configureDisplayToggleButtons();
-        configureOpacitySlider();
-
-        forceRefreshButton.setDisable(true);
-
         modelChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            forceRefreshButton.setDisable(false);
             currentRunner = runners.get(newValue);
             new Thread(() -> currentRunner.queueDownload(false)).start();
         });
+        forceRefreshButton.disableProperty().bind(modelChoiceBox.getSelectionModel().selectedItemProperty().isNull());
+    }
 
-        hardwareChoiceBox.getItems().addAll(hardwareOptions);
 
+    private void configureAvailableDevices() {
+        var available = getAvailableDevices();
+        deviceChoices.getItems().setAll(available);
+        var selected = WSInferPrefs.deviceProperty().get();
+        if (available.contains(selected))
+            deviceChoices.getSelectionModel().select(selected);
+        else
+            deviceChoices.getSelectionModel().selectFirst();
+        // Don't bind property for now, since this would cause trouble if the WSInferPrefs.deviceProperty() is
+        // changed elsewhere
+        deviceChoices.getSelectionModel().selectedItemProperty().addListener((value, oldValue, newValue) -> {
+            WSInferPrefs.deviceProperty().set(newValue);
+        });
+    }
+
+
+    private Collection<String> getAvailableDevices() {
+        Set<String> availableDevices = new LinkedHashSet<>();
+        boolean includesMPS = false; // Don't add MPS twice
+        try {
+            for (var device : Engine.getEngine("PyTorch").getDevices()) {
+                String name = device.getDeviceType();
+                availableDevices.add(name);
+                if (name.toLowerCase().startsWith("mps"))
+                    includesMPS = true;
+            }
+        } catch (Throwable e) {
+            logger.warn("PyTorch not found");
+            availableDevices.add("cpu");
+        }
+        // If we could use MPS, but don't have it already, add it
+        if (!includesMPS && GeneralTools.isMac() && "aarch64".equals(System.getProperty("os.arch"))) {
+            availableDevices.add("mps");
+        }
+        return availableDevices;
+    }
+
+
+    private void configureRunInferenceButton() {
         // Disable the run button while a task is pending, or we have no model selected
         runButton.disableProperty().bind(
-                pendingTask.isNotNull().or(
-                        modelChoiceBox.getSelectionModel().selectedItemProperty().isNull()));
+                imageDataProperty.isNull()
+                        .or(pendingTask.isNotNull())
+                        .or(modelChoiceBox.getSelectionModel().selectedItemProperty().isNull())
+        );
+    }
 
+    private void configurePendingTaskProperty() {
         // Submit any new pending tasks to the thread pool
         pendingTask.addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -131,7 +197,9 @@ public class WSInferController {
     }
 
     private void configureSelectionButtons() {
+        toggleSelectAllAnnotations.disableProperty().bind(imageDataProperty.isNull());
         overrideToggleSelected(toggleSelectAllAnnotations);
+        toggleSelectAllDetections.disableProperty().bind(imageDataProperty.isNull());
         overrideToggleSelected(toggleSelectAllDetections);
     }
 
@@ -151,11 +219,19 @@ public class WSInferController {
         button.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
     }
 
+    private void configureModelDirectory() {
+        tfModelDirectory.textProperty().bindBidirectional(WSInferPrefs.modelDirectoryProperty());
+    }
+
+    private void configureNumWorkers() {
+        spinnerNumWorkers.getValueFactory().valueProperty().bindBidirectional(WSInferPrefs.numWorkersProperty());
+    }
+
     /**
      * Try to run inference on the current image using the current model and parameters.
      */
     public void runInference() {
-        var imageData = QuPathGUI.getInstance().getImageData();
+        var imageData = this.imageDataProperty.get();
         if (imageData == null) {
             Dialogs.showErrorMessage("WSInfer plugin", "Cannot run WSInfer plugin without ImageData.");
             return;
@@ -194,12 +270,12 @@ public class WSInferController {
 
     @FXML
     private void selectAllAnnotations() {
-        Commands.selectObjectsByClass(qupath.getImageData(), PathAnnotationObject.class);
+        Commands.selectObjectsByClass(imageDataProperty.get(), PathAnnotationObject.class);
     }
 
     @FXML
     private void selectAllTiles() {
-        Commands.selectObjectsByClass(qupath.getImageData(), PathTileObject.class);
+        Commands.selectObjectsByClass(imageDataProperty.get(), PathTileObject.class);
     }
 
     @FXML
@@ -222,7 +298,7 @@ public class WSInferController {
 
     @FXML
     private void openDetectionTable() {
-        Commands.showDetectionMeasurementTable(qupath, qupath.getImageData());
+        Commands.showDetectionMeasurementTable(qupath, imageDataProperty.get());
     }
 
 
