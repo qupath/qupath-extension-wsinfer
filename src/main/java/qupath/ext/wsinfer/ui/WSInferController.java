@@ -5,13 +5,13 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.ToggleButton;
 import javafx.stage.Stage;
+import org.controlsfx.control.action.Action;
 import org.controlsfx.control.action.ActionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +24,6 @@ import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
 import qupath.lib.gui.dialogs.Dialogs;
-import qupath.lib.gui.viewer.OverlayOptions;
 import qupath.lib.images.ImageData;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
@@ -83,9 +82,10 @@ public class WSInferController {
         }
 
         var qupath = QuPathGUI.getInstance();
-        configureFillDetectionsButton(qupath);
-        configureDetectionsButton(qupath);
-        configureAnnotationsButton(qupath);
+        var actions = qupath.getDefaultActions();
+        configureActionToggleButton(actions.FILL_DETECTIONS, toggleDetectionFill);
+        configureActionToggleButton(actions.SHOW_DETECTIONS, toggleDetections);
+        configureActionToggleButton(actions.SHOW_ANNOTATIONS, toggleAnnotations);
 
         forceRefreshButton.setDisable(true);
 
@@ -110,25 +110,14 @@ public class WSInferController {
         });
     }
 
-    private void configureFillDetectionsButton(QuPathGUI qupath) {
-        var defaultActions = qupath.getDefaultActions();
-        var actionFillDetections = defaultActions.FILL_DETECTIONS;
-        ActionUtils.configureButton(actionFillDetections, toggleDetectionFill);
-        toggleDetectionFill.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-    }
-
-    private void configureDetectionsButton(QuPathGUI qupath) {
-        var defaultActions = qupath.getDefaultActions();
-        var actionShowDetections = defaultActions.SHOW_DETECTIONS;
-        ActionUtils.configureButton(actionShowDetections, toggleDetections);
-        toggleDetections.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
-    }
-
-    private void configureAnnotationsButton(QuPathGUI qupath) {
-        var defaultActions = qupath.getDefaultActions();
-        var actionShowAnnotations = defaultActions.SHOW_ANNOTATIONS;
-        ActionUtils.configureButton(actionShowAnnotations, toggleAnnotations);
-        toggleAnnotations.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+    /**
+     * Configure a toggle button for showing/hiding or filling/unfilling objects.
+     * @param action
+     * @param button
+     */
+    private void configureActionToggleButton(Action action, ToggleButton button) {
+        ActionUtils.configureButton(action, button);
+        button.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
     }
 
     /**
