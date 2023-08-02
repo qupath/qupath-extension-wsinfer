@@ -188,7 +188,7 @@ public class WSInfer {
             int height = (int) Math.round(wsiModel.getConfiguration().getPatchSizePixels() * downsample);
 
             // Number of workers who will be busy fetching tiles for us while we're busy inferring
-            int nWorkers = Math.max(1, Math.min(4, Runtime.getRuntime().availableProcessors()/2));
+            int nWorkers = Math.max(1, WSInferPrefs.numWorkersProperty().getValue());
 
             // Make a guess at a batch size currently... *must* be 1 for MPS
             // FIXME: Make batch size adjustable when using a GPU (or CPU?)

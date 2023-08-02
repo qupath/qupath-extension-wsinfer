@@ -37,23 +37,7 @@ public class WSInferExtension implements QuPathExtension {
 			return;
 		}
 		isInstalled = true;
-		addPreferences(qupath);
 		addMenuItems(qupath);
-	}
-
-	private void addPreferences(QuPathGUI qupath) {
-		qupath.getPreferencePane().addPropertyPreference(
-				WSInferPrefs.modelDirectoryProperty(),
-				String.class,
-				"WSInfer model directory",
-				EXTENSION_NAME,
-				"Directory to store WSInfer cached models (leave blank to use the default)");
-		qupath.getPreferencePane().addPropertyPreference(
-				WSInferPrefs.deviceProperty(),
-				String.class,
-				"WSInfer preferred device",
-				EXTENSION_NAME,
-				"Device to use for WSInfer inference");
 	}
 
 	private void addMenuItems(QuPathGUI qupath) {
