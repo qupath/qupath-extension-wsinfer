@@ -13,11 +13,15 @@
   -fx-padding: -7.5;
 }
 
-/* Error-message */
-.error-message {
-  -fx-text-fill: red;
+/* message-label-styles */
+.warning-message {
+  -fx-text-fill: -qp-script-error-color;
+  -fx-opacity:0.8;
+  -fx-font-style: italic;
+}
+.standard-message {
+  -fx-text-fill: -fx-text-base-color;
   -fx-opacity:0.6;
-  -fx-background:green;
   -fx-font-style: italic;
 }
 

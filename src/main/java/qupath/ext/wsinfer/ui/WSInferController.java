@@ -3,9 +3,14 @@ package qupath.ext.wsinfer.ui;
 import ai.djl.engine.Engine;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.StringBinding;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
 import javafx.event.ActionEvent;
@@ -35,7 +40,10 @@ import qupath.lib.gui.commands.Commands;
 import qupath.lib.gui.dialogs.Dialogs;
 import qupath.lib.images.ImageData;
 import qupath.lib.objects.PathAnnotationObject;
+import qupath.lib.objects.PathObject;
 import qupath.lib.objects.PathTileObject;
+import qupath.lib.objects.hierarchy.PathObjectHierarchy;
+import qupath.lib.objects.hierarchy.events.PathObjectSelectionListener;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
 import java.awt.image.BufferedImage;
@@ -58,9 +66,10 @@ public class WSInferController {
 
     public QuPathGUI qupath;
     private ObjectProperty<ImageData<BufferedImage>> imageDataProperty = new SimpleObjectProperty<>();
+    private MessageTextHelper messageTextHelper;
 
     @FXML
-    private Label labelWarning;
+    private Label labelMessage;
     @FXML
     private ChoiceBox<String> modelChoiceBox;
     @FXML
@@ -113,10 +122,25 @@ public class WSInferController {
         configureModelDirectory();
         configureNumWorkers();
 
+        configureMessageLabel();
         configureRunInferenceButton();
-        configureWarningLabel();
 
         configurePendingTaskProperty();
+    }
+
+    private void configureMessageLabel() {
+        messageTextHelper = new MessageTextHelper();
+        labelMessage.textProperty().bind(messageTextHelper.messageLabelText);
+        if (messageTextHelper.hasWarning.get())
+            labelMessage.getStyleClass().setAll("warning-message");
+        else
+            labelMessage.getStyleClass().setAll("standard-message");
+        messageTextHelper.hasWarning.addListener((observable, oldValue, newValue) -> {
+            if (newValue)
+                labelMessage.getStyleClass().setAll("warning-message");
+            else
+                labelMessage.getStyleClass().setAll("standard-message");
+        });
     }
 
     /**
@@ -175,25 +199,6 @@ public class WSInferController {
         return availableDevices;
     }
 
-    private StringBinding createWarningTextBinding() {
-        return Bindings.createStringBinding(this::getWarningText,
-                imageDataProperty,
-                modelChoiceBox.getSelectionModel().selectedItemProperty());
-    }
-
-    private String getWarningText() {
-        if (imageDataProperty.get() == null) {
-            return resources.getString("ui.error.no-image");
-        }
-        if (modelChoiceBox.getSelectionModel().isEmpty())
-            return resources.getString("ui.error.no-model");
-        // TODO: Handle no objects selected
-        return null;
-    }
-
-    private void configureWarningLabel() {
-        labelWarning.textProperty().bind(createWarningTextBinding());
-    }
 
     private void configureRunInferenceButton() {
         // Disable the run button while a task is pending, or we have no model selected
@@ -201,6 +206,7 @@ public class WSInferController {
                 imageDataProperty.isNull()
                         .or(pendingTask.isNotNull())
                         .or(modelChoiceBox.getSelectionModel().selectedItemProperty().isNull())
+                        .or(messageTextHelper.warningText.isNotEmpty())
         );
     }
 
@@ -364,6 +370,152 @@ public class WSInferController {
                 Platform.runLater(() -> Dialogs.showErrorMessage(getTitle(), e.getLocalizedMessage()));
             }
             return null;
+        }
+
+    }
+
+
+    /**
+     * Helper class for determining which text to display in the message label.
+     */
+    private class MessageTextHelper {
+
+        private SelectedObjectCounter selectedObjectCounter;
+
+        /**
+         * Text to display a warning (because inference can't be run)
+         */
+        private StringBinding warningText;
+        /**
+         * Text to display the number of selected objects (usually when inference can be run)
+         */
+        private StringBinding selectedObjectText;
+        /**
+         * Text to display in the message label (either the warning or the selected object text)
+         */
+        private StringBinding messageLabelText;
+
+        /**
+         * Binding to check if the warning is empty.
+         * Retained here because otherwise code that attaches a listener to {@code warningText.isEmpty()} would need to
+         * retain a reference to the binding to prevent garbage collection.
+         */
+        private BooleanBinding hasWarning;
+
+        MessageTextHelper() {
+            this.selectedObjectCounter = new SelectedObjectCounter(imageDataProperty);
+            configureMessageTextBindings();
+        }
+
+        private void configureMessageTextBindings() {
+            this.warningText = createWarningTextBinding();
+            this.selectedObjectText = createSelectedObjectTextBinding();
+            this.messageLabelText = Bindings.createStringBinding(() -> {
+                var warning = warningText.get();
+                if (warning == null || warning.isEmpty())
+                    return selectedObjectText.get();
+                else
+                    return warning;
+            }, warningText, selectedObjectText);
+            this.hasWarning = warningText.isEmpty().not();
+        }
+
+        private StringBinding createSelectedObjectTextBinding() {
+            return Bindings.createStringBinding(this::getSelectedObjectText,
+                    selectedObjectCounter.numSelectedAnnotations,
+                    selectedObjectCounter.numSelectedDetections);
+        }
+
+        private String getSelectedObjectText() {
+            int nAnnotations = selectedObjectCounter.numSelectedAnnotations.get();
+            int nDetections = selectedObjectCounter.numSelectedDetections.get();
+            if (nAnnotations == 1)
+                return resources.getString("ui.selection.annotations-single");
+            else if (nAnnotations > 1)
+                return String.format(resources.getString("ui.selection.annotations-multiple"), nAnnotations);
+            else if (nDetections == 1)
+                return resources.getString("ui.selection.detections-single");
+            else if (nDetections > 1)
+                return String.format(resources.getString("ui.selection.detections-multiple"), nDetections);
+            else
+                return resources.getString("ui.selection.empty");
+        }
+
+        private StringBinding createWarningTextBinding() {
+            return Bindings.createStringBinding(this::getWarningText,
+                    imageDataProperty,
+                    modelChoiceBox.getSelectionModel().selectedItemProperty(),
+                    selectedObjectCounter.numSelectedAnnotations,
+                    selectedObjectCounter.numSelectedDetections);
+        }
+
+        private String getWarningText() {
+            if (imageDataProperty.get() == null)
+                return resources.getString("ui.error.no-image");
+            if (modelChoiceBox.getSelectionModel().isEmpty())
+                return resources.getString("ui.error.no-model");
+            if (selectedObjectCounter.numSelectedAnnotations.get() == 0 && selectedObjectCounter.numSelectedDetections.get() == 0)
+                return resources.getString("ui.error.no-selection");
+            return null;
+        }
+    }
+
+
+    /**
+     * Helper class for maintaining a count of selected annotations and detections,
+     * determined from an ImageData property (whose value may changed).
+     * This addresses the awkwardness of attaching/detaching listeners.
+     */
+    private static class SelectedObjectCounter {
+
+        private ObjectProperty<ImageData<?>> imageDataProperty = new SimpleObjectProperty<>();
+
+        private PathObjectSelectionListener selectionListener = this::selectedPathObjectChanged;
+
+        private ObservableValue<PathObjectHierarchy> hierarchyProperty;
+
+        private IntegerProperty numSelectedAnnotations = new SimpleIntegerProperty();
+        private IntegerProperty numSelectedDetections = new SimpleIntegerProperty();
+
+        SelectedObjectCounter(ObservableValue<ImageData<BufferedImage>> imageDataProperty) {
+            this.imageDataProperty.bind(imageDataProperty);
+            this.hierarchyProperty = createHierarchyBinding();
+            hierarchyProperty.addListener((observable, oldValue, newValue) -> updateHierarchy(oldValue, newValue));
+            updateHierarchy(null, hierarchyProperty.getValue());
+        }
+
+        private ObjectBinding<PathObjectHierarchy> createHierarchyBinding() {
+            return Bindings.createObjectBinding(() -> {
+                        var imageData = imageDataProperty.get();
+                        return imageData == null ? null : imageData.getHierarchy();
+                    },
+                    imageDataProperty);
+        }
+
+        private void updateHierarchy(PathObjectHierarchy oldValue, PathObjectHierarchy newValue) {
+            if (oldValue == newValue)
+                return;
+            if (oldValue != null)
+                oldValue.getSelectionModel().removePathObjectSelectionListener(selectionListener);
+            if (newValue != null)
+                newValue.getSelectionModel().addPathObjectSelectionListener(selectionListener);
+            updateSelectedObjectCounts();
+        }
+
+        private void selectedPathObjectChanged(PathObject pathObjectSelected, PathObject previousObject, Collection<PathObject> allSelected) {
+            updateSelectedObjectCounts();
+        }
+
+        private void updateSelectedObjectCounts() {
+            var hierarchy = hierarchyProperty.getValue();
+            if (hierarchy == null) {
+                numSelectedAnnotations.set(0);
+                numSelectedDetections.set(0);
+            } else {
+                var selected = hierarchy.getSelectionModel().getSelectedObjects();
+                numSelectedAnnotations.set((int)selected.stream().filter(p -> p.isAnnotation()).count());
+                numSelectedDetections.set((int)selected.stream().filter(p -> p.isDetection()).count());
+            }
         }
 
     }
