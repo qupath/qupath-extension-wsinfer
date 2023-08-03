@@ -3,6 +3,7 @@ package qupath.ext.wsinfer.ui;
 import ai.djl.engine.Engine;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.IntegerProperty;
@@ -130,15 +131,15 @@ public class WSInferController {
     private void configureMessageLabel() {
         messageTextHelper = new MessageTextHelper();
         labelMessage.textProperty().bind(messageTextHelper.messageLabelText);
-        if (!messageTextHelper.warningText.isEmpty().get())
+        if (messageTextHelper.hasWarning.get())
             labelMessage.getStyleClass().setAll("warning-message");
         else
             labelMessage.getStyleClass().setAll("standard-message");
-        messageTextHelper.warningText.isEmpty().addListener((observable, oldValue, newValue) -> {
+        messageTextHelper.hasWarning.addListener((observable, oldValue, newValue) -> {
             if (newValue)
-                labelMessage.getStyleClass().setAll("standard-message");
-            else
                 labelMessage.getStyleClass().setAll("warning-message");
+            else
+                labelMessage.getStyleClass().setAll("standard-message");
         });
     }
 
@@ -394,6 +395,13 @@ public class WSInferController {
          */
         private StringBinding messageLabelText;
 
+        /**
+         * Binding to check if the warning is empty.
+         * Retained here because otherwise code that attaches a listener to {@code warningText.isEmpty()} would need to
+         * retain a reference to the binding to prevent garbage collection.
+         */
+        private BooleanBinding hasWarning;
+
         MessageTextHelper() {
             this.selectedObjectCounter = new SelectedObjectCounter(imageDataProperty);
             configureMessageTextBindings();
@@ -409,6 +417,7 @@ public class WSInferController {
                 else
                     return warning;
             }, warningText, selectedObjectText);
+            this.hasWarning = warningText.isEmpty().not();
         }
 
         private StringBinding createSelectedObjectTextBinding() {
