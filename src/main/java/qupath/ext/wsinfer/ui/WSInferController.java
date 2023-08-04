@@ -107,7 +107,7 @@ public class WSInferController {
 
     @FXML
     private void initialize() {
-        logger.info("Initializing...");
+        logger.info(resources.getString("logger.initializing"));
 
         this.qupath = QuPathGUI.getInstance();
         this.imageDataProperty.bind(qupath.imageDataProperty());
@@ -189,7 +189,7 @@ public class WSInferController {
                     includesMPS = true;
             }
         } catch (Throwable e) {
-            logger.warn("PyTorch not found");
+            logger.warn(resources.getString("logger.pytorch"));
             availableDevices.add("cpu");
         }
         // If we could use MPS, but don't have it already, add it
@@ -268,11 +268,12 @@ public class WSInferController {
     public void runInference() {
         var imageData = this.imageDataProperty.get();
         if (imageData == null) {
-            Dialogs.showErrorMessage("WSInfer plugin", "Cannot run WSInfer plugin without ImageData.");
+            Dialogs.showErrorMessage(resources.getString("title") , resources.getString("error.inference"));
             return;
         }
         var model = currentRunner.getModel();
         submitInferenceTask(imageData, model.getName());
+
     }
 
     private void submitInferenceTask(ImageData<BufferedImage> imageData, String modelName) {
@@ -291,6 +292,7 @@ public class WSInferController {
         imageData.getHistoryWorkflow()
                 .addStep(
                         new DefaultScriptableWorkflowStep(
+//                                TODO
                                 "Run WSInfer model",
                                 WSInfer.class.getName() + ".runInference(\"" + modelName + "\")"
                         ));
@@ -325,7 +327,7 @@ public class WSInferController {
         }
         // Fallback in case we couldn't get the action
         if (measurementMapsStage == null) {
-            logger.warn("Creating a new measurement map stage");
+            logger.warn(resources.getString("logger.measurement-maps"));
             measurementMapsStage = Commands.createMeasurementMapDialog(QuPathGUI.getInstance());
         }
         measurementMapsStage.show();
@@ -335,8 +337,6 @@ public class WSInferController {
     private void openDetectionTable() {
         Commands.showDetectionMeasurementTable(qupath, imageDataProperty.get());
     }
-
-
 
     /**
      * Wrapper for an inference task, which can be submitted to the thread pool.
@@ -351,6 +351,7 @@ public class WSInferController {
             this.imageData = imageData;
             this.model = model;
             this.progressListener = new WSInferProgressDialog(QuPathGUI.getInstance().getStage(), e -> {
+//                TODO
                 if (Dialogs.showYesNoDialog("WSInfer", "Stop all running tasks?")) {
                     cancel(true);
                     e.consume();
@@ -361,6 +362,7 @@ public class WSInferController {
         @Override
         protected Void call() throws Exception {
             try {
+//                TODO
                 Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), "Requesting inference for " + model.getName()));
                 WSInfer.runInference(imageData, model, progressListener);
                 addToHistoryWorkflow(imageData, model.getName());
@@ -371,7 +373,6 @@ public class WSInferController {
             }
             return null;
         }
-
     }
 
 
