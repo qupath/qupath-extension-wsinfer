@@ -94,9 +94,7 @@ public class WSInferController {
     private Spinner<Integer> spinnerNumWorkers;
     @FXML
     private TextField tfModelDirectory;
-    @FXML
-    private ResourceBundle resources;
-
+    private final static ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
     private WSInferModelHandler currentRunner;
     private Stage measurementMapsStage;
 
@@ -292,8 +290,7 @@ public class WSInferController {
         imageData.getHistoryWorkflow()
                 .addStep(
                         new DefaultScriptableWorkflowStep(
-//                                TODO
-                                "Run WSInfer model",
+                                resources.getString("workflow.title"),
                                 WSInfer.class.getName() + ".runInference(\"" + modelName + "\")"
                         ));
     }
@@ -351,8 +348,7 @@ public class WSInferController {
             this.imageData = imageData;
             this.model = model;
             this.progressListener = new WSInferProgressDialog(QuPathGUI.getInstance().getStage(), e -> {
-//                TODO
-                if (Dialogs.showYesNoDialog("WSInfer", "Stop all running tasks?")) {
+                if (Dialogs.showYesNoDialog(resources.getString("title"), resources.getString("ui.stop-tasks"))) {
                     cancel(true);
                     e.consume();
                 }
@@ -362,8 +358,7 @@ public class WSInferController {
         @Override
         protected Void call() throws Exception {
             try {
-//                TODO
-                Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), "Requesting inference for " + model.getName()));
+                Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), resources.getString("ui.popup.requesting") + model.getName()));
                 WSInfer.runInference(imageData, model, progressListener);
                 addToHistoryWorkflow(imageData, model.getName());
             } catch (InterruptedException e) {
@@ -464,7 +459,7 @@ public class WSInferController {
 
     /**
      * Helper class for maintaining a count of selected annotations and detections,
-     * determined from an ImageData property (whose value may changed).
+     * determined from an ImageData property (whose value may change).
      * This addresses the awkwardness of attaching/detaching listeners.
      */
     private static class SelectedObjectCounter {

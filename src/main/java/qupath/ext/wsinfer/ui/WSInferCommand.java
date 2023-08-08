@@ -50,7 +50,7 @@ public class WSInferCommand implements Runnable {
 
         URL url = getClass().getResource("wsinfer_control.fxml");
         if (url == null) {
-            throw new IOException("Cannot find URL for WSInfer FXML");
+            throw new IOException(resources.getString("error.url"));
         }
 
         VBox root = FXMLLoader.load(url, resources);
