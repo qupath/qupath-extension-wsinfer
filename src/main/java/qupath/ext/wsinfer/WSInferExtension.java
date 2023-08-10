@@ -38,7 +38,7 @@ public class WSInferExtension implements QuPathExtension {
 	@Override
 	public void installExtension(QuPathGUI qupath) {
 		if (isInstalled) {
-			logger.debug(resources.getString("error.install"), getName());
+			logger.debug("{} is already installed", getName());
 			return;
 		}
 		isInstalled = true;
@@ -47,7 +47,7 @@ public class WSInferExtension implements QuPathExtension {
 
 	private void addMenuItems(QuPathGUI qupath) {
 		var menu = qupath.getMenu("Extensions>" + EXTENSION_NAME, true);
-		MenuItem menuItem = new MenuItem("WSInfer");
+		MenuItem menuItem = new MenuItem(resources.getString("title"));
 		WSInferCommand command = new WSInferCommand(qupath);
 		menuItem.setOnAction(e -> command.run());
 		menuItem.disableProperty().bind(enableExtensionProperty.not());

@@ -38,7 +38,7 @@ public class WSInferCommand implements Runnable {
                 stage = createStage();
             } catch (IOException e) {
                 Dialogs.showErrorMessage(resources.getString("title"),
-                        resources.getString("error.initializing"));
+                        "Error initializing WSInfer window");
                 logger.error(e.getMessage(), e);
                 return;
             }
@@ -50,7 +50,7 @@ public class WSInferCommand implements Runnable {
 
         URL url = getClass().getResource("wsinfer_control.fxml");
         if (url == null) {
-            throw new IOException(resources.getString("error.url"));
+            throw new IOException("Cannot find URL for WSInfer FXML");
         }
 
         VBox root = FXMLLoader.load(url, resources);

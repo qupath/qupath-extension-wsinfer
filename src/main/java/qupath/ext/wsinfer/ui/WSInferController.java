@@ -105,7 +105,7 @@ public class WSInferController {
 
     @FXML
     private void initialize() {
-        logger.info(resources.getString("logger.initializing"));
+        logger.info("Initializing...");
 
         this.qupath = QuPathGUI.getInstance();
         this.imageDataProperty.bind(qupath.imageDataProperty());
@@ -187,7 +187,7 @@ public class WSInferController {
                     includesMPS = true;
             }
         } catch (Throwable e) {
-            logger.warn(resources.getString("logger.pytorch"));
+            logger.warn("PyTorch not found");
             availableDevices.add("cpu");
         }
         // If we could use MPS, but don't have it already, add it
@@ -324,7 +324,7 @@ public class WSInferController {
         }
         // Fallback in case we couldn't get the action
         if (measurementMapsStage == null) {
-            logger.warn(resources.getString("logger.measurement-maps"));
+            logger.warn("Creating a new measurement map stage");
             measurementMapsStage = Commands.createMeasurementMapDialog(QuPathGUI.getInstance());
         }
         measurementMapsStage.show();
