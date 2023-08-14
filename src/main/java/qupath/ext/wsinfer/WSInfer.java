@@ -21,13 +21,15 @@ import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.ext.wsinfer.models.WSInferModelConfiguration;
 import qupath.ext.wsinfer.models.WSInferTransform;
 import qupath.ext.wsinfer.models.WSInferUtils;
-import qupath.ext.wsinfer.ui.TileCreator;
 import qupath.ext.wsinfer.ui.WSInferPrefs;
 import qupath.lib.gui.dialogs.Dialogs;
 import qupath.lib.images.ImageData;
 import qupath.lib.images.servers.ImageServer;
+import qupath.lib.images.servers.PixelCalibration;
 import qupath.lib.objects.PathObject;
+import qupath.lib.objects.PathObjects;
 import qupath.lib.objects.classes.PathClass;
+import qupath.lib.roi.GeometryTools;
 import qupath.lib.scripting.QP;
 
 import java.awt.image.BufferedImage;
@@ -352,20 +354,40 @@ public class WSInfer {
         Collection<PathObject> selectedAnnotations = selectedObjects.stream()
                 .filter(p -> p.isAnnotation())
                 .collect(Collectors.toList());
+
         if (!selectedAnnotations.isEmpty()) {
             var annotationSet = new LinkedHashSet<>(selectedAnnotations); // We want this later
-            double tileSizePx = 0, tileSizeMicrons = 0;
-            if (imageData.getServer().getPixelCalibration().hasPixelSizeMicrons()) {
-                tileSizeMicrons = config.getPatchSizePixels() * config.getSpacingMicronPerPixel();
+            double tileWidth, tileHeight;
+            PixelCalibration cal = imageData.getServer().getPixelCalibration();
+            if (cal.hasPixelSizeMicrons()) {
+                double tileSizeMicrons = config.getPatchSizePixels() * config.getSpacingMicronPerPixel();
+                tileWidth = (int)(tileSizeMicrons / cal.getPixelWidthMicrons() + .5);
+                tileHeight = (int)(tileSizeMicrons / cal.getPixelHeightMicrons() + .5);
             } else {
-                logger.warn("Pixel calibration not available, so using pixels instead of microns");
-                tileSizePx = config.getPatchSizePixels();
+                tileWidth = (int)(config.getPatchSizePixels() + .5);
+                tileHeight = tileWidth;
             }
             for (var annotation: selectedAnnotations) {
-                TileCreator tileCreator = new TileCreator(imageData,
-                        annotation, tileSizeMicrons, tileSizePx,
-                        false, false, false, true);
-                tileCreator.run();
+                var tiler = new Tiler(
+                        GeometryTools.roiToGeometry(annotation.getROI()),
+                        (int)tileWidth,
+                        (int)tileHeight);
+                tiler.setTrimToParent(false);
+                tiler.setTrimByCentroids(false);
+                tiler.setSymmetric(true);
+                var tiles = tiler.tile();
+
+                // add tiles to the hierarchy
+                annotation.clearChildObjects();
+                for (int i = 0; i < tiles.size(); i++) {
+                    var tile = tiles.get(i);
+                    var roi = GeometryTools.geometryToROI(tile,
+                            annotation.getROI().getImagePlane());
+                    var po = PathObjects.createTileObject(roi);
+                    po.setName("Tile " + i);
+                    annotation.addChildObject(po);
+                }
+                imageData.getHierarchy().fireHierarchyChangedEvent(annotation);
             }
 
             // We want our new tiles to be selected... but we also want to ensure that any tile object

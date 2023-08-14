@@ -1,8 +1,11 @@
 package qupath.ext.wsinfer.models;
 
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.lib.io.GsonTools;
+import qupath.lib.roi.GeometryTools;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,6 +18,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -99,4 +104,7 @@ public class WSInferUtils {
         }
         return GsonTools.getInstance().fromJson(json, WSInferModelCollection.class);
     }
+
+
+
 }
