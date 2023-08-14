@@ -13,7 +13,7 @@ public class Tiler {
     private int tileHeight;
     private boolean trimToParent = true;
     private boolean symmetric = true;
-    private boolean trimByCentroids = true;
+    private boolean filterByCentroid = true;
 
     public Tiler(Geometry parent, int tileWidth, int tileHeight) {
         this.parent = parent;
@@ -61,16 +61,16 @@ public class Tiler {
         this.symmetric = symmetric;
     }
 
-    public void setTrimByCentroids(boolean trimByCentroids) {
-        this.trimByCentroids = trimByCentroids;
+    public void setFilterByCentroid(boolean filterByCentroid) {
+        this.filterByCentroid = filterByCentroid;
     }
 
-    public boolean isTrimByCentroids() {
-        return trimByCentroids;
+    public boolean isFilterByCentroid() {
+        return filterByCentroid;
     }
 
     public List<Geometry> tile() {
-        return Tiler.tile(parent, tileWidth, tileHeight, trimToParent, trimByCentroids, symmetric);
+        return Tiler.tile(parent, tileWidth, tileHeight, trimToParent, filterByCentroid, symmetric);
     }
 
     public static List<Geometry> tile(final Geometry parent,
