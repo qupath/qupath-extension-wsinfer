@@ -7,18 +7,14 @@ plugins {
   id 'org.bytedeco.gradle-javacpp-platform'
 }
 
-// TODO: Change the module name
 ext.moduleName = 'io.github.qupath.extension.wsinfer'
 
-// TODO: Define the extension version & provide a short description
 version = "0.1.0"
 description = 'An extension to run WSInfer in QuPath'
 
-// TODO: Specify the QuPath version, compatible with the extension.
 // The default 'gradle.ext.qupathVersion' reads this from settings.gradle.
 ext.qupathVersion = gradle.ext.qupathVersion
 
-// TODO: Specify the Java version compatible with the extension
 // Generally 11 for QuPath v0.4.3, but will be 17 for QuPath v0.5.0
 ext.qupathJavaVersion = 11
 
