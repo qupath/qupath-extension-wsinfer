@@ -2,10 +2,20 @@ package qupath.ext.wsinfer;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+import qupath.lib.images.ImageData;
+import qupath.lib.images.servers.ImageServer;
+import qupath.lib.objects.PathObject;
+import qupath.lib.objects.PathObjects;
+import qupath.lib.objects.hierarchy.PathObjectHierarchy;
 import qupath.lib.roi.GeometryTools;
+import qupath.lib.roi.interfaces.ROI;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class Tiler {
     private Geometry parent;
@@ -94,8 +104,8 @@ public class Tiler {
             yStart += calculateOffset(tileHeight, bBoxHeight);
         }
         List<Geometry> tiles = new ArrayList<>();
-        for (int x = (int)xStart; x < xEnd; x += tileWidth) {
-            for (int y = (int)yStart; y < yEnd; y += tileHeight) {
+        for (int x = (int) xStart; x < xEnd; x += tileWidth) {
+            for (int y = (int) yStart; y < yEnd; y += tileHeight) {
                 Geometry tile = GeometryTools.createRectangle(x, y, tileWidth, tileHeight);
                 // straightforward case 1:
                 // if there's no intersection, we're in the bounding box but not
@@ -133,4 +143,62 @@ public class Tiler {
         return mod / 2;
     }
 
+    public static boolean createObjectsFromGeometries(
+            ImageData<BufferedImage> imageData,
+            Collection<Geometry> geometries,
+            PathObject parent,
+            boolean clearChildren,
+            boolean setLocked,
+            Function<ROI, ? extends PathObject> creator) {
+        if (geometries.isEmpty()) {
+            return false;
+        }
+        var rois = geometries
+                .stream()
+                .map(geometry -> GeometryTools.geometryToROI(geometry, parent.getROI().getImagePlane()))
+                .collect(Collectors.toList());
+
+        if (clearChildren) {
+            parent.clearChildObjects();
+        }
+        for (int i = 0; i < rois.size(); i++) {
+            var roi = rois.get(i);
+            var po = creator.apply(roi);
+            po.setName("Tile " + i);
+            parent.addChildObject(po);
+        }
+        parent.setLocked(setLocked);
+        imageData.getHierarchy().fireHierarchyChangedEvent(parent);
+        return true;
+    }
+
+    public static boolean createTilesFromGeometries(
+            ImageData<BufferedImage> imageData,
+            Collection<Geometry> geometries,
+            PathObject parent,
+            boolean clearChildren,
+            boolean setLocked) {
+        return createObjectsFromGeometries(
+                imageData,
+                geometries,
+                parent,
+                clearChildren,
+                setLocked,
+                PathObjects::createTileObject);
+    }
+
+    public static boolean createAnnotationTilesFromGeometries(
+            ImageData<BufferedImage> imageData,
+            Collection<Geometry> geometries,
+            PathObject parent,
+            boolean clearChildren,
+            boolean setLocked) {
+        return createObjectsFromGeometries(
+                imageData,
+                geometries,
+                parent,
+                clearChildren,
+                setLocked,
+                PathObjects::createAnnotationObject);
+    }
 }

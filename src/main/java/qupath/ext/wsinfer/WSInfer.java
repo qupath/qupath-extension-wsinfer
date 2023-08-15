@@ -378,16 +378,13 @@ public class WSInfer {
                 var tiles = tiler.tile();
 
                 // add tiles to the hierarchy
-                annotation.clearChildObjects();
-                for (int i = 0; i < tiles.size(); i++) {
-                    var tile = tiles.get(i);
-                    var roi = GeometryTools.geometryToROI(tile,
-                            annotation.getROI().getImagePlane());
-                    var po = PathObjects.createTileObject(roi);
-                    po.setName("Tile " + i);
-                    annotation.addChildObject(po);
-                }
-                imageData.getHierarchy().fireHierarchyChangedEvent(annotation);
+                Tiler.createTilesFromGeometries(
+                        imageData,
+                        tiles,
+                        annotation,
+                        true,
+                        true
+                );
             }
 
             // We want our new tiles to be selected... but we also want to ensure that any tile object
