@@ -375,7 +375,7 @@ public class WSInfer {
                 logger.warn("Tiling interrupted", e);
             }
         }
-        throw new IllegalArgumentException(resources.getString("ui.selection.empty2"));
+        throw new IllegalArgumentException(resources.getString("No tiles or annotations selected!"));
     }
 
 
