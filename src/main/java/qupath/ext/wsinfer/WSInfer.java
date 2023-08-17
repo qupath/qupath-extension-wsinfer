@@ -373,7 +373,7 @@ public class WSInfer {
                         (int)tileWidth,
                         (int)tileHeight);
                 tiler.setTrimToParent(false);
-                tiler.setFilterByCentroid(false);
+                tiler.setFilterByCentroid(true);
                 tiler.setSymmetric(true);
                 var tiles = tiler.tile();
 
