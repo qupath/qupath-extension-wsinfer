@@ -91,9 +91,7 @@ public class WSInferController {
     private Spinner<Integer> spinnerNumWorkers;
     @FXML
     private TextField tfModelDirectory;
-    @FXML
-    private ResourceBundle resources;
-
+    private final static ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
     private WSInferModelHandler currentRunner;
     private Stage measurementMapsStage;
 
@@ -247,12 +245,12 @@ public class WSInferController {
         var imageData = this.imageDataProperty.get();
         String title = resources.getString("title");
         if (imageData == null) {
-            Dialogs.showErrorMessage(title, "Cannot run WSInfer plugin without ImageData.");
+            Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.no-imagedata"));
             return;
         }
         if (!PytorchManager.hasPyTorchEngine()) {
-            if (!Dialogs.showConfirmDialog(title, "PyTorch engine not found - would you like to download it?\nThis may take some time (but is only required once).")) {
-                Dialogs.showWarningNotification(title, "No inference performed - PyTorch engine not found.");
+            if (!Dialogs.showConfirmDialog(resources.getString("title"), resources.getString("ui.pytorch"))) {
+                Dialogs.showWarningNotification(resources.getString("title"), resources.getString("ui.pytorch-popup"));
                 return;
             }
         }
@@ -275,7 +273,7 @@ public class WSInferController {
         imageData.getHistoryWorkflow()
                 .addStep(
                         new DefaultScriptableWorkflowStep(
-                                "Run WSInfer model",
+                                resources.getString("workflow.title"),
                                 WSInfer.class.getName() + ".runInference(\"" + modelName + "\")"
                         ));
     }
@@ -320,8 +318,6 @@ public class WSInferController {
         Commands.showDetectionMeasurementTable(qupath, imageDataProperty.get());
     }
 
-
-
     /**
      * Wrapper for an inference task, which can be submitted to the thread pool.
      */
@@ -335,7 +331,7 @@ public class WSInferController {
             this.imageData = imageData;
             this.model = model;
             this.progressListener = new WSInferProgressDialog(QuPathGUI.getInstance().getStage(), e -> {
-                if (Dialogs.showYesNoDialog(getTitle(), "Stop all running tasks?")) {
+                if (Dialogs.showYesNoDialog(getTitle(), resources.getString("ui.stop-tasks"))) {
                     cancel(true);
                     e.consume();
                 }
@@ -347,11 +343,11 @@ public class WSInferController {
             try {
                 // Ensure PyTorch engine is available
                 if (!PytorchManager.hasPyTorchEngine()) {
-                    Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), "Downloading PyTorch engine..."));
+                    Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), resources.getString("ui.pytorch-downloading")));
                     PytorchManager.getEngineOnline();
                 }
                 // Run inference
-                Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), "Requesting inference for " + model.getName()));
+                Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), resources.getString("ui.popup.requesting") + model.getName()));
                 WSInfer.runInference(imageData, model, progressListener);
                 addToHistoryWorkflow(imageData, model.getName());
             } catch (InterruptedException e) {
@@ -361,7 +357,6 @@ public class WSInferController {
             }
             return null;
         }
-
     }
 
 
@@ -453,7 +448,7 @@ public class WSInferController {
 
     /**
      * Helper class for maintaining a count of selected annotations and detections,
-     * determined from an ImageData property (whose value may changed).
+     * determined from an ImageData property (whose value may change).
      * This addresses the awkwardness of attaching/detaching listeners.
      */
     private static class SelectedObjectCounter {

@@ -42,8 +42,6 @@ public class WSInfer {
     private static final Logger logger = LoggerFactory.getLogger(WSInfer.class);
     private static final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 
-    private static final String title = "WSInfer";
-
     /**
      * Run inference on the current image data using the given model.
      * @param wsiModel
@@ -136,7 +134,7 @@ public class WSInfer {
     public static void runInference(ImageData<BufferedImage> imageData, WSInferModel wsiModel, ProgressListener progressListener) throws InterruptedException, ModelNotFoundException, MalformedModelException, IOException, TranslateException {
         Objects.requireNonNull(wsiModel, "Model cannot be null");
         if (imageData == null) {
-            Dialogs.showNoImageError(title);
+            Dialogs.showNoImageError(resources.getString("title"));
         }
 
         // Try to get some tiles we can use
@@ -351,31 +349,35 @@ public class WSInfer {
         Collection<PathObject> selectedAnnotations = selectedObjects.stream()
                 .filter(p -> p.isAnnotation())
                 .collect(Collectors.toList());
-        if (!selectedAnnotations.isEmpty()) {
-            var annotationSet = new LinkedHashSet<>(selectedAnnotations); // We want this later
-            Map<String, Object> pluginArgs = new LinkedHashMap<>();
-            if (imageData.getServer().getPixelCalibration().hasPixelSizeMicrons()) {
-                pluginArgs.put("tileSizeMicrons", config.getPatchSizePixels() * config.getSpacingMicronPerPixel());
-            } else {
-                logger.warn("Pixel calibration not available, so using pixels instead of microns");
-                pluginArgs.put("tileSizePixels", config.getPatchSizePixels());
-            }
-            pluginArgs.put("trimToROI", false);
-            pluginArgs.put("makeAnnotations", false);
-            pluginArgs.put("removeParentAnnotation", false);
-            try {
-                QP.runPlugin("qupath.lib.algorithms.TilerPlugin", imageData, pluginArgs);
-                // We want our new tiles to be selected... but we also want to ensure that any tile object
-                // has a selected annotation as a parent (in case there were other tiles already)
-                return imageData.getHierarchy().getTileObjects()
-                        .stream()
-                        .filter(t -> annotationSet.contains(t.getParent()))
-                        .collect(Collectors.toList());
-            } catch (InterruptedException e) {
-                logger.warn("Tiling interrupted", e);
-            }
+
+        if (selectedAnnotations.isEmpty()) {
+            throw new IllegalArgumentException(resources.getString("No tiles or annotations selected!"));
         }
-        throw new IllegalArgumentException("No tiles or annotations selected!");
+
+        // create tiles from the selected annotations
+        var annotationSet = new LinkedHashSet<>(selectedAnnotations); // We want this later
+        Map<String, Object> pluginArgs = new LinkedHashMap<>();
+        if (imageData.getServer().getPixelCalibration().hasPixelSizeMicrons()) {
+            pluginArgs.put("tileSizeMicrons", config.getPatchSizePixels() * config.getSpacingMicronPerPixel());
+        } else {
+            logger.warn("Pixel calibration not available, so using pixels instead of microns");
+            pluginArgs.put("tileSizePixels", config.getPatchSizePixels());
+        }
+        pluginArgs.put("trimToROI", false);
+        pluginArgs.put("makeAnnotations", false);
+        pluginArgs.put("removeParentAnnotation", false);
+        try {
+            QP.runPlugin("qupath.lib.algorithms.TilerPlugin", imageData, pluginArgs);
+            // We want our new tiles to be selected... but we also want to ensure that any tile object
+            // has a selected annotation as a parent (in case there were other tiles already)
+            return imageData.getHierarchy().getTileObjects()
+                    .stream()
+                    .filter(t -> annotationSet.contains(t.getParent()))
+                    .collect(Collectors.toList());
+        } catch (InterruptedException e) {
+            logger.warn("Tiling interrupted", e);
+            return new ArrayList<>();
+        }
     }
 
 

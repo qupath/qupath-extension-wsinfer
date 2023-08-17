@@ -5,19 +5,23 @@ import javafx.beans.property.SimpleBooleanProperty;
 import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.lib.gui.dialogs.Dialogs;
 
+import java.util.ResourceBundle;
+
 public class WSInferModelHandler {
 
     private final WSInferModel wsiModel;
     private final BooleanProperty downloadRequestedProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty modelIsReadyProperty = new SimpleBooleanProperty(false);
+
+    private final static ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
     
     public WSInferModelHandler(WSInferModel wsiModel) {
         this.wsiModel = wsiModel;
         this.downloadRequestedProperty.addListener((v, o, n) -> {
             if (n) {
-                Dialogs.showPlainNotification("WSInfer", String.format("Fetching model: %s", wsiModel.getName()));
+                Dialogs.showPlainNotification(resources.getString("title"), String.format(resources.getString("ui.popup.fetching"), wsiModel.getName()));
                 wsiModel.fetchModel();
-                Dialogs.showPlainNotification("WSInfer", String.format("Model available: %s", wsiModel.getName()));
+                Dialogs.showPlainNotification(resources.getString("title"), String.format(resources.getString("ui.popup.available"), wsiModel.getName()));
                 downloadRequestedProperty.set(false);
                 modelIsReadyProperty.set(true);
             }

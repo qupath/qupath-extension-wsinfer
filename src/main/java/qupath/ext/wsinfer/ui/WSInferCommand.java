@@ -38,7 +38,7 @@ public class WSInferCommand implements Runnable {
                 stage = createStage();
             } catch (IOException e) {
                 Dialogs.showErrorMessage(resources.getString("title"),
-                        resources.getString("error.initializing"));
+                        resources.getString("error.window"));
                 logger.error(e.getMessage(), e);
                 return;
             }
