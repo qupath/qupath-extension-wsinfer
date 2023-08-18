@@ -45,8 +45,6 @@ public class WSInfer {
     private static final Logger logger = LoggerFactory.getLogger(WSInfer.class);
     private static final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 
-    private static final String title = "WSInfer";
-
     /**
      * Run inference on the current image data using the given model.
      * @param wsiModel
@@ -139,7 +137,7 @@ public class WSInfer {
     public static void runInference(ImageData<BufferedImage> imageData, WSInferModel wsiModel, ProgressListener progressListener) throws InterruptedException, ModelNotFoundException, MalformedModelException, IOException, TranslateException {
         Objects.requireNonNull(wsiModel, "Model cannot be null");
         if (imageData == null) {
-            Dialogs.showNoImageError(title);
+            Dialogs.showNoImageError(resources.getString("title"));
         }
 
         // Try to get some tiles we can use
@@ -355,47 +353,49 @@ public class WSInfer {
                 .filter(p -> p.isAnnotation())
                 .collect(Collectors.toList());
 
-        if (!selectedAnnotations.isEmpty()) {
-            var annotationSet = new LinkedHashSet<>(selectedAnnotations); // We want this later
-            double tileWidth, tileHeight;
-            PixelCalibration cal = imageData.getServer().getPixelCalibration();
-            if (cal.hasPixelSizeMicrons()) {
-                double tileSizeMicrons = config.getPatchSizePixels() * config.getSpacingMicronPerPixel();
-                tileWidth = (int)(tileSizeMicrons / cal.getPixelWidthMicrons() + .5);
-                tileHeight = (int)(tileSizeMicrons / cal.getPixelHeightMicrons() + .5);
-            } else {
-                tileWidth = (int)(config.getPatchSizePixels() + .5);
-                tileHeight = tileWidth;
-            }
-            for (var annotation: selectedAnnotations) {
-                var tiler = new Tiler(
-                        GeometryTools.roiToGeometry(annotation.getROI()),
-                        (int)tileWidth,
-                        (int)tileHeight);
-                tiler.setTrimToParent(false);
-                tiler.setFilterByCentroid(true);
-                tiler.setSymmetric(true);
-                var tiles = tiler.tile();
-
-                // add tiles to the hierarchy
-                Tiler.createTilesFromGeometries(
-                        imageData,
-                        tiles,
-                        annotation,
-                        true,
-                        true
-                );
-            }
-
-            // We want our new tiles to be selected... but we also want to ensure that any tile object
-            // has a selected annotation as a parent (in case there were other tiles already)
-            return imageData.getHierarchy().getTileObjects()
-                    .stream()
-                    .filter(t -> annotationSet.contains(t.getParent()))
-                    .collect(Collectors.toList());
+        if (selectedAnnotations.isEmpty()) {
+            throw new IllegalArgumentException(resources.getString("No tiles or annotations selected!"));
         }
-        throw new IllegalArgumentException("No tiles or annotations selected!");
-    }
 
+        var annotationSet = new LinkedHashSet<>(selectedAnnotations); // We want this later
+        double tileWidth, tileHeight;
+        PixelCalibration cal = imageData.getServer().getPixelCalibration();
+        if (cal.hasPixelSizeMicrons()) {
+            double tileSizeMicrons = config.getPatchSizePixels() * config.getSpacingMicronPerPixel();
+            tileWidth = (int)(tileSizeMicrons / cal.getPixelWidthMicrons() + .5);
+            tileHeight = (int)(tileSizeMicrons / cal.getPixelHeightMicrons() + .5);
+        } else {
+            logger.warn("Pixel calibration not available, so using pixels instead of microns");
+            tileWidth = (int)(config.getPatchSizePixels() + .5);
+            tileHeight = tileWidth;
+        }
+        for (var annotation: selectedAnnotations) {
+            var tiler = new Tiler(
+                    GeometryTools.roiToGeometry(annotation.getROI()),
+                    (int)tileWidth,
+                    (int)tileHeight);
+            tiler.setTrimToParent(false);
+            tiler.setFilterByCentroid(true);
+            tiler.setSymmetric(true);
+            var tiles = tiler.tile();
+
+            // add tiles to the hierarchy
+            Tiler.createTilesFromGeometries(
+                    imageData,
+                    tiles,
+                    annotation,
+                    true,
+                    true
+            );
+        }
+
+        // We want our new tiles to be selected... but we also want to ensure that any tile object
+        // has a selected annotation as a parent (in case there were other tiles already)
+        return imageData.getHierarchy().getTileObjects()
+                .stream()
+                .filter(t -> annotationSet.contains(t.getParent()))
+                .collect(Collectors.toList());
+
+    }
 
 }

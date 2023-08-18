@@ -1,6 +1,5 @@
 package qupath.ext.wsinfer.ui;
 
-import ai.djl.engine.Engine;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -33,7 +32,6 @@ import qupath.ext.wsinfer.WSInfer;
 import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.ext.wsinfer.models.WSInferModelCollection;
 import qupath.ext.wsinfer.models.WSInferUtils;
-import qupath.lib.common.GeneralTools;
 import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
@@ -49,7 +47,6 @@ import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 import java.awt.image.BufferedImage;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -94,15 +91,13 @@ public class WSInferController {
     private Spinner<Integer> spinnerNumWorkers;
     @FXML
     private TextField tfModelDirectory;
-    @FXML
-    private ResourceBundle resources;
-
+    private final static ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
     private WSInferModelHandler currentRunner;
     private Stage measurementMapsStage;
 
     private final ExecutorService pool = Executors.newSingleThreadExecutor(ThreadTools.createThreadFactory("wsinfer", true));
 
-    private final ObjectProperty<WSInferTask> pendingTask = new SimpleObjectProperty<>();
+    private final ObjectProperty<Task<?>> pendingTask = new SimpleObjectProperty<>();
 
 
     @FXML
@@ -163,7 +158,7 @@ public class WSInferController {
 
 
     private void configureAvailableDevices() {
-        var available = getAvailableDevices();
+        var available = PytorchManager.getAvailableDevices();
         deviceChoices.getItems().setAll(available);
         var selected = WSInferPrefs.deviceProperty().get();
         if (available.contains(selected))
@@ -178,26 +173,7 @@ public class WSInferController {
     }
 
 
-    private Collection<String> getAvailableDevices() {
-        Set<String> availableDevices = new LinkedHashSet<>();
-        boolean includesMPS = false; // Don't add MPS twice
-        try {
-            for (var device : Engine.getEngine("PyTorch").getDevices()) {
-                String name = device.getDeviceType();
-                availableDevices.add(name);
-                if (name.toLowerCase().startsWith("mps"))
-                    includesMPS = true;
-            }
-        } catch (Throwable e) {
-            logger.warn("PyTorch not found");
-            availableDevices.add("cpu");
-        }
-        // If we could use MPS, but don't have it already, add it
-        if (!includesMPS && GeneralTools.isMac() && "aarch64".equals(System.getProperty("os.arch"))) {
-            availableDevices.add("mps");
-        }
-        return availableDevices;
-    }
+
 
 
     private void configureRunInferenceButton() {
@@ -267,15 +243,21 @@ public class WSInferController {
      */
     public void runInference() {
         var imageData = this.imageDataProperty.get();
+        String title = resources.getString("title");
         if (imageData == null) {
-            Dialogs.showErrorMessage("WSInfer plugin", "Cannot run WSInfer plugin without ImageData.");
+            Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.no-imagedata"));
             return;
         }
-        var model = currentRunner.getModel();
-        submitInferenceTask(imageData, model.getName());
+        if (!PytorchManager.hasPyTorchEngine()) {
+            if (!Dialogs.showConfirmDialog(resources.getString("title"), resources.getString("ui.pytorch"))) {
+                Dialogs.showWarningNotification(resources.getString("title"), resources.getString("ui.pytorch-popup"));
+                return;
+            }
+        }
+        submitInferenceTask(imageData);
     }
 
-    private void submitInferenceTask(ImageData<BufferedImage> imageData, String modelName) {
+    private void submitInferenceTask(ImageData<BufferedImage> imageData) {
         var task = new WSInferTask(imageData, currentRunner.getModel());
         pendingTask.set(task);
         // Reset the pending task when it completes (either successfully or not)
@@ -291,7 +273,7 @@ public class WSInferController {
         imageData.getHistoryWorkflow()
                 .addStep(
                         new DefaultScriptableWorkflowStep(
-                                "Run WSInfer model",
+                                resources.getString("workflow.title"),
                                 WSInfer.class.getName() + ".runInference(\"" + modelName + "\")"
                         ));
     }
@@ -317,7 +299,7 @@ public class WSInferController {
     private void openMeasurementMaps(ActionEvent event) {
         // Try to use existing action, to avoid creating a new stage
         // TODO: Replace this if QuPath v0.5.0 provides direct access to the action
-        //       since that should be more robust
+        //       since that should be more robust (and also cope with language changes)
         var action = qupath.lookupActionByText("Show measurement maps");
         if (action != null) {
             action.handle(event);
@@ -336,8 +318,6 @@ public class WSInferController {
         Commands.showDetectionMeasurementTable(qupath, imageDataProperty.get());
     }
 
-
-
     /**
      * Wrapper for an inference task, which can be submitted to the thread pool.
      */
@@ -351,7 +331,7 @@ public class WSInferController {
             this.imageData = imageData;
             this.model = model;
             this.progressListener = new WSInferProgressDialog(QuPathGUI.getInstance().getStage(), e -> {
-                if (Dialogs.showYesNoDialog("WSInfer", "Stop all running tasks?")) {
+                if (Dialogs.showYesNoDialog(getTitle(), resources.getString("ui.stop-tasks"))) {
                     cancel(true);
                     e.consume();
                 }
@@ -361,7 +341,13 @@ public class WSInferController {
         @Override
         protected Void call() throws Exception {
             try {
-                Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), "Requesting inference for " + model.getName()));
+                // Ensure PyTorch engine is available
+                if (!PytorchManager.hasPyTorchEngine()) {
+                    Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), resources.getString("ui.pytorch-downloading")));
+                    PytorchManager.getEngineOnline();
+                }
+                // Run inference
+                Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), resources.getString("ui.popup.requesting") + model.getName()));
                 WSInfer.runInference(imageData, model, progressListener);
                 addToHistoryWorkflow(imageData, model.getName());
             } catch (InterruptedException e) {
@@ -371,7 +357,6 @@ public class WSInferController {
             }
             return null;
         }
-
     }
 
 
@@ -463,7 +448,7 @@ public class WSInferController {
 
     /**
      * Helper class for maintaining a count of selected annotations and detections,
-     * determined from an ImageData property (whose value may changed).
+     * determined from an ImageData property (whose value may change).
      * This addresses the awkwardness of attaching/detaching listeners.
      */
     private static class SelectedObjectCounter {

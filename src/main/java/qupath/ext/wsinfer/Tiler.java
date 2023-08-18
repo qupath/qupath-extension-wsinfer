@@ -145,7 +145,7 @@ public class Tiler {
 
     public static boolean createObjectsFromGeometries(
             ImageData<BufferedImage> imageData,
-            Collection<Geometry> geometries,
+            List<Geometry> geometries,
             PathObject parent,
             boolean clearChildren,
             boolean setLocked,
@@ -153,16 +153,13 @@ public class Tiler {
         if (geometries.isEmpty()) {
             return false;
         }
-        var rois = geometries
-                .stream()
-                .map(geometry -> GeometryTools.geometryToROI(geometry, parent.getROI().getImagePlane()))
-                .collect(Collectors.toList());
 
         if (clearChildren) {
             parent.clearChildObjects();
         }
-        for (int i = 0; i < rois.size(); i++) {
-            var roi = rois.get(i);
+        for (int i = 0; i < geometries.size(); i++) {
+            var geometry = geometries.get(i);
+            var roi = GeometryTools.geometryToROI(geometry, parent.getROI().getImagePlane());
             var po = creator.apply(roi);
             po.setName("Tile " + i);
             parent.addChildObject(po);
@@ -174,7 +171,7 @@ public class Tiler {
 
     public static boolean createTilesFromGeometries(
             ImageData<BufferedImage> imageData,
-            Collection<Geometry> geometries,
+            List<Geometry> geometries,
             PathObject parent,
             boolean clearChildren,
             boolean setLocked) {
@@ -189,7 +186,7 @@ public class Tiler {
 
     public static boolean createAnnotationTilesFromGeometries(
             ImageData<BufferedImage> imageData,
-            Collection<Geometry> geometries,
+            List<Geometry> geometries,
             PathObject parent,
             boolean clearChildren,
             boolean setLocked) {
