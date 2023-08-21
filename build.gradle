@@ -9,7 +9,7 @@ plugins {
 
 ext.moduleName = 'io.github.qupath.extension.wsinfer'
 
-version = "0.1.0"
+version = "0.1.0-SNAPSHOT"
 description = 'An extension to run WSInfer in QuPath'
 
 // The default 'gradle.ext.qupathVersion' reads this from settings.gradle.
@@ -61,11 +61,11 @@ jar {
 }
 
 /*
- * Copy the LICENSE file into the jar... if we have one (we should!)
+ * Copy the LICENSE file into the jar
  */
 processResources {
   from ("${projectDir}/LICENSE") {
-    into 'licenses/'
+    into "licenses/"
   }
 }
 
