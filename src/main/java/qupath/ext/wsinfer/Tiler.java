@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package qupath.ext.wsinfer;
 
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import qupath.lib.objects.PathAnnotationObject;
 import qupath.lib.objects.PathObject;
 import qupath.lib.objects.PathObjects;
 import qupath.lib.objects.PathTileObject;
-import qupath.lib.regions.ImagePlane;
 import qupath.lib.roi.GeometryTools;
 import qupath.lib.roi.interfaces.ROI;
 
@@ -167,19 +168,25 @@ public class Tiler {
         if (parent == null) {
             return new ArrayList<>();
         }
-        Geometry boundingBox = parent.isRectangle() ? parent : parent.getEnvelope();
-        Coordinate[] coordinates = boundingBox.getCoordinates(); // (minx miny, minx maxy, maxx maxy, maxx miny, minx miny).
-        double xStart = coordinates[0].x;
-        double yStart = coordinates[0].y;
-        double xEnd = coordinates[2].x;
-        double yEnd = coordinates[2].y;
+        Envelope boundingBox = parent.getEnvelopeInternal();
+        double xStart = boundingBox.getMinX();
+        double yStart = boundingBox.getMinY();
+        double xEnd = boundingBox.getMaxX();
+        double yEnd = boundingBox.getMaxY();
 
         double bBoxWidth = xEnd - xStart;
         double bBoxHeight = yEnd - yStart;
 
         if (symmetric) {
-            xStart += calculateOffset(tileWidth, bBoxWidth);
-            yStart += calculateOffset(tileHeight, bBoxHeight);
+            if (filterByCentroid) {
+                // Shift 'inside' the parent
+                xStart += calculateInteriorOffset(tileWidth, bBoxWidth);
+                yStart += calculateInteriorOffset(tileHeight, bBoxHeight);
+            } else {
+                // Shift 'outside' the parent
+                xStart += calculateExteriorOffset(tileWidth, bBoxWidth);
+                yStart += calculateExteriorOffset(tileHeight, bBoxHeight);
+            }
         }
         List<Geometry> tiles = new ArrayList<>();
         for (int x = (int) xStart; x < xEnd; x += tileWidth) {
@@ -203,7 +210,7 @@ public class Tiler {
                     // trim the tile to fit the parent
                     tile = tile.intersection(parent);
                     tiles.add(tile);
-                } else if (!filterByCentroid | parent.contains(tile.getCentroid())) {
+                } else if (!filterByCentroid || parent.contains(tile.getCentroid())) {
                     // If we aren't trimming based on centroids,
                     // or it'd be included anyway
                     tiles.add(tile);
@@ -257,11 +264,32 @@ public class Tiler {
         return createObjects(parent, PathObjects::createAnnotationObject);
     }
 
-    private static double calculateOffset(final int tileDim, final double parentDim) {
+    /**
+     * Calculate offset for symmetric tiling where the tiles cannot extend beyond the parent bounds
+     * @param tileDim
+     * @param parentDim
+     * @return
+     */
+    private static double calculateInteriorOffset(final int tileDim, final double parentDim) {
         double mod = parentDim % tileDim;
         if (mod == 0) {
             return 0;
         }
         return mod / 2;
     }
+
+    /**
+     * Calculate offset for symmetric tiling where the tiles can extend beyond the parent bounds
+     * @param tileDim
+     * @param parentDim
+     * @return
+     */
+    private static double calculateExteriorOffset(final int tileDim, final double parentDim) {
+        double mod = parentDim % tileDim;
+        if (mod == 0) {
+            return 0;
+        }
+        return -(tileDim - mod) / 2;
+    }
+
 }
