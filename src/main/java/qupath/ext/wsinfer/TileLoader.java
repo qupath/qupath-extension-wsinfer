@@ -25,6 +25,8 @@ import qupath.lib.common.ThreadTools;
 import qupath.lib.images.servers.ImageServer;
 import qupath.lib.objects.PathObject;
 import qupath.lib.roi.interfaces.ROI;
+import qupath.opencv.dnn.DnnTools;
+import qupath.opencv.tools.OpenCVTools;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -119,16 +121,21 @@ class TileLoader {
                 ROI roi = pathObject.getROI();
                 int x = (int) Math.round(roi.getCentroidX() - width / 2.0);
                 int y = (int) Math.round(roi.getCentroidY() - height / 2.0);
-                if (x < 0 || y < 0 || x + width >= server.getWidth() || y + height >= server.getHeight()) {
-                    // TODO: Handle out-of-bounds coordinates!
-                    logger.warn("Skipping out-of-bounds tile request ({}, {}, {}, {})", x, y, width, height);
-                    continue;
-                }
                 try {
-                    BufferedImage img = server.readRegion(downsample, x, y, width, height);
-                    if (resizeWidth > 0 && resizeHeight > 0)
-                        img = BufferedImageTools.resize(img, resizeWidth, resizeHeight, true);
-
+                    BufferedImage img;
+                    if (x < 0 || y < 0 || x + width >= server.getWidth() || y + height >= server.getHeight()) {
+                        // Handle out-of-bounds coordinates
+                        // This reuses code from DnnTools.readPatch, but is not ideal since it uses a trip through OpenCV
+                        var mat = DnnTools.readPatch(server, roi, downsample, width, height);
+                        img = OpenCVTools.matToBufferedImage(mat);
+                        mat.close();
+                        logger.warn("Detected out-of-bounds tile request - results may be influenced by padding ({}, {}, {}, {})", x, y, width, height);
+                    } else {
+                        // Handle normal case of within-bounds coordinates
+                        img = server.readRegion(downsample, x, y, width, height);
+                        if (resizeWidth > 0 && resizeHeight > 0)
+                            img = BufferedImageTools.resize(img, resizeWidth, resizeHeight, true);
+                    }
                     Image input = BufferedImageFactory.getInstance().fromImage(img);
                     pathObjectBatch.add(pathObject);
                     inputs.add(input);
