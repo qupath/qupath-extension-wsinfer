@@ -42,7 +42,7 @@ public class WSInferExtension implements QuPathExtension {
 
 	private final static String EXTENSION_DESCRIPTION = resources.getString("extension.description");
 
-	private final static Version EXTENSION_QUPATH_VERSION = Version.parse(resources.getString("extension.version"));
+	private final static Version EXTENSION_QUPATH_VERSION = Version.parse(resources.getString("extension.qupath.version"));
 
 	private boolean isInstalled = false;
 
