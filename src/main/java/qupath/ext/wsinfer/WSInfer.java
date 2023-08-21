@@ -41,8 +41,11 @@ import qupath.ext.wsinfer.ui.WSInferPrefs;
 import qupath.lib.gui.dialogs.Dialogs;
 import qupath.lib.images.ImageData;
 import qupath.lib.images.servers.ImageServer;
+import qupath.lib.images.servers.PixelCalibration;
 import qupath.lib.objects.PathObject;
+import qupath.lib.objects.PathObjects;
 import qupath.lib.objects.classes.PathClass;
+import qupath.lib.roi.GeometryTools;
 import qupath.lib.scripting.QP;
 
 import java.awt.image.BufferedImage;
@@ -370,31 +373,46 @@ public class WSInfer {
             throw new IllegalArgumentException(resources.getString("No tiles or annotations selected!"));
         }
 
-        // create tiles from the selected annotations
         var annotationSet = new LinkedHashSet<>(selectedAnnotations); // We want this later
-        Map<String, Object> pluginArgs = new LinkedHashMap<>();
-        if (imageData.getServer().getPixelCalibration().hasPixelSizeMicrons()) {
-            pluginArgs.put("tileSizeMicrons", config.getPatchSizePixels() * config.getSpacingMicronPerPixel());
+        double tileWidth, tileHeight;
+        PixelCalibration cal = imageData.getServer().getPixelCalibration();
+        if (cal.hasPixelSizeMicrons()) {
+            double tileSizeMicrons = config.getPatchSizePixels() * config.getSpacingMicronPerPixel();
+            tileWidth = (int)(tileSizeMicrons / cal.getPixelWidthMicrons() + .5);
+            tileHeight = (int)(tileSizeMicrons / cal.getPixelHeightMicrons() + .5);
         } else {
             logger.warn("Pixel calibration not available, so using pixels instead of microns");
-            pluginArgs.put("tileSizePixels", config.getPatchSizePixels());
+            tileWidth = (int)(config.getPatchSizePixels() + .5);
+            tileHeight = tileWidth;
         }
-        pluginArgs.put("trimToROI", false);
-        pluginArgs.put("makeAnnotations", false);
-        pluginArgs.put("removeParentAnnotation", false);
-        try {
-            QP.runPlugin("qupath.lib.algorithms.TilerPlugin", imageData, pluginArgs);
-            // We want our new tiles to be selected... but we also want to ensure that any tile object
-            // has a selected annotation as a parent (in case there were other tiles already)
-            return imageData.getHierarchy().getTileObjects()
-                    .stream()
-                    .filter(t -> annotationSet.contains(t.getParent()))
-                    .collect(Collectors.toList());
-        } catch (InterruptedException e) {
-            logger.warn("Tiling interrupted", e);
-            return new ArrayList<>();
-        }
-    }
+        var tiler = new Tiler(
+                (int)tileWidth,
+                (int)tileHeight);
+        tiler.setTrimToParent(false);
+        tiler.setFilterByCentroid(true);
+        tiler.setSymmetric(true);
 
+        for (var annotation: selectedAnnotations) {
+            var tiles = tiler.createTiles(annotation.getROI());
+
+            // add tiles to the hierarchy
+            annotation.clearChildObjects();
+            for (int i = 0; i < tiles.size(); i++) {
+                var tile = tiles.get(i);
+                tile.setName("Tile " + i);
+                annotation.addChildObject(tile);
+            }
+            annotation.setLocked(true);
+            imageData.getHierarchy().fireHierarchyChangedEvent(annotation);
+        }
+
+        // We want our new tiles to be selected... but we also want to ensure that any tile object
+        // has a selected annotation as a parent (in case there were other tiles already)
+        return imageData.getHierarchy().getTileObjects()
+                .stream()
+                .filter(t -> annotationSet.contains(t.getParent()))
+                .collect(Collectors.toList());
+
+    }
 
 }
