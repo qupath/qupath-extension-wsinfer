@@ -47,30 +47,71 @@ public class WSInferModel {
         return hfRepoId;
     }
 
+    /**
+     * Get the configuration. Note that this may be null.
+     * @return
+     */
     public WSInferModelConfiguration getConfiguration() {
+        if (configuration == null) {
+            configuration = tryToLoadConfiguration();
+        }
         return configuration;
     }
 
-    public void removeCache() {
+    private WSInferModelConfiguration tryToLoadConfiguration() {
+        var cfFile = getCFFile();
+        if (cfFile.exists()) {
+            try (var reader = Files.newBufferedReader(cfFile.toPath(), StandardCharsets.UTF_8)) {
+                return GsonTools.getInstance().fromJson(reader, WSInferModelConfiguration.class);
+            } catch (IOException e) {
+                logger.error("Cannot read configuration {}", cfFile, e);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Remove the cached model files.
+     */
+    public synchronized void removeCache() {
         getTSFile().delete();
         getCFFile().delete();
     }
 
+    /**
+     * Get the torchscript file. Note that it is not guaranteed that the model has been downloaded.
+     * @return
+     */
     public File getTSFile() {
         return getFile("torchscript_model.pt");
     }
 
+    /**
+     * Get the configuration file. Note that it is not guaranteed that the model has been downloaded.
+     * @return
+     */
     public File getCFFile() {
         return getFile("config.json");
     }
 
-    public File getFile(String f) {
+    private File getFile(String f) {
         String dir = WSInferPrefs.modelDirectoryProperty().get();
         String modPath = String.format("%s" + File.separator + "%s" + File.separator + "/%s", dir, hfRepoId, hfRevision);
         return new File(String.format("%s/%s", modPath, f));
     }
 
-    public void fetchModel() {
+    /**
+     * Query if the model has already been downloaded.
+     * @return
+     */
+    public boolean isModelAvailable() {
+        return getTSFile().exists() && getConfiguration() != null;
+    }
+
+    /**
+     * Request that the model is downloaded.
+     */
+    public synchronized void fetchModel() {
         String ts = "torchscript_model.pt";
         String cf = "config.json";
         URL tsURL;
@@ -99,12 +140,5 @@ public class WSInferModel {
         if (!cfFile.exists()) {
             WSInferUtils.downloadURLToFile(cfURL, cfFile);
         }
-        String json = null;
-        try {
-            json = Files.readString(cfFile.toPath(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            logger.error("Cannot read file {}", cfFile, e);
-        }
-        this.configuration = GsonTools.getInstance().fromJson(json, WSInferModelConfiguration.class);
     }
 }

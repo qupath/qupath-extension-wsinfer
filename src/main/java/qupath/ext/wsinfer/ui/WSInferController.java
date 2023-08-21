@@ -39,6 +39,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.control.action.ActionUtils;
 import org.slf4j.Logger;
@@ -64,10 +65,12 @@ import java.awt.image.BufferedImage;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * Controller for the WSInfer user interface, which is defined in wsinfer_control.fxml
@@ -84,7 +87,7 @@ public class WSInferController {
     @FXML
     private Label labelMessage;
     @FXML
-    private ChoiceBox<String> modelChoiceBox;
+    private ChoiceBox<WSInferModel> modelChoiceBox;
     @FXML
     private Button runButton;
     @FXML
@@ -107,8 +110,9 @@ public class WSInferController {
     private Spinner<Integer> spinnerNumWorkers;
     @FXML
     private TextField tfModelDirectory;
+
     private final static ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
-    private WSInferModelHandler currentRunner;
+
     private Stage measurementMapsStage;
 
     private final ExecutorService pool = Executors.newSingleThreadExecutor(ThreadTools.createThreadFactory("wsinfer", true));
@@ -159,19 +163,12 @@ public class WSInferController {
      */
     private void configureModelChoices() {
         WSInferModelCollection models = WSInferUtils.getModelCollection();
-        Map<String, WSInferModelHandler> runners = new HashMap<>();
-        for (String key: models.getModels().keySet()) {
-            WSInferModelHandler runner = new WSInferModelHandler(models.getModels().get(key));
-            runners.put(key, runner);
-            modelChoiceBox.getItems().add(key);
-        }
-        modelChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            currentRunner = runners.get(newValue);
-            new Thread(() -> currentRunner.queueDownload(false)).start();
-        });
+        modelChoiceBox.getItems().setAll(models.getModels().values());
+        modelChoiceBox.setConverter(new ModelStringConverter(models));
+//        modelChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+//        });
         forceRefreshButton.disableProperty().bind(modelChoiceBox.getSelectionModel().selectedItemProperty().isNull());
     }
-
 
     private void configureAvailableDevices() {
         var available = PytorchManager.getAvailableDevices();
@@ -259,22 +256,35 @@ public class WSInferController {
      */
     public void runInference() {
         var imageData = this.imageDataProperty.get();
-        String title = resources.getString("title");
         if (imageData == null) {
             Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.no-imagedata"));
             return;
         }
+        // Check we have a model - and are willing to download it if needed
+        var selectedModel = modelChoiceBox.getSelectionModel().getSelectedItem();
+        if (selectedModel == null) {
+            // Shouldn't happen
+            Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.no-model"));
+            return;
+        }
+        if (!selectedModel.isModelAvailable()) {
+            if (!Dialogs.showConfirmDialog(resources.getString("title"), resources.getString("ui.model-popup"))) {
+                Dialogs.showWarningNotification(resources.getString("title"), resources.getString("ui.model-not-downloaded"));
+                return;
+            }
+        }
+
         if (!PytorchManager.hasPyTorchEngine()) {
             if (!Dialogs.showConfirmDialog(resources.getString("title"), resources.getString("ui.pytorch"))) {
                 Dialogs.showWarningNotification(resources.getString("title"), resources.getString("ui.pytorch-popup"));
                 return;
             }
         }
-        submitInferenceTask(imageData);
+        submitInferenceTask(imageData, selectedModel);
     }
 
-    private void submitInferenceTask(ImageData<BufferedImage> imageData) {
-        var task = new WSInferTask(imageData, currentRunner.getModel());
+    private void submitInferenceTask(ImageData<BufferedImage> imageData, WSInferModel model) {
+        var task = new WSInferTask(imageData, model);
         pendingTask.set(task);
         // Reset the pending task when it completes (either successfully or not)
         task.stateProperty().addListener((observable, oldValue, newValue) -> {
@@ -294,11 +304,28 @@ public class WSInferController {
                         ));
     }
 
+    private static void showFetchingModelNotification(String modelName) {
+        Dialogs.showPlainNotification(
+                resources.getString("title"),
+                String.format(resources.getString("ui.popup.fetching"), modelName));
+    }
+
+    private static void showModelAvailableNotification(String modelName) {
+        Dialogs.showPlainNotification(
+                resources.getString("title"),
+                String.format(resources.getString("ui.popup.available"), modelName));
+    }
+
     public void forceRefresh() {
-        new Thread(() -> {
-            currentRunner.modelIsReadyProperty().set(false);
-            currentRunner.queueDownload(true);
-        }).start();
+        ForkJoinPool.commonPool().execute(() -> {
+            var model = modelChoiceBox.getSelectionModel().getSelectedItem();
+            if (model != null) {
+                model.removeCache();
+                showFetchingModelNotification(model.getName());
+                model.fetchModel();
+                showModelAvailableNotification(model.getName());
+            }
+        });
     }
 
     @FXML
@@ -362,8 +389,14 @@ public class WSInferController {
                     Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), resources.getString("ui.pytorch-downloading")));
                     PytorchManager.getEngineOnline();
                 }
+                // Ensure model is available - any prompts allowing the user to cancel
+                // should have been displayed already
+                if (!model.isModelAvailable()) {
+                    showFetchingModelNotification(model.getName());
+                    model.fetchModel();
+                    showModelAvailableNotification(model.getName());
+                }
                 // Run inference
-                Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), resources.getString("ui.popup.requesting") + model.getName()));
                 WSInfer.runInference(imageData, model, progressListener);
                 addToHistoryWorkflow(imageData, model.getName());
             } catch (InterruptedException e) {
@@ -519,6 +552,30 @@ public class WSInferController {
             }
         }
 
+    }
+
+    private static class ModelStringConverter extends StringConverter<WSInferModel> {
+
+        private WSInferModelCollection models;
+
+        private ModelStringConverter(WSInferModelCollection models) {
+            Objects.requireNonNull(models, "Models cannot be null");
+            this.models = models;
+        }
+
+        @Override
+        public String toString(WSInferModel object) {
+            for (var entry : models.getModels().entrySet()) {
+                if (entry.getValue() == object)
+                    return entry.getKey();
+            }
+            return "";
+        }
+
+        @Override
+        public WSInferModel fromString(String string) {
+            return models.getModels().getOrDefault(string, null);
+        }
     }
 
 }
