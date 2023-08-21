@@ -369,24 +369,25 @@ public class WSInfer {
             tileWidth = (int)(config.getPatchSizePixels() + .5);
             tileHeight = tileWidth;
         }
+        var tiler = new Tiler(
+                (int)tileWidth,
+                (int)tileHeight);
+        tiler.setTrimToParent(false);
+        tiler.setFilterByCentroid(true);
+        tiler.setSymmetric(true);
+
         for (var annotation: selectedAnnotations) {
-            var tiler = new Tiler(
-                    GeometryTools.roiToGeometry(annotation.getROI()),
-                    (int)tileWidth,
-                    (int)tileHeight);
-            tiler.setTrimToParent(false);
-            tiler.setFilterByCentroid(true);
-            tiler.setSymmetric(true);
-            var tiles = tiler.tile();
+            var tiles = tiler.createTiles(annotation.getROI());
 
             // add tiles to the hierarchy
-            Tiler.createTilesFromGeometries(
-                    imageData,
-                    tiles,
-                    annotation,
-                    true,
-                    true
-            );
+            annotation.clearChildObjects();
+            for (int i = 0; i < tiles.size(); i++) {
+                var tile = tiles.get(i);
+                tile.setName("Tile " + i);
+                annotation.addChildObject(tile);
+            }
+            annotation.setLocked(true);
+            imageData.getHierarchy().fireHierarchyChangedEvent(annotation);
         }
 
         // We want our new tiles to be selected... but we also want to ensure that any tile object

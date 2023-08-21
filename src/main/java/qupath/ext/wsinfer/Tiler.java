@@ -2,93 +2,156 @@ package qupath.ext.wsinfer;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
-import qupath.lib.images.ImageData;
-import qupath.lib.images.servers.ImageServer;
+import qupath.lib.objects.PathAnnotationObject;
 import qupath.lib.objects.PathObject;
 import qupath.lib.objects.PathObjects;
-import qupath.lib.objects.hierarchy.PathObjectHierarchy;
+import qupath.lib.objects.PathTileObject;
+import qupath.lib.regions.ImagePlane;
 import qupath.lib.roi.GeometryTools;
 import qupath.lib.roi.interfaces.ROI;
 
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * A class used to split {@link ROI} or {@link Geometry} objects into
+ * rectangular tiles. Useful for parallel processing.
+ */
 public class Tiler {
-    private Geometry parent;
     private int tileWidth;
     private int tileHeight;
     private boolean trimToParent = true;
     private boolean symmetric = true;
     private boolean filterByCentroid = true;
 
-    public Tiler(Geometry parent, int tileWidth, int tileHeight) {
-        this.parent = parent;
+    /**
+     * Create a Tiler object.
+     * @param tileWidth the width in pixels.
+     * @param tileHeight the height in pixels.
+     */
+    public Tiler(int tileWidth, int tileHeight) {
         this.tileWidth = tileWidth;
         this.tileHeight = tileHeight;
     }
 
-    public Geometry getParent() {
-        return parent;
+    /**
+     *
+     * @param tileWidth tile width in pixels.
+     * @param tileHeight tile height in pixels.
+     * @param trimToParent controls whether tiles should be trimmed to fit
+     *                     within the parent object.
+     * @param symmetric controls whether the Tiler should aim to split the
+     *                  parent object symmetrically. If false, it will
+     *                  begin at the top left of the parent.
+     * @param filterByCentroid controls whether tiles whose centroid is outwith
+     *                         the parent object will be removed from the
+     *                         output.
+     */
+    public Tiler(int tileWidth, int tileHeight,
+                 boolean trimToParent, boolean symmetric,
+                 boolean filterByCentroid) {
+        this(tileWidth, tileHeight);
+        this.trimToParent = trimToParent;
+        this.symmetric = symmetric;
+        this.filterByCentroid = filterByCentroid;
     }
 
-    public void setParent(Geometry parent) {
-        this.parent = parent;
-    }
-
-    public void setTileWidth(int tileWidth) {
-        this.tileWidth = tileWidth;
-    }
-
+    /**
+     * Get the width of output tiles
+     * @return the width in pixels
+     */
     public int getTileWidth() {
         return tileWidth;
     }
 
+    /**
+     * Change the width of output tiles
+     * @param tileWidth the new width in pixels
+     */
+    public void setTileWidth(int tileWidth) {
+        this.tileWidth = tileWidth;
+    }
+
+    /**
+     * Change the height of output tiles
+     * @return the height in pixels
+     */
     public int getTileHeight() {
         return tileHeight;
     }
 
+    /**
+     * Change the height of output tiles
+     * @param tileHeight the new height in pixels
+     */
     public void setTileHeight(int tileHeight) {
         this.tileHeight = tileHeight;
     }
 
+    /**
+     * Check if the tiler is set to trim output to the input parent.
+     * @return whether the tiler is set to trim output to the parent object
+     */
     public boolean isTrimToParent() {
         return trimToParent;
     }
 
+    /**
+     * Set whether the tiler is set to trim output to the input parent.
+     * @param trimToParent the new setting
+     */
     public void setTrimToParent(boolean trimToParent) {
         this.trimToParent = trimToParent;
     }
 
+    /**
+     * Check if the tiler will try to tile symmetrically, or will start
+     * directly from the top-left of the parent.
+     * @return The current setting
+     */
     public boolean isSymmetric() {
         return symmetric;
     }
 
+    /**
+     * Set if the tiler will try to tile symmetrically, or will start
+     * directly from the top-left of the parent.
+     * @param symmetric The new setting
+     */
     public void setSymmetric(boolean symmetric) {
         this.symmetric = symmetric;
     }
 
-    public void setFilterByCentroid(boolean filterByCentroid) {
-        this.filterByCentroid = filterByCentroid;
-    }
-
+    /**
+     * Check if the tiler will filter the output based on whether the centroid
+     * of tiles lies within the parent
+     * @return The current setting
+     */
     public boolean isFilterByCentroid() {
         return filterByCentroid;
     }
 
-    public List<Geometry> tile() {
-        return Tiler.tile(parent, tileWidth, tileHeight, trimToParent, filterByCentroid, symmetric);
+    /**
+     * Set if the tiler will filter the output based on whether the centroid
+     * of tiles lies within the parent
+     * @param filterByCentroid the new setting
+     */
+    public void setFilterByCentroid(boolean filterByCentroid) {
+        this.filterByCentroid = filterByCentroid;
     }
 
-    public static List<Geometry> tile(final Geometry parent,
-                                      final int tileWidth,
-                                      final int tileHeight,
-                                      final boolean trimToParent,
-                                      final boolean trimByCentroids,
-                                      final boolean symmetric) {
+    /**
+     * Create a list of {@link Geometry} tiles from the input. These may
+     * not all be rectangular based on the settings used.
+     * @param parent the object that will be split into tiles.
+     * @return a list of tiles
+     */
+    public List<Geometry> createGeometries(Geometry parent) {
+        if (parent == null) {
+            return new ArrayList<>();
+        }
         Geometry boundingBox = parent.isRectangle() ? parent : parent.getEnvelope();
         Coordinate[] coordinates = boundingBox.getCoordinates(); // (minx miny, minx maxy, maxx maxy, maxx miny, minx miny).
         double xStart = coordinates[0].x;
@@ -125,7 +188,7 @@ public class Tiler {
                     // trim the tile to fit the parent
                     tile = tile.intersection(parent);
                     tiles.add(tile);
-                } else if (!trimByCentroids | parent.contains(tile.getCentroid())) {
+                } else if (!filterByCentroid | parent.contains(tile.getCentroid())) {
                     // If we aren't trimming based on centroids,
                     // or it'd be included anyway
                     tiles.add(tile);
@@ -135,67 +198,55 @@ public class Tiler {
         return tiles;
     }
 
+    /**
+     * Create a list of {@link ROI} tiles from the input. These may
+     * not all be rectangular based on the settings used.
+     * @param parent the object that will be split into tiles.
+     * @return a list of tiles
+     */
+    public List<ROI> createROIs(ROI parent) {
+        return createGeometries(parent.getGeometry()).stream()
+                .map(g -> GeometryTools.geometryToROI(g, parent.getImagePlane()))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Create a list of {@link PathObject} tiles from the input. These may
+     * not all be rectangular based on the settings used.
+     * @param parent the object that will be split into tiles.
+     * @param creator a function used to create the desired type
+     *                of {@link PathObject}
+     * @return a list of tiles
+     */
+    public List<PathObject> createObjects(ROI parent, Function<ROI, PathObject> creator) {
+        return createROIs(parent).stream().map(creator).collect(Collectors.toList());
+    }
+
+    /**
+     * Create a list of {@link PathTileObject} tiles from the input. These may
+     * not all be rectangular based on the settings used.
+     * @param parent the object that will be split into tiles.
+     * @return a list of tiles
+     */
+    public List<PathObject> createTiles(ROI parent) {
+        return createObjects(parent, PathObjects::createTileObject);
+    }
+
+    /**
+     * Create a list of {@link PathAnnotationObject} tiles from the input. These may
+     * not all be rectangular based on the settings used.
+     * @param parent the object that will be split into tiles.
+     * @return a list of tiles
+     */
+    public List<PathObject> createAnnotations(ROI parent) {
+        return createObjects(parent, PathObjects::createAnnotationObject);
+    }
+
     private static double calculateOffset(final int tileDim, final double parentDim) {
         double mod = parentDim % tileDim;
         if (mod == 0) {
             return 0;
         }
         return mod / 2;
-    }
-
-    public static boolean createObjectsFromGeometries(
-            ImageData<BufferedImage> imageData,
-            List<Geometry> geometries,
-            PathObject parent,
-            boolean clearChildren,
-            boolean setLocked,
-            Function<ROI, ? extends PathObject> creator) {
-        if (geometries.isEmpty()) {
-            return false;
-        }
-
-        if (clearChildren) {
-            parent.clearChildObjects();
-        }
-        for (int i = 0; i < geometries.size(); i++) {
-            var geometry = geometries.get(i);
-            var roi = GeometryTools.geometryToROI(geometry, parent.getROI().getImagePlane());
-            var po = creator.apply(roi);
-            po.setName("Tile " + i);
-            parent.addChildObject(po);
-        }
-        parent.setLocked(setLocked);
-        imageData.getHierarchy().fireHierarchyChangedEvent(parent);
-        return true;
-    }
-
-    public static boolean createTilesFromGeometries(
-            ImageData<BufferedImage> imageData,
-            List<Geometry> geometries,
-            PathObject parent,
-            boolean clearChildren,
-            boolean setLocked) {
-        return createObjectsFromGeometries(
-                imageData,
-                geometries,
-                parent,
-                clearChildren,
-                setLocked,
-                PathObjects::createTileObject);
-    }
-
-    public static boolean createAnnotationTilesFromGeometries(
-            ImageData<BufferedImage> imageData,
-            List<Geometry> geometries,
-            PathObject parent,
-            boolean clearChildren,
-            boolean setLocked) {
-        return createObjectsFromGeometries(
-                imageData,
-                geometries,
-                parent,
-                clearChildren,
-                setLocked,
-                PathObjects::createAnnotationObject);
     }
 }
