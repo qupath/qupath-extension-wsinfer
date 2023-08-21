@@ -11,7 +11,7 @@ plugins {
 ext.moduleName = 'io.github.qupath.extension.wsinfer'
 
 // TODO: Define the extension version & provide a short description
-version = "0.1.0"
+version = "0.1.0-SNAPSHOT"
 description = 'An extension to run WSInfer in QuPath'
 
 // TODO: Specify the QuPath version, compatible with the extension.
@@ -65,11 +65,11 @@ jar {
 }
 
 /*
- * Copy the LICENSE file into the jar... if we have one (we should!)
+ * Copy the LICENSE file into the jar
  */
 processResources {
   from ("${projectDir}/LICENSE") {
-    into 'licenses/'
+    into "licenses/"
   }
 }
 
