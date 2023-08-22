@@ -49,6 +49,8 @@ public class WSInferModel {
 
     @SerializedName("hf_revision")
     private String hfRevision;
+
+    // transient means it's not serialized/deserialized
     private final transient BooleanProperty isModelAvailableProperty = new SimpleBooleanProperty(false);
 
     public String getName() {
@@ -57,7 +59,7 @@ public class WSInferModel {
 
     /**
      * Get the configuration. Note that this may be null.
-     * @return
+     * @return The model configuration, or null.
      */
     public WSInferModelConfiguration getConfiguration() {
         if (configuration == null) {
@@ -147,10 +149,6 @@ public class WSInferModel {
             return false;
         }
         return true;
-    }
-
-    private boolean checkFilesExist() {
-        return getTSFile().exists() && getCFFile().exists();
     }
 
     private String downloadSHA() throws IOException {
