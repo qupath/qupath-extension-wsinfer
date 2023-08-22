@@ -26,6 +26,7 @@ import qupath.lib.io.GsonTools;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -65,18 +66,6 @@ public class WSInferModel {
         return configuration;
     }
 
-    private WSInferModelConfiguration tryToLoadConfiguration() {
-        var cfFile = getCFFile();
-        if (cfFile.exists()) {
-            try (var reader = Files.newBufferedReader(cfFile.toPath(), StandardCharsets.UTF_8)) {
-                return GsonTools.getInstance().fromJson(reader, WSInferModelConfiguration.class);
-            } catch (IOException e) {
-                logger.error("Cannot read configuration {}", cfFile, e);
-            }
-        }
-        return null;
-    }
-
     /**
      * Remove the cached model files.
      */
@@ -101,17 +90,6 @@ public class WSInferModel {
         return getFile("config.json");
     }
 
-    private File getFile(String f) {
-        return new File(String.format("%s/%s", getModelDirectory(), f));
-    }
-
-    private File getModelDirectory() {
-        return new File(
-                String.format(
-                        "%s" + File.separator + "%s" + File.separator + "/%s",
-                        WSInferPrefs.modelDirectoryProperty().get(), hfRepoId, hfRevision));
-    }
-
     /**
      * Check if the model files exist and are valid.
      * @return True if the files exist and the SHA matches, and the config is valid.
@@ -128,13 +106,36 @@ public class WSInferModel {
         return this.isModelAvailableProperty;
     }
 
+    private File getFile(String f) {
+        return new File(String.format("%s/%s", getModelDirectory(), f));
+    }
+
+    private File getModelDirectory() {
+        return new File(
+                String.format(
+                        "%s" + File.separator + "%s" + File.separator + "/%s",
+                        WSInferPrefs.modelDirectoryProperty().get(), hfRepoId, hfRevision));
+    }
+
+    private WSInferModelConfiguration tryToLoadConfiguration() {
+        var cfFile = getCFFile();
+        if (cfFile.exists()) {
+            try (var reader = Files.newBufferedReader(cfFile.toPath(), StandardCharsets.UTF_8)) {
+                return GsonTools.getInstance().fromJson(reader, WSInferModelConfiguration.class);
+            } catch (IOException e) {
+                logger.error("Cannot read configuration {}", cfFile, e);
+            }
+        }
+        return null;
+    }
+
     private static String SHA256(File file) throws IOException, NoSuchAlgorithmException {
         byte[] data = Files.readAllBytes(file.toPath());
         byte[] hash = MessageDigest.getInstance("SHA-256").digest(data);
         return new BigInteger(1, hash).toString(16);
     }
 
-    public boolean checkSHAMatches() {
+    private boolean checkSHAMatches() {
         try {
             String shaDown = SHA256(getTSFile());
             String shaUp = downloadSHA();
@@ -158,11 +159,13 @@ public class WSInferModel {
 //        Result: version https://git-lfs.github.com/spec/v1
 //        oid sha256:fffeeecb4282b61b2b699c6dfcd8f76c30c8ca1af9800fa78f5d81fc0b78a4e2
 //        size 94494278
-        String out = new Scanner(url.openStream(), StandardCharsets.UTF_8)
-                .useDelimiter("\\A")
-                .next();
-        return out.split("\n")[1]
-                .replace("oid sha256:", "");
+        try (InputStream stream = url.openStream()) {
+            String out = new Scanner(stream, StandardCharsets.UTF_8)
+                    .useDelimiter("\\A")
+                    .next();
+            return out.split("\n")[1]
+                    .replace("oid sha256:", "");
+        }
     }
 
     /**
