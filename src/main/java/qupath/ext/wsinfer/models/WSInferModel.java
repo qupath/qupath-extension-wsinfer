@@ -59,7 +59,7 @@ public class WSInferModel {
 
     /**
      * Get the configuration. Note that this may be null.
-     * @return The model configuration, or null.
+     * @return the model configuration, or null.
      */
     public WSInferModelConfiguration getConfiguration() {
         if (configuration == null) {
@@ -78,7 +78,7 @@ public class WSInferModel {
 
     /**
      * Get the torchscript file. Note that it is not guaranteed that the model has been downloaded.
-     * @return
+     * @return path to torchscript pt file in cache dir
      */
     public File getTSFile() {
         return getFile("torchscript_model.pt");
@@ -86,7 +86,7 @@ public class WSInferModel {
 
     /**
      * Get the configuration file. Note that it is not guaranteed that the model has been downloaded.
-     * @return
+     * @return path to model config file in cache dir
      */
     public File getCFFile() {
         return getFile("config.json");
@@ -94,7 +94,7 @@ public class WSInferModel {
 
     /**
      * Check if the model files exist and are valid.
-     * @return True if the files exist and the SHA matches, and the config is valid.
+     * @return true if the files exist and the SHA matches, and the config is valid.
      */
     public boolean isValid() {
         return getTSFile().exists() && checkSHAMatches() && getConfiguration() != null;
@@ -102,7 +102,7 @@ public class WSInferModel {
 
     /**
      * True if the model files exist and have been SHA matched.
-     * @return A read/write {@link BooleanProperty}.
+     * @return a read/write {@link BooleanProperty}.
      */
     public BooleanProperty isModelAvailableProperty() {
         return this.isModelAvailableProperty;
