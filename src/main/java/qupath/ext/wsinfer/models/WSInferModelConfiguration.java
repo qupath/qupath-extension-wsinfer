@@ -31,19 +31,19 @@ import java.util.List;
 public class WSInferModelConfiguration {
 
     @SerializedName("spec_version")
-    private String spec_version;
+    private String specVersion;
 
     private String architecture;
 
     @SerializedName("num_classes")
-    private int num_classes;
+    private int numClasses;
     private List<String> class_names;
 
     @SerializedName("patch_size_pixels")
-    private int patch_size_pixels;
+    private int patchSizePixels;
 
     @SerializedName("spacing_um_px")
-    private double spacing_um_px;
+    private double spacingUmPx;
 
     private List<WSInferTransform> transform;
 
@@ -68,7 +68,7 @@ public class WSInferModelConfiguration {
      * @return
      */
     public double getPatchSizePixels() {
-        return patch_size_pixels;
+        return patchSizePixels;
     }
 
     /**
@@ -76,6 +76,6 @@ public class WSInferModelConfiguration {
      * @return
      */
     public double getSpacingMicronPerPixel() {
-        return spacing_um_px;
+        return spacingUmPx;
     }
 }

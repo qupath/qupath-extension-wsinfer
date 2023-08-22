@@ -31,7 +31,7 @@
                                     <ChoiceBox id="deviceChoices" fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0">
                                         <tooltip><Tooltip text="%ui.model.tooltip" /></tooltip>
                                     </ChoiceBox>
-                                    <Button fx:id="forceRefreshButton" mnemonicParsing="false" onAction="#forceRefresh" prefHeight="31.0" prefWidth="39.0">
+                                    <Button fx:id="downloadButton" mnemonicParsing="false" onAction="#downloadModel" prefHeight="31.0" prefWidth="39.0">
                                         <tooltip><Tooltip text="%ui.model.download.tooltip" /></tooltip>
                                         <graphic>
                                             <Text styleClass="download-icon"></Text>

@@ -25,6 +25,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
@@ -63,14 +64,13 @@ import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
 import java.awt.image.BufferedImage;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
+
 
 /**
  * Controller for the WSInfer user interface, which is defined in wsinfer_control.fxml
@@ -91,7 +91,7 @@ public class WSInferController {
     @FXML
     private Button runButton;
     @FXML
-    private Button forceRefreshButton;
+    private Button downloadButton;
     @FXML
     private ChoiceBox<String> deviceChoices;
     @FXML
@@ -146,10 +146,11 @@ public class WSInferController {
     private void configureMessageLabel() {
         messageTextHelper = new MessageTextHelper();
         labelMessage.textProperty().bind(messageTextHelper.messageLabelText);
-        if (messageTextHelper.hasWarning.get())
+        if (messageTextHelper.hasWarning.get()) {
             labelMessage.getStyleClass().setAll("warning-message");
-        else
+        } else {
             labelMessage.getStyleClass().setAll("standard-message");
+        }
         messageTextHelper.hasWarning.addListener((observable, oldValue, newValue) -> {
             if (newValue)
                 labelMessage.getStyleClass().setAll("warning-message");
@@ -165,19 +166,25 @@ public class WSInferController {
         WSInferModelCollection models = WSInferUtils.getModelCollection();
         modelChoiceBox.getItems().setAll(models.getModels().values());
         modelChoiceBox.setConverter(new ModelStringConverter(models));
-//        modelChoiceBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-//        });
-        forceRefreshButton.disableProperty().bind(modelChoiceBox.getSelectionModel().selectedItemProperty().isNull());
+        modelChoiceBox.getSelectionModel().selectedItemProperty().addListener((v, o, n) ->
+            n.isModelAvailableProperty().set(n.isValid()));
+        downloadButton.disableProperty().bind(
+                modelChoiceBox
+                        .getSelectionModel().selectedItemProperty()
+                        .flatMap(WSInferModel::isModelAvailableProperty)
+                        .orElse(Boolean.TRUE)
+        );
     }
 
     private void configureAvailableDevices() {
         var available = PytorchManager.getAvailableDevices();
         deviceChoices.getItems().setAll(available);
         var selected = WSInferPrefs.deviceProperty().get();
-        if (available.contains(selected))
+        if (available.contains(selected)) {
             deviceChoices.getSelectionModel().select(selected);
-        else
+        } else {
             deviceChoices.getSelectionModel().selectFirst();
+        }
         // Don't bind property for now, since this would cause trouble if the WSInferPrefs.deviceProperty() is
         // changed elsewhere
         deviceChoices.getSelectionModel().selectedItemProperty().addListener((value, oldValue, newValue) -> {
@@ -185,12 +192,8 @@ public class WSInferController {
         });
     }
 
-
-
-
-
     private void configureRunInferenceButton() {
-        // Disable the run button while a task is pending, or we have no model selected
+        // Disable the run button while a task is pending, or we have no model selected, or download is required
         runButton.disableProperty().bind(
                 imageDataProperty.isNull()
                         .or(pendingTask.isNotNull())
@@ -267,7 +270,7 @@ public class WSInferController {
             Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.no-model"));
             return;
         }
-        if (!selectedModel.isModelAvailable()) {
+        if (!selectedModel.isModelAvailableProperty().get()) {
             if (!Dialogs.showConfirmDialog(resources.getString("title"), resources.getString("ui.model-popup"))) {
                 Dialogs.showWarningNotification(resources.getString("title"), resources.getString("ui.model-not-downloaded"));
                 return;
@@ -304,7 +307,7 @@ public class WSInferController {
                         ));
     }
 
-    private static void showFetchingModelNotification(String modelName) {
+    private static void showDownloadingModelNotification(String modelName) {
         Dialogs.showPlainNotification(
                 resources.getString("title"),
                 String.format(resources.getString("ui.popup.fetching"), modelName));
@@ -316,15 +319,22 @@ public class WSInferController {
                 String.format(resources.getString("ui.popup.available"), modelName));
     }
 
-    public void forceRefresh() {
+    public void downloadModel() {
+        var model = modelChoiceBox.getSelectionModel().getSelectedItem();
+        if (model == null) {
+            return;
+        }
+        if (model.isValid()) {
+            model.isModelAvailableProperty().set(true);
+            showModelAvailableNotification(model.getName());
+            return;
+        }
+
         ForkJoinPool.commonPool().execute(() -> {
-            var model = modelChoiceBox.getSelectionModel().getSelectedItem();
-            if (model != null) {
-                model.removeCache();
-                showFetchingModelNotification(model.getName());
-                model.fetchModel();
-                showModelAvailableNotification(model.getName());
-            }
+            model.removeCache();
+            showDownloadingModelNotification(model.getName());
+            model.downloadModel();
+            showModelAvailableNotification(model.getName());
         });
     }
 
@@ -391,9 +401,9 @@ public class WSInferController {
                 }
                 // Ensure model is available - any prompts allowing the user to cancel
                 // should have been displayed already
-                if (!model.isModelAvailable()) {
-                    showFetchingModelNotification(model.getName());
-                    model.fetchModel();
+                if (!model.isValid()) {
+                    showDownloadingModelNotification(model.getName());
+                    model.downloadModel();
                     showModelAvailableNotification(model.getName());
                 }
                 // Run inference

@@ -17,6 +17,8 @@
 package qupath.ext.wsinfer.models;
 
 import com.google.gson.annotations.SerializedName;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.ui.WSInferPrefs;
@@ -24,10 +26,14 @@ import qupath.lib.io.GsonTools;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Scanner;
 
 // Equivalent to config.json files from hugging face
 public class WSInferModel {
@@ -42,6 +48,7 @@ public class WSInferModel {
 
     @SerializedName("hf_revision")
     private String hfRevision;
+    private final transient BooleanProperty isModelAvailableProperty = new SimpleBooleanProperty(false);
 
     public String getName() {
         return hfRepoId;
@@ -95,23 +102,73 @@ public class WSInferModel {
     }
 
     private File getFile(String f) {
-        String dir = WSInferPrefs.modelDirectoryProperty().get();
-        String modPath = String.format("%s" + File.separator + "%s" + File.separator + "/%s", dir, hfRepoId, hfRevision);
-        return new File(String.format("%s/%s", modPath, f));
+        return new File(String.format("%s/%s", getModelDirectory(), f));
+    }
+
+    private File getModelDirectory() {
+        return new File(
+                String.format(
+                        "%s" + File.separator + "%s" + File.separator + "/%s",
+                        WSInferPrefs.modelDirectoryProperty().get(), hfRepoId, hfRevision));
     }
 
     /**
-     * Query if the model has already been downloaded.
-     * @return
+     * Check if the model files exist and are valid.
+     * @return True if the files exist and the SHA matches, and the config is valid.
      */
-    public boolean isModelAvailable() {
-        return getTSFile().exists() && getConfiguration() != null;
+    public boolean isValid() {
+        return getTSFile().exists() && checkSHAMatches() && getConfiguration() != null;
+    }
+
+    /**
+     * True if the model files exist and have been SHA matched.
+     * @return A read/write {@link BooleanProperty}.
+     */
+    public BooleanProperty isModelAvailableProperty() {
+        return this.isModelAvailableProperty;
+    }
+
+    private static String SHA256(File file) throws IOException, NoSuchAlgorithmException {
+        byte[] data = Files.readAllBytes(file.toPath());
+        byte[] hash = MessageDigest.getInstance("SHA-256").digest(data);
+        return new BigInteger(1, hash).toString(16);
+    }
+
+    public boolean checkSHAMatches() {
+        try {
+            String shaDown = SHA256(getTSFile());
+            String shaUp = downloadSHA();
+            if (!shaDown.equals(shaUp)) {
+                return false;
+            }
+        } catch (IOException | NoSuchAlgorithmException e) {
+            logger.error("Unable to generate SHA for {}", getTSFile(), e);
+            return false;
+        }
+        return true;
+    }
+
+    private boolean checkFilesExist() {
+        return getTSFile().exists() && getCFFile().exists();
+    }
+
+    private String downloadSHA() throws IOException {
+        URL url = new URL(String.format("https://huggingface.co/%s/raw/%s/torchscript_model.pt", hfRepoId, hfRevision));
+        // this is the format
+//        Result: version https://git-lfs.github.com/spec/v1
+//        oid sha256:fffeeecb4282b61b2b699c6dfcd8f76c30c8ca1af9800fa78f5d81fc0b78a4e2
+//        size 94494278
+        String out = new Scanner(url.openStream(), StandardCharsets.UTF_8)
+                .useDelimiter("\\A")
+                .next();
+        return out.split("\n")[1]
+                .replace("oid sha256:", "");
     }
 
     /**
      * Request that the model is downloaded.
      */
-    public synchronized void fetchModel() {
+    public synchronized void downloadModel() {
         String ts = "torchscript_model.pt";
         String cf = "config.json";
         URL tsURL;
@@ -122,23 +179,18 @@ public class WSInferModel {
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
-        String dir = WSInferPrefs.modelDirectoryProperty().get();
-        String modPath = String.format("%s" + File.separator + "%s" + File.separator + "/%s", dir, hfRepoId, hfRevision);
-        File modDir = new File(modPath);
-        if (!modDir.exists()) {
+        File modelDirectory = getModelDirectory();
+        if (!modelDirectory.exists()) {
             try {
-                Files.createDirectories(modDir.toPath());
+                Files.createDirectories(modelDirectory.toPath());
             } catch (IOException e) {
-                logger.error("Cannot create directory for model files {}", modDir, e);
+                logger.error("Cannot create directory for model files {}", modelDirectory, e);
             }
         }
-        File tsFile = new File(String.format("%s/%s", modPath, ts));
-        if (!tsFile.exists()) {
-            WSInferUtils.downloadURLToFile(tsURL, tsFile);
-        }
-        File cfFile = new File(String.format("%s/%s", modPath, cf));
-        if (!cfFile.exists()) {
-            WSInferUtils.downloadURLToFile(cfURL, cfFile);
-        }
+        File tsFile = getTSFile();
+        WSInferUtils.downloadURLToFile(tsURL, tsFile);
+        File cfFile = getCFFile();
+        WSInferUtils.downloadURLToFile(cfURL, cfFile);
+        isModelAvailableProperty.set(isValid());
     }
 }
