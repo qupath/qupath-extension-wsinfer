@@ -43,9 +43,7 @@ import qupath.lib.images.ImageData;
 import qupath.lib.images.servers.ImageServer;
 import qupath.lib.images.servers.PixelCalibration;
 import qupath.lib.objects.PathObject;
-import qupath.lib.objects.PathObjects;
 import qupath.lib.objects.classes.PathClass;
-import qupath.lib.roi.GeometryTools;
 import qupath.lib.scripting.QP;
 
 import java.awt.image.BufferedImage;
@@ -382,14 +380,14 @@ public class WSInfer {
             tileHeight = (int)(tileSizeMicrons / cal.getPixelHeightMicrons() + .5);
         } else {
             logger.warn("Pixel calibration not available, so using pixels instead of microns");
-            tileWidth = (int)(config.getPatchSizePixels() + .5);
+            tileWidth = Math.round(config.getPatchSizePixels());
             tileHeight = tileWidth;
         }
         var tiler = new Tiler(
                 (int)tileWidth,
                 (int)tileHeight);
         tiler.setTrimToParent(false);
-        tiler.setFilterByCentroid(true);
+        tiler.setFilterByCentroid(false);
         tiler.setSymmetric(true);
 
         for (var annotation: selectedAnnotations) {

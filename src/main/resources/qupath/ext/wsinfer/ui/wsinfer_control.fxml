@@ -48,7 +48,7 @@
                         <children>
                             <VBox alignment="CENTER" styleClass="standard-spacing">
                                 <Label styleClass="regular" text="%ui.selection.label" />
-                                <Label styleClass="wsinfer-sub-title" text="%ui.selection.alt" />
+                                <Label alignment="CENTER" styleClass="wsinfer-sub-title" text="%ui.selection.alt" textAlignment="CENTER" />
                                 <HBox alignment="CENTER" styleClass="standard-spacing">
                                    <children>
                                       <Label styleClass="regular" text="%ui.selection.sub-label" />
@@ -110,7 +110,10 @@
                             </HBox>
                             <VBox alignment="CENTER" styleClass="standard-spacing">
                                 <Label styleClass="regular" text="%ui.results.slider" />
-                                <Slider fx:id="sliderOpacity" blockIncrement="0.1" majorTickUnit="0.1" max="1.0" maxWidth="200.0" minorTickCount="0" prefHeight="19.0" prefWidth="200.0" />
+                                <Slider fx:id="sliderOpacity" blockIncrement="0.1" majorTickUnit="0.1" max="1.0" maxWidth="200.0" minorTickCount="0" prefHeight="19.0" prefWidth="200.0">
+                        <tooltip>
+                           <Tooltip text="%ui.results.slider.tooltip" />
+                        </tooltip></Slider>
                             </VBox>
                         </children>
                     </VBox>
