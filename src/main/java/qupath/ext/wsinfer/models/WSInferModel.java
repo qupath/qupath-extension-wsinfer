@@ -17,8 +17,6 @@
 package qupath.ext.wsinfer.models;
 
 import com.google.gson.annotations.SerializedName;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.ui.WSInferPrefs;
@@ -26,7 +24,6 @@ import qupath.lib.io.GsonTools;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -34,7 +31,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Scanner;
 
 // Equivalent to config.json files from hugging face
 public class WSInferModel {
@@ -49,9 +45,6 @@ public class WSInferModel {
 
     @SerializedName("hf_revision")
     private String hfRevision;
-
-    // transient means it's not serialized/deserialized
-    private final transient BooleanProperty isModelAvailableProperty = new SimpleBooleanProperty(false);
 
     public String getName() {
         return hfRepoId;
@@ -100,14 +93,6 @@ public class WSInferModel {
         return getTSFile().exists() && checkSHAMatches() && getConfiguration() != null;
     }
 
-    /**
-     * True if the model files exist and have been SHA matched.
-     * @return A read/write {@link BooleanProperty}.
-     */
-    public BooleanProperty isModelAvailableProperty() {
-        return this.isModelAvailableProperty;
-    }
-
     private File getFile(String f) {
         return new File(String.format("%s/%s", getModelDirectory(), f));
     }
@@ -131,7 +116,7 @@ public class WSInferModel {
         return null;
     }
 
-    private static String SHA256(File file) throws IOException, NoSuchAlgorithmException {
+    private static String checkSumSHA256(File file) throws IOException, NoSuchAlgorithmException {
         byte[] data = Files.readAllBytes(file.toPath());
         byte[] hash = MessageDigest.getInstance("SHA-256").digest(data);
         return new BigInteger(1, hash).toString(16);
@@ -139,8 +124,14 @@ public class WSInferModel {
 
     private boolean checkSHAMatches() {
         try {
-            String shaDown = SHA256(getTSFile());
-            String shaUp = downloadSHA();
+            String shaDown = checkSumSHA256(getTSFile());
+            // this is the format
+            //        Result: version https://git-lfs.github.com/spec/v1
+            //        oid sha256:fffeeecb4282b61b2b699c6dfcd8f76c30c8ca1af9800fa78f5d81fc0b78a4e2
+            //        size 94494278
+            String content = Files.readString(getFile("lfs-pointer.txt").toPath(), StandardCharsets.UTF_8);
+            String shaUp = content.split("\n")[1]
+                    .replace("oid sha256:", "");
             if (!shaDown.equals(shaUp)) {
                 return false;
             }
@@ -151,35 +142,12 @@ public class WSInferModel {
         return true;
     }
 
-    private String downloadSHA() throws IOException {
-        URL url = new URL(String.format("https://huggingface.co/%s/raw/%s/torchscript_model.pt", hfRepoId, hfRevision));
-        // this is the format
-//        Result: version https://git-lfs.github.com/spec/v1
-//        oid sha256:fffeeecb4282b61b2b699c6dfcd8f76c30c8ca1af9800fa78f5d81fc0b78a4e2
-//        size 94494278
-        try (InputStream stream = url.openStream()) {
-            String out = new Scanner(stream, StandardCharsets.UTF_8)
-                    .useDelimiter("\\A")
-                    .next();
-            return out.split("\n")[1]
-                    .replace("oid sha256:", "");
-        }
-    }
+
 
     /**
      * Request that the model is downloaded.
      */
     public synchronized void downloadModel() {
-        String ts = "torchscript_model.pt";
-        String cf = "config.json";
-        URL tsURL;
-        URL cfURL;
-        try {
-            tsURL = new URL(String.format("https://huggingface.co/%s/resolve/%s/%s", hfRepoId, hfRevision, ts));
-            cfURL = new URL(String.format("https://huggingface.co/%s/resolve/%s/%s", hfRepoId, hfRevision, cf));
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
         File modelDirectory = getModelDirectory();
         if (!modelDirectory.exists()) {
             try {
@@ -188,10 +156,27 @@ public class WSInferModel {
                 logger.error("Cannot create directory for model files {}", modelDirectory, e);
             }
         }
-        File tsFile = getTSFile();
-        WSInferUtils.downloadURLToFile(tsURL, tsFile);
-        File cfFile = getCFFile();
-        WSInferUtils.downloadURLToFile(cfURL, cfFile);
-        isModelAvailableProperty.set(isValid());
+        downloadFileToCacheDir("torchscript_model.pt");
+        downloadFileToCacheDir("config.json");
+        URL url = null;
+        try {
+            url = new URL(String.format("https://huggingface.co/%s/raw/%s/torchscript_model.pt", hfRepoId, hfRevision));
+        } catch (MalformedURLException e) {
+            logger.error("Error downloading URL {}", url, e);
+        }
+        WSInferUtils.downloadURLToFile(url, getFile("lfs-pointer.txt"));
+        if (!isValid()) {
+            logger.error("Error downloading model");
+        }
+    }
+
+    private void downloadFileToCacheDir(String file) {
+        URL url;
+        try {
+            url = new URL(String.format("https://huggingface.co/%s/resolve/%s/%s", hfRepoId, hfRevision, file));
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+        WSInferUtils.downloadURLToFile(url, getFile(file));
     }
 }

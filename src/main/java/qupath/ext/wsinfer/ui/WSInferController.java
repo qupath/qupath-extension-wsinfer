@@ -166,14 +166,7 @@ public class WSInferController {
         WSInferModelCollection models = WSInferUtils.getModelCollection();
         modelChoiceBox.getItems().setAll(models.getModels().values());
         modelChoiceBox.setConverter(new ModelStringConverter(models));
-        modelChoiceBox.getSelectionModel().selectedItemProperty().addListener((v, o, n) ->
-            n.isModelAvailableProperty().set(n.isValid()));
-        downloadButton.disableProperty().bind(
-                modelChoiceBox
-                        .getSelectionModel().selectedItemProperty()
-                        .flatMap(WSInferModel::isModelAvailableProperty)
-                        .orElse(Boolean.TRUE)
-        );
+        downloadButton.disableProperty().bind(modelChoiceBox.getSelectionModel().selectedItemProperty().isNull());
     }
 
     private void configureAvailableDevices() {
@@ -270,7 +263,7 @@ public class WSInferController {
             Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.no-model"));
             return;
         }
-        if (!selectedModel.isModelAvailableProperty().get()) {
+        if (!selectedModel.isValid()) {
             if (!Dialogs.showConfirmDialog(resources.getString("title"), resources.getString("ui.model-popup"))) {
                 Dialogs.showWarningNotification(resources.getString("title"), resources.getString("ui.model-not-downloaded"));
                 return;
@@ -325,7 +318,6 @@ public class WSInferController {
             return;
         }
         if (model.isValid()) {
-            model.isModelAvailableProperty().set(true);
             showModelAvailableNotification(model.getName());
             return;
         }
