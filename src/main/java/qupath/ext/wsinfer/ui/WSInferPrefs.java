@@ -29,13 +29,14 @@ public class WSInferPrefs {
 
     private static final StringProperty modelDirectoryProperty = PathPrefs.createPersistentPreference(
             "wsinfer.model.dir",
-            PathPrefs.getUserPath() + File.separator + "wsinfer"
+            getUserDir() + File.separator + "wsinfer"
     );
 
     private static final StringProperty deviceProperty = PathPrefs.createPersistentPreference(
             "wsinfer.device",
             "cpu"
     );
+
     private static final Property<Integer> numWorkersProperty = PathPrefs.createPersistentPreference(
             "wsinfer.numWorkers",
             1
@@ -62,4 +63,9 @@ public class WSInferPrefs {
         return numWorkersProperty;
     }
 
+    private static String getUserDir() {
+        String userPath = PathPrefs.getUserPath();
+        String cachePath = System.getProperty("user.dir") + File.separator + ".cache";
+        return userPath == null ?  cachePath : userPath;
+    }
 }

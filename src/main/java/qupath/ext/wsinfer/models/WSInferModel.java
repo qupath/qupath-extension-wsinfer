@@ -90,7 +90,27 @@ public class WSInferModel {
      * @return true if the files exist and the SHA matches, and the config is valid.
      */
     public boolean isValid() {
-        return getTSFile().exists() && checkSHAMatches() && getConfiguration() != null;
+        return getTSFile().exists() && checkModifiedTimes() && getConfiguration() != null;
+    }
+
+    /**
+     * Check if the LFS pointer that contains the SHA has later modified time
+     * than the model file. This should always be true since we download the
+     * model first.
+     * @return true if the modified times are as expected.
+     */
+    private boolean checkModifiedTimes() {
+        try {
+            return Files.getLastModifiedTime(getTSFile().toPath())
+                    .compareTo(Files.getLastModifiedTime(getPointerFile().toPath())) < 0;
+        } catch (IOException e) {
+            logger.error("Cannot get last modified time");
+            return false;
+        }
+    }
+
+    private File getPointerFile() {
+        return getFile("lfs-pointer.txt");
     }
 
     private File getFile(String f) {
@@ -122,6 +142,11 @@ public class WSInferModel {
         return new BigInteger(1, hash).toString(16);
     }
 
+    /**
+     * Check that the SHA-256 checksum in the LFS pointer file matches one
+     * we calculate ourselves.
+     * @return true if the torchscript model file is identical to the remote one.
+     */
     private boolean checkSHAMatches() {
         try {
             String shaDown = checkSumSHA256(getTSFile());
@@ -129,7 +154,7 @@ public class WSInferModel {
             //        Result: version https://git-lfs.github.com/spec/v1
             //        oid sha256:fffeeecb4282b61b2b699c6dfcd8f76c30c8ca1af9800fa78f5d81fc0b78a4e2
             //        size 94494278
-            String content = Files.readString(getFile("lfs-pointer.txt").toPath(), StandardCharsets.UTF_8);
+            String content = Files.readString(getPointerFile().toPath(), StandardCharsets.UTF_8);
             String shaUp = content.split("\n")[1]
                     .replace("oid sha256:", "");
             if (!shaDown.equals(shaUp)) {
@@ -164,8 +189,8 @@ public class WSInferModel {
         } catch (MalformedURLException e) {
             logger.error("Error downloading URL {}", url, e);
         }
-        WSInferUtils.downloadURLToFile(url, getFile("lfs-pointer.txt"));
-        if (!isValid()) {
+        WSInferUtils.downloadURLToFile(url, getPointerFile());
+        if (!isValid() && checkSHAMatches()) {
             logger.error("Error downloading model");
         }
     }
