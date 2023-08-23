@@ -42,18 +42,20 @@ public class WSInferUtils {
 
     private static WSInferModelCollection cachedModelCollection;
 
-    static void downloadURLToFile(URL url, File file) {
+    static void downloadURLToFile(URL url, File file) throws IOException {
         ReadableByteChannel readableByteChannel = null;
         try {
             readableByteChannel = Channels.newChannel(url.openStream());
         } catch (IOException e) {
             logger.error("Error opening URL {}", url, e);
         }
-
+        if (readableByteChannel == null) {
+            throw new IOException("Unable to open URL");
+        }
         try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
         } catch (IOException e) {
-            logger.error("Error download file {}", url, e);
+            logger.error("Error downloading file {}", url, e);
         }
     }
 
@@ -104,14 +106,50 @@ public class WSInferUtils {
         return cachedModelCollection;
     }
 
+    /**
+     * Check if a directory exists and create it if it does not.
+     * @param path the path of the directory
+     * @return true if the directory exists when the method returns
+     */
+    public static boolean checkPathExists(Path path) {
+        if (!Files.exists(path)) {
+            try {
+                Files.createDirectories(path);
+            } catch (IOException e) {
+                logger.error("Cannot create directory {}", path, e);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static File getCachedCollectionFile() {
+        String dir = WSInferPrefs.modelDirectoryProperty().get();
+        return new File(String.format("%s" + File.separator + "wsinfer-zoo-registry.json", dir));
+    }
 
     private static WSInferModelCollection downloadModelCollectionImpl() {
-        String json = null;
+        String json;
+        URL url = null;
         try {
-            URI uri = new URI("https://huggingface.co/datasets/kaczmarj/wsinfer-model-zoo-json/raw/main/wsinfer-zoo-registry.json");
-            json = downloadJSON(uri);
-        } catch (URISyntaxException e) {
-            logger.error("Malformed URI", e);
+            url = new URL("https://huggingface.co/datasets/kaczmarj/wsinfer-model-zoo-json/raw/main/wsinfer-zoo-registry.json");
+        } catch (MalformedURLException e) {
+            logger.error("Malformed URL", e);
+        }
+        File cachedFile = getCachedCollectionFile();
+        try {
+            checkPathExists(Path.of(WSInferPrefs.modelDirectoryProperty().get()));
+            downloadURLToFile(url, cachedFile);
+            logger.info("Downloaded zoo file {}", cachedFile);
+        } catch (IOException e) {
+            logger.error("Unable to download zoo JSON file {}", cachedFile, e);
+        }
+        try {
+            json = Files.readString(cachedFile.toPath());
+            logger.info("Read cached zoo file {}", cachedFile);
+        } catch (IOException e) {
+            logger.error("Unable to read cached zoo JSON file", e);
+            return null;
         }
         return GsonTools.getInstance().fromJson(json, WSInferModelCollection.class);
     }
