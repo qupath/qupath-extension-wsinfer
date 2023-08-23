@@ -24,15 +24,18 @@ import qupath.lib.io.GsonTools;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 // Equivalent to config.json files from hugging face
 public class WSInferModel {
 
-    private final Logger logger = LoggerFactory.getLogger(WSInferModel.class);
+    private static final Logger logger = LoggerFactory.getLogger(WSInferModel.class);
 
     private String description;
     private WSInferModelConfiguration configuration;
@@ -49,13 +52,76 @@ public class WSInferModel {
 
     /**
      * Get the configuration. Note that this may be null.
-     * @return
+     * @return the model configuration, or null.
      */
     public WSInferModelConfiguration getConfiguration() {
         if (configuration == null) {
             configuration = tryToLoadConfiguration();
         }
         return configuration;
+    }
+
+    /**
+     * Remove the cached model files.
+     */
+    public synchronized void removeCache() {
+        getTSFile().delete();
+        getCFFile().delete();
+    }
+
+    /**
+     * Get the torchscript file. Note that it is not guaranteed that the model has been downloaded.
+     * @return path to torchscript pt file in cache dir
+     */
+    public File getTSFile() {
+        return getFile("torchscript_model.pt");
+    }
+
+    /**
+     * Get the configuration file. Note that it is not guaranteed that the model has been downloaded.
+     * @return path to model config file in cache dir
+     */
+    public File getCFFile() {
+        return getFile("config.json");
+    }
+
+    /**
+     * Check if the model files exist and are valid.
+     * @return true if the files exist and the SHA matches, and the config is valid.
+     */
+    public boolean isValid() {
+        return getTSFile().exists() && checkModifiedTimes() && getConfiguration() != null;
+    }
+
+    /**
+     * Check if the LFS pointer that contains the SHA has later modified time
+     * than the model file. This should always be true since we download the
+     * model first.
+     * @return true if the modified times are as expected.
+     */
+    private boolean checkModifiedTimes() {
+        try {
+            return Files.getLastModifiedTime(getTSFile().toPath())
+                    .compareTo(Files.getLastModifiedTime(getPointerFile().toPath())) < 0;
+        } catch (IOException e) {
+            logger.error("Cannot get last modified time");
+            return false;
+        }
+    }
+
+    private File getPointerFile() {
+        return getFile("lfs-pointer.txt");
+    }
+
+    private File getFile(String f) {
+        return new File(String.format("%s/%s", getModelDirectory(), f));
+    }
+
+    private File getModelDirectory() {
+        return new File(
+                String.format(
+                        "%s" + File.separator + "%s" + File.separator + "/%s",
+                        WSInferPrefs.modelDirectoryProperty().get(), hfRepoId, hfRevision));
     }
 
     private WSInferModelConfiguration tryToLoadConfiguration() {
@@ -70,75 +136,72 @@ public class WSInferModel {
         return null;
     }
 
-    /**
-     * Remove the cached model files.
-     */
-    public synchronized void removeCache() {
-        getTSFile().delete();
-        getCFFile().delete();
+    private static String checkSumSHA256(File file) throws IOException, NoSuchAlgorithmException {
+        byte[] data = Files.readAllBytes(file.toPath());
+        byte[] hash = MessageDigest.getInstance("SHA-256").digest(data);
+        return new BigInteger(1, hash).toString(16);
     }
 
     /**
-     * Get the torchscript file. Note that it is not guaranteed that the model has been downloaded.
-     * @return
+     * Check that the SHA-256 checksum in the LFS pointer file matches one
+     * we calculate ourselves.
+     * @return true if the torchscript model file is identical to the remote one.
      */
-    public File getTSFile() {
-        return getFile("torchscript_model.pt");
+    private boolean checkSHAMatches() {
+        try {
+            String shaDown = checkSumSHA256(getTSFile());
+            // this is the format
+            //        Result: version https://git-lfs.github.com/spec/v1
+            //        oid sha256:fffeeecb4282b61b2b699c6dfcd8f76c30c8ca1af9800fa78f5d81fc0b78a4e2
+            //        size 94494278
+            String content = Files.readString(getPointerFile().toPath(), StandardCharsets.UTF_8);
+            String shaUp = content.split("\n")[1]
+                    .replace("oid sha256:", "");
+            if (!shaDown.equals(shaUp)) {
+                return false;
+            }
+        } catch (IOException | NoSuchAlgorithmException e) {
+            logger.error("Unable to generate SHA for {}", getTSFile(), e);
+            return false;
+        }
+        return true;
     }
 
-    /**
-     * Get the configuration file. Note that it is not guaranteed that the model has been downloaded.
-     * @return
-     */
-    public File getCFFile() {
-        return getFile("config.json");
-    }
 
-    private File getFile(String f) {
-        String dir = WSInferPrefs.modelDirectoryProperty().get();
-        String modPath = String.format("%s" + File.separator + "%s" + File.separator + "/%s", dir, hfRepoId, hfRevision);
-        return new File(String.format("%s/%s", modPath, f));
-    }
-
-    /**
-     * Query if the model has already been downloaded.
-     * @return
-     */
-    public boolean isModelAvailable() {
-        return getTSFile().exists() && getConfiguration() != null;
-    }
 
     /**
      * Request that the model is downloaded.
      */
-    public synchronized void fetchModel() {
-        String ts = "torchscript_model.pt";
-        String cf = "config.json";
-        URL tsURL;
-        URL cfURL;
+    public synchronized void downloadModel() {
+        File modelDirectory = getModelDirectory();
+        if (!modelDirectory.exists()) {
+            try {
+                Files.createDirectories(modelDirectory.toPath());
+            } catch (IOException e) {
+                logger.error("Cannot create directory for model files {}", modelDirectory, e);
+            }
+        }
+        downloadFileToCacheDir("torchscript_model.pt");
+        downloadFileToCacheDir("config.json");
+        URL url = null;
         try {
-            tsURL = new URL(String.format("https://huggingface.co/%s/resolve/%s/%s", hfRepoId, hfRevision, ts));
-            cfURL = new URL(String.format("https://huggingface.co/%s/resolve/%s/%s", hfRepoId, hfRevision, cf));
+            url = new URL(String.format("https://huggingface.co/%s/raw/%s/torchscript_model.pt", hfRepoId, hfRevision));
+        } catch (MalformedURLException e) {
+            logger.error("Error downloading URL {}", url, e);
+        }
+        WSInferUtils.downloadURLToFile(url, getPointerFile());
+        if (!isValid() && checkSHAMatches()) {
+            logger.error("Error downloading model");
+        }
+    }
+
+    private void downloadFileToCacheDir(String file) {
+        URL url;
+        try {
+            url = new URL(String.format("https://huggingface.co/%s/resolve/%s/%s", hfRepoId, hfRevision, file));
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
         }
-        String dir = WSInferPrefs.modelDirectoryProperty().get();
-        String modPath = String.format("%s" + File.separator + "%s" + File.separator + "/%s", dir, hfRepoId, hfRevision);
-        File modDir = new File(modPath);
-        if (!modDir.exists()) {
-            try {
-                Files.createDirectories(modDir.toPath());
-            } catch (IOException e) {
-                logger.error("Cannot create directory for model files {}", modDir, e);
-            }
-        }
-        File tsFile = new File(String.format("%s/%s", modPath, ts));
-        if (!tsFile.exists()) {
-            WSInferUtils.downloadURLToFile(tsURL, tsFile);
-        }
-        File cfFile = new File(String.format("%s/%s", modPath, cf));
-        if (!cfFile.exists()) {
-            WSInferUtils.downloadURLToFile(cfURL, cfFile);
-        }
+        WSInferUtils.downloadURLToFile(url, getFile(file));
     }
 }
