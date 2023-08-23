@@ -6,13 +6,9 @@ name: Java CI with Gradle
 on:
   push:
     branches: [ "main" ]
-    tags: "v*"
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
-
-env:
-  artifact_name: ${{github.event.repository.name}}-${{github.ref_name}}
 
 jobs:
   build:
@@ -34,7 +30,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: ${{env.artifact_name}}
+        name: ${{ github.event.repository.name }}-${{ github.event.pull_request && github.head_ref || github.ref_name }}
         path: build/libs
         retention-days: 7
 
