@@ -30,7 +30,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ github.event.repository.name }}-${{ env.GITHUB_REF_NAME }}
+        name: ${{ github.event.repository.name }}-${{ github.event.pull_request && github.head_ref || github.ref_name }}
         path: build/libs
         retention-days: 7
 
