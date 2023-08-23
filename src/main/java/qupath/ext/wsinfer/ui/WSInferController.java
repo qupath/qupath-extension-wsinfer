@@ -119,7 +119,6 @@ public class WSInferController {
 
     private final ObjectProperty<Task<?>> pendingTask = new SimpleObjectProperty<>();
 
-
     @FXML
     private void initialize() {
         logger.info("Initializing...");
@@ -166,7 +165,8 @@ public class WSInferController {
         WSInferModelCollection models = WSInferUtils.getModelCollection();
         modelChoiceBox.getItems().setAll(models.getModels().values());
         modelChoiceBox.setConverter(new ModelStringConverter(models));
-        downloadButton.disableProperty().bind(modelChoiceBox.getSelectionModel().selectedItemProperty().isNull());
+        modelChoiceBox.getSelectionModel().selectedItemProperty().addListener(
+                (v, o, n) -> downloadButton.setDisable((n == null) || n.isValid()));
     }
 
     private void configureAvailableDevices() {
@@ -180,9 +180,8 @@ public class WSInferController {
         }
         // Don't bind property for now, since this would cause trouble if the WSInferPrefs.deviceProperty() is
         // changed elsewhere
-        deviceChoices.getSelectionModel().selectedItemProperty().addListener((value, oldValue, newValue) -> {
-            WSInferPrefs.deviceProperty().set(newValue);
-        });
+        deviceChoices.getSelectionModel().selectedItemProperty().addListener(
+                (value, oldValue, newValue) -> WSInferPrefs.deviceProperty().set(newValue));
     }
 
     private void configureRunInferenceButton() {
@@ -327,6 +326,7 @@ public class WSInferController {
             showDownloadingModelNotification(model.getName());
             model.downloadModel();
             showModelAvailableNotification(model.getName());
+            downloadButton.setDisable(true);
         });
     }
 

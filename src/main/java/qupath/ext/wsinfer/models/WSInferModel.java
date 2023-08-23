@@ -35,7 +35,7 @@ import java.security.NoSuchAlgorithmException;
 // Equivalent to config.json files from hugging face
 public class WSInferModel {
 
-    private final Logger logger = LoggerFactory.getLogger(WSInferModel.class);
+    private static final Logger logger = LoggerFactory.getLogger(WSInferModel.class);
 
     private String description;
     private WSInferModelConfiguration configuration;
