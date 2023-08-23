@@ -23,6 +23,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import qupath.lib.gui.ExtensionClassLoader;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.dialogs.Dialogs;
 
@@ -69,7 +70,10 @@ public class WSInferCommand implements Runnable {
             throw new IOException("Cannot find URL for WSInfer FXML");
         }
 
-        VBox root = FXMLLoader.load(url, resources);
+        // We need to use the ExtensionClassLoader to load the FXML, since it's in a different module
+        var loader = new FXMLLoader(url, resources);
+        loader.setClassLoader(QuPathGUI.getExtensionClassLoader());
+        VBox root = loader.load();
 
         // There's probably a better approach... but wrapping in a border pane
         // helped me get the resizing to behave
