@@ -18,20 +18,18 @@ package qupath.ext.wsinfer.models;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import qupath.ext.wsinfer.ui.WSInferPrefs;
 import qupath.lib.io.GsonTools;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.util.Objects;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * Utility class to help with working with WSInfer models.
@@ -57,27 +55,6 @@ public class WSInferUtils {
         } catch (IOException e) {
             logger.error("Error downloading file {}", url, e);
         }
-    }
-
-    static String downloadJSON(URI uri) {
-        HttpRequest request = HttpRequest.newBuilder(uri)
-                .GET()
-                .build();
-        HttpResponse response = null;
-        try {
-            response = HttpClient.newHttpClient()
-                    .send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-            logger.error("Error in HTTP request for URI {}", uri, e);
-        }
-
-        int code = Objects.requireNonNull(response).statusCode();
-        if (code == 200) {
-            return (String) response.body();
-        } else if (code == 304) {
-            logger.error("Error code 304 downloading {}", uri);
-        }
-        return null;
     }
 
     /**
@@ -153,4 +130,5 @@ public class WSInferUtils {
         }
         return GsonTools.getInstance().fromJson(json, WSInferModelCollection.class);
     }
+
 }
