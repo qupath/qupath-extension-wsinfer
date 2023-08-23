@@ -2,7 +2,11 @@
 
 This repo contains the extension to work with WSInfer models in QuPath.
 
+This helps make deep learning-based patch classification in pathology images easy and interactive.
+
 See https://wsinfer.readthedocs.io for details.
+
+> **If you use this extension, please cite both the WSInfer preprint and the [QuPath paper](https://qupath.readthedocs.io/en/0.4/docs/intro/citing.html)!**
 
 ## Installation
 
