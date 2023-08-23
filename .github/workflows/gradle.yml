@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  artifact_name: ${{github.event.repository.name}}-${{github.ref_name}}
+  artifact_name: ${{ github.event.repository.name }}-${{ env.GITHUB_REF_NAME }}
 
 jobs:
   build:
@@ -33,7 +33,7 @@ jobs:
     - name: Upload artifacts
       uses: actions/upload-artifact@v3
       with:
-        name: ${{env.artifact_name}}
+        name: ${{ env.artifact_name }}
         path: build/libs
         retention-days: 7
 
