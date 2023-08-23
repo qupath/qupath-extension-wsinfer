@@ -181,27 +181,21 @@ public class WSInferModel {
                 logger.error("Cannot create directory for model files {}", modelDirectory, e);
             }
         }
-        downloadFileToCacheDir("torchscript_model.pt");
-        downloadFileToCacheDir("config.json");
-        URL url = null;
         try {
-            url = new URL(String.format("https://huggingface.co/%s/raw/%s/torchscript_model.pt", hfRepoId, hfRevision));
-        } catch (MalformedURLException e) {
-            logger.error("Error downloading URL {}", url, e);
+            downloadFileToCacheDir("torchscript_model.pt");
+            downloadFileToCacheDir("config.json");
+            URL url = new URL(String.format("https://huggingface.co/%s/raw/%s/torchscript_model.pt", hfRepoId, hfRevision));
+            WSInferUtils.downloadURLToFile(url, getPointerFile());
+        } catch (IOException e) {
+            logger.error("Error downloading model files", e);
         }
-        WSInferUtils.downloadURLToFile(url, getPointerFile());
-        if (!isValid() && checkSHAMatches()) {
+        if (!isValid() || !checkSHAMatches()) {
             logger.error("Error downloading model");
         }
     }
 
-    private void downloadFileToCacheDir(String file) {
-        URL url;
-        try {
-            url = new URL(String.format("https://huggingface.co/%s/resolve/%s/%s", hfRepoId, hfRevision, file));
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
+    private void downloadFileToCacheDir(String file) throws IOException {
+        URL url = new URL(String.format("https://huggingface.co/%s/resolve/%s/%s", hfRepoId, hfRevision, file));
         WSInferUtils.downloadURLToFile(url, getFile(file));
     }
 }
