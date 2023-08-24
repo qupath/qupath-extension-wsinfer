@@ -403,7 +403,7 @@ public class WSInferController {
                     try {
                         model.downloadModel();
                     } catch (IOException e) {
-                        Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.downloading"));
+                        Platform.runLater(() -> Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.downloading")));
                     }
                     showModelAvailableNotification(model.getName());
                 }
