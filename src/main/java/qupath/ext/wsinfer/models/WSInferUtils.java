@@ -30,6 +30,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Utility class to help with working with WSInfer models.
@@ -100,9 +101,8 @@ public class WSInferUtils {
         return true;
     }
 
-    private static File getCachedCollectionFile() {
-        String dir = WSInferPrefs.modelDirectoryProperty().get();
-        return new File(String.format("%s" + File.separator + "wsinfer-zoo-registry.json", dir));
+    private static Path getCachedCollectionFile() {
+        return Paths.get(WSInferPrefs.modelDirectoryProperty().get(), "wsinfer-zoo-registry.json"));
     }
 
     private static WSInferModelCollection downloadModelCollectionImpl() {
@@ -113,16 +113,16 @@ public class WSInferUtils {
         } catch (MalformedURLException e) {
             logger.error("Malformed URL", e);
         }
-        File cachedFile = getCachedCollectionFile();
+        Path cachedFile = getCachedCollectionFile();
         try {
             checkPathExists(Path.of(WSInferPrefs.modelDirectoryProperty().get()));
-            downloadURLToFile(url, cachedFile);
+            downloadURLToFile(url, cachedFile.toFile());
             logger.info("Downloaded zoo file {}", cachedFile);
         } catch (IOException e) {
             logger.error("Unable to download zoo JSON file {}", cachedFile, e);
         }
         try {
-            json = Files.readString(cachedFile.toPath());
+            json = Files.readString(cachedFile);
             logger.info("Read cached zoo file {}", cachedFile);
         } catch (IOException e) {
             logger.error("Unable to read cached zoo JSON file", e);

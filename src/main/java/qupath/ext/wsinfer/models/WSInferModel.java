@@ -29,6 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -114,14 +115,11 @@ public class WSInferModel {
     }
 
     private File getFile(String f) {
-        return new File(String.format("%s/%s", getModelDirectory(), f));
+        return Paths.get(getModelDirectory().toString(), f).toFile();
     }
 
     private File getModelDirectory() {
-        return new File(
-                String.format(
-                        "%s" + File.separator + "%s" + File.separator + "/%s",
-                        WSInferPrefs.modelDirectoryProperty().get(), hfRepoId, hfRevision));
+        return Paths.get(WSInferPrefs.modelDirectoryProperty().get(), hfRepoId, hfRevision).toFile();
     }
 
     private WSInferModelConfiguration tryToLoadConfiguration() {
