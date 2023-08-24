@@ -46,6 +46,7 @@ public class WSInferUtils {
         ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
         FileOutputStream fos = new FileOutputStream(file);
         fos.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+        readableByteChannel.close();
         fos.close();
     }
 
