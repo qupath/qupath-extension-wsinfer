@@ -63,6 +63,7 @@ import qupath.lib.objects.hierarchy.events.PathObjectSelectionListener;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -324,7 +325,11 @@ public class WSInferController {
         ForkJoinPool.commonPool().execute(() -> {
             model.removeCache();
             showDownloadingModelNotification(model.getName());
-            model.downloadModel();
+            try {
+                model.downloadModel();
+            } catch (IOException e) {
+                Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.downloading"));
+            }
             showModelAvailableNotification(model.getName());
             downloadButton.setDisable(true);
         });
@@ -395,7 +400,11 @@ public class WSInferController {
                 // should have been displayed already
                 if (!model.isValid()) {
                     showDownloadingModelNotification(model.getName());
-                    model.downloadModel();
+                    try {
+                        model.downloadModel();
+                    } catch (IOException e) {
+                        Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.downloading"));
+                    }
                     showModelAvailableNotification(model.getName());
                 }
                 // Run inference

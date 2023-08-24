@@ -170,26 +170,17 @@ public class WSInferModel {
     /**
      * Request that the model is downloaded.
      */
-    public synchronized void downloadModel() {
+    public synchronized void downloadModel() throws IOException {
         File modelDirectory = getModelDirectory();
         if (!modelDirectory.exists()) {
-            try {
-                Files.createDirectories(modelDirectory.toPath());
-            } catch (IOException e) {
-                logger.error("Cannot create directory for model files {}", modelDirectory, e);
-            }
-
+            Files.createDirectories(modelDirectory.toPath());
         }
-        try {
-            downloadFileToCacheDir("torchscript_model.pt");
-            downloadFileToCacheDir("config.json");
-            URL url = new URL(String.format("https://huggingface.co/%s/raw/%s/torchscript_model.pt", hfRepoId, hfRevision));
-            WSInferUtils.downloadURLToFile(url, getPointerFile());
-        } catch (IOException e) {
-            logger.error("Error downloading model files", e);
-        }
+        downloadFileToCacheDir("torchscript_model.pt");
+        downloadFileToCacheDir("config.json");
+        URL url = new URL(String.format("https://huggingface.co/%s/raw/%s/torchscript_model.pt", hfRepoId, hfRevision));
+        WSInferUtils.downloadURLToFile(url, getPointerFile());
         if (!isValid() || !checkSHAMatches()) {
-            logger.error("Error downloading model");
+            throw new IOException("Error downloading model files");
         }
     }
 
