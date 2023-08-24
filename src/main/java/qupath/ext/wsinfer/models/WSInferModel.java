@@ -178,6 +178,7 @@ public class WSInferModel {
             } catch (IOException e) {
                 logger.error("Cannot create directory for model files {}", modelDirectory, e);
             }
+
         }
         try {
             downloadFileToCacheDir("torchscript_model.pt");

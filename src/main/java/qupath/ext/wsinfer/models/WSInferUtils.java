@@ -16,6 +16,7 @@
 
 package qupath.ext.wsinfer.models;
 
+import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.ui.WSInferPrefs;
@@ -42,20 +43,10 @@ public class WSInferUtils {
     private static WSInferModelCollection cachedModelCollection;
 
     static void downloadURLToFile(URL url, File file) throws IOException {
-        ReadableByteChannel readableByteChannel = null;
-        try {
-            readableByteChannel = Channels.newChannel(url.openStream());
-        } catch (IOException e) {
-            logger.error("Error opening URL {}", url, e);
-        }
-        if (readableByteChannel == null) {
-            throw new IOException("Unable to open URL");
-        }
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            fos.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-        } catch (IOException e) {
-            logger.error("Error downloading file {}", url, e);
-        }
+        ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
+        FileOutputStream fos = new FileOutputStream(file);
+        fos.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+        fos.close();
     }
 
     /**
@@ -90,7 +81,7 @@ public class WSInferUtils {
      * @return true if the directory exists when the method returns
      */
     public static boolean checkPathExists(Path path) {
-        if (!Files.exists(path)) {
+        if (!path.toFile().exists()) {
             try {
                 Files.createDirectories(path);
             } catch (IOException e) {
@@ -102,7 +93,7 @@ public class WSInferUtils {
     }
 
     private static Path getCachedCollectionFile() {
-        return Paths.get(WSInferPrefs.modelDirectoryProperty().get(), "wsinfer-zoo-registry.json"));
+        return Paths.get(WSInferPrefs.modelDirectoryProperty().get(), "wsinfer-zoo-registry.json");
     }
 
     private static WSInferModelCollection downloadModelCollectionImpl() {
