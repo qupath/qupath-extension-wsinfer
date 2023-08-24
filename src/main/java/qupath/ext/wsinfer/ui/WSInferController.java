@@ -329,6 +329,7 @@ public class WSInferController {
                 model.downloadModel();
             } catch (IOException e) {
                 Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.downloading"));
+                return;
             }
             showModelAvailableNotification(model.getName());
             downloadButton.setDisable(true);
@@ -404,6 +405,7 @@ public class WSInferController {
                         model.downloadModel();
                     } catch (IOException e) {
                         Platform.runLater(() -> Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.downloading")));
+                        return null;
                     }
                     showModelAvailableNotification(model.getName());
                 }
