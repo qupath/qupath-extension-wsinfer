@@ -16,9 +16,13 @@
 
 package qupath.ext.wsinfer;
 
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.TopologyException;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
+import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import qupath.lib.objects.PathAnnotationObject;
 import qupath.lib.objects.PathObject;
 import qupath.lib.objects.PathObjects;
@@ -36,6 +40,9 @@ import java.util.stream.Collectors;
  * rectangular tiles. Useful for parallel processing.
  */
 public class Tiler {
+
+    private static final Logger logger = LoggerFactory.getLogger(Tiler.class);
+
     private int tileWidth;
     private int tileHeight;
     private boolean trimToParent = true;
@@ -166,13 +173,17 @@ public class Tiler {
      */
     public List<Geometry> createGeometries(Geometry parent) {
         if (parent == null) {
+            logger.warn("Tiler.createGeometries() called with null parent - no tiles will be created");
             return new ArrayList<>();
         }
+
         Envelope boundingBox = parent.getEnvelopeInternal();
         double xStart = boundingBox.getMinX();
         double yStart = boundingBox.getMinY();
         double xEnd = boundingBox.getMaxX();
         double yEnd = boundingBox.getMaxY();
+
+        logger.debug("Tiling requested for {} (bounds={})", parent.getGeometryType(), boundingBox);
 
         double bBoxWidth = xEnd - xStart;
         double bBoxHeight = yEnd - yStart;
@@ -191,33 +202,48 @@ public class Tiler {
         List<Geometry> tiles = new ArrayList<>();
         for (int x = (int) xStart; x < xEnd; x += tileWidth) {
             for (int y = (int) yStart; y < yEnd; y += tileHeight) {
-                Geometry tile = GeometryTools.createRectangle(x, y, tileWidth, tileHeight);
-                // straightforward case 1:
-                // if there's no intersection, we're in the bounding box but not
-                // the parent
-                if (!parent.intersects(tile)) {
-                    continue;
-                }
-                // straightforward case 2:
-                // tile is cleanly within roi
-                if (parent.contains(tile)) {
-                    tiles.add(tile);
-                    continue;
-                }
-
-                // trimming:
-                if (trimToParent) {
-                    // trim the tile to fit the parent
-                    tile = tile.intersection(parent);
-                    tiles.add(tile);
-                } else if (!filterByCentroid || parent.contains(tile.getCentroid())) {
-                    // If we aren't trimming based on centroids,
-                    // or it'd be included anyway
-                    tiles.add(tile);
-                }
+                tiles.add(GeometryTools.createRectangle(x, y, tileWidth, tileHeight));
             }
         }
-        return tiles;
+
+        var preparedParent = PreparedGeometryFactory.prepare(parent);
+        return tiles.parallelStream()
+                .map(createTileFilter(preparedParent, trimToParent, filterByCentroid))
+                .filter(g -> g != null)
+                .collect(Collectors.toList());
+    }
+
+    private static Function<Geometry, Geometry> createTileFilter(PreparedGeometry parent, boolean trimToParent, boolean filterByCentroid) {
+        return (Geometry tile) -> {
+            // straightforward case 1:
+            // if there's no intersection, we're in the bounding box but not
+            // the parent - skip tile
+            if (!parent.intersects(tile)) {
+                return null;
+            }
+            // straightforward case 2:
+            // tile is cleanly within roi - return unchanged
+            if (parent.covers(tile)) {
+                return tile;
+            }
+
+            // trimming:
+            if (trimToParent) {
+                // trim the tile to fit the parent
+                try {
+                    return tile.intersection(parent.getGeometry());
+                } catch (TopologyException e) {
+                    logger.warn("Exception calculating tile intersection - tile will be skipped", e);
+                    return null;
+                }
+            } else if (!filterByCentroid || parent.contains(tile.getCentroid())) {
+                // return tile unchanged if we aren't trimming based on centroids,
+                // or it'd be included anyway
+                return tile;
+            }
+            // otherwise, skip tile
+            return null;
+        };
     }
 
     /**
