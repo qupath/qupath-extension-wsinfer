@@ -9,14 +9,14 @@ plugins {
 
 ext.moduleName = 'io.github.qupath.extension.wsinfer'
 
-version = "0.1.0"
+version = "0.2.0"
 description = 'An extension to run WSInfer in QuPath'
 
 // The default 'gradle.ext.qupathVersion' reads this from settings.gradle.
 ext.qupathVersion = gradle.ext.qupathVersion
 
 // Generally 11 for QuPath v0.4.3, but will be 17 for QuPath v0.5.0
-ext.qupathJavaVersion = 11
+ext.qupathJavaVersion = 17
 
 def djlVersion = libs.versions.deepJavaLibrary.get()
 
@@ -36,6 +36,7 @@ dependencies {
     // Main QuPath user interface jar.
     // Automatically includes other QuPath jars as subdependencies.
     implementation "io.github.qupath:qupath-gui-fx:${qupathVersion}"
+    implementation 'io.github.qupath:qupath-fxtras:0.1.0-SNAPSHOT'
 
     // For logging - the version comes from QuPath's version catalog at
     // https://github.com/qupath/qupath/blob/main/gradle/libs.versions.toml

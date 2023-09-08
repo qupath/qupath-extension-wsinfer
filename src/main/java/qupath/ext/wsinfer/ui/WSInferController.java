@@ -53,7 +53,7 @@ import qupath.ext.wsinfer.models.WSInferUtils;
 import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
-import qupath.lib.gui.dialogs.Dialogs;
+import qupath.fx.dialogs.Dialogs;
 import qupath.lib.images.ImageData;
 import qupath.lib.objects.PathAnnotationObject;
 import qupath.lib.objects.PathObject;
@@ -204,7 +204,7 @@ public class WSInferController {
     }
 
     private void configureDisplayToggleButtons() {
-        var actions = qupath.getDefaultActions();
+        var actions = qupath.getOverlayActions();
         configureActionToggleButton(actions.FILL_DETECTIONS, toggleDetectionFill);
         configureActionToggleButton(actions.SHOW_DETECTIONS, toggleDetections);
         configureActionToggleButton(actions.SHOW_ANNOTATIONS, toggleAnnotations);

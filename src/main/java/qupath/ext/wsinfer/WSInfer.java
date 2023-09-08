@@ -38,7 +38,7 @@ import qupath.ext.wsinfer.models.WSInferModelConfiguration;
 import qupath.ext.wsinfer.models.WSInferTransform;
 import qupath.ext.wsinfer.models.WSInferUtils;
 import qupath.ext.wsinfer.ui.WSInferPrefs;
-import qupath.lib.gui.dialogs.Dialogs;
+import qupath.lib.gui.tools.GuiTools;
 import qupath.lib.images.ImageData;
 import qupath.lib.images.servers.ImageServer;
 import qupath.lib.images.servers.PixelCalibration;
@@ -151,7 +151,7 @@ public class WSInfer {
     public static void runInference(ImageData<BufferedImage> imageData, WSInferModel wsiModel, ProgressListener progressListener) throws InterruptedException, ModelNotFoundException, MalformedModelException, IOException, TranslateException {
         Objects.requireNonNull(wsiModel, "Model cannot be null");
         if (imageData == null) {
-            Dialogs.showNoImageError(resources.getString("title"));
+            GuiTools.showNoImageError(resources.getString("title"));
         }
 
         // Try to get some tiles we can use
