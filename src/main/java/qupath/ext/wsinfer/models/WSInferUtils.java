@@ -29,7 +29,6 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,8 +46,8 @@ public class WSInferUtils {
     static void downloadURLToFile(URL url, File file) throws IOException {
         try (InputStream stream = url.openStream()) {
             try (ReadableByteChannel readableByteChannel = Channels.newChannel(stream)) {
-                try (FileChannel channel = FileChannel.open(file.toPath())) {
-                    channel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+                try (FileOutputStream fos = new FileOutputStream(file)) {
+                    fos.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
                 }
             }
         }
