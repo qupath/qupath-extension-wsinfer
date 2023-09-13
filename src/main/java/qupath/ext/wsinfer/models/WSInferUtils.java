@@ -25,9 +25,11 @@ import qupath.lib.io.GsonTools;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,11 +45,13 @@ public class WSInferUtils {
     private static WSInferModelCollection cachedModelCollection;
 
     static void downloadURLToFile(URL url, File file) throws IOException {
-        ReadableByteChannel readableByteChannel = Channels.newChannel(url.openStream());
-        FileOutputStream fos = new FileOutputStream(file);
-        fos.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-        readableByteChannel.close();
-        fos.close();
+        try (InputStream stream = url.openStream()) {
+            try (ReadableByteChannel readableByteChannel = Channels.newChannel(stream)) {
+                try (FileChannel channel = FileChannel.open(file.toPath())) {
+                    channel.transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+                }
+            }
+        }
     }
 
     /**
