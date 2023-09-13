@@ -16,22 +16,23 @@
 
 package qupath.ext.wsinfer.models;
 
+import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import qupath.ext.wsinfer.ui.WSInferPrefs;
 import qupath.lib.io.GsonTools;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.util.Objects;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Utility class to help with working with WSInfer models.
@@ -42,40 +43,14 @@ public class WSInferUtils {
 
     private static WSInferModelCollection cachedModelCollection;
 
-    static void downloadURLToFile(URL url, File file) {
-        ReadableByteChannel readableByteChannel = null;
-        try {
-            readableByteChannel = Channels.newChannel(url.openStream());
-        } catch (IOException e) {
-            logger.error("Error opening URL {}", url, e);
+    static void downloadURLToFile(URL url, File file) throws IOException {
+        try (InputStream stream = url.openStream()) {
+            try (ReadableByteChannel readableByteChannel = Channels.newChannel(stream)) {
+                try (FileOutputStream fos = new FileOutputStream(file)) {
+                    fos.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
+                }
+            }
         }
-
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            fos.getChannel().transferFrom(readableByteChannel, 0, Long.MAX_VALUE);
-        } catch (IOException e) {
-            logger.error("Error download file {}", url, e);
-        }
-    }
-
-    static String downloadJSON(URI uri) {
-        HttpRequest request = HttpRequest.newBuilder(uri)
-                .GET()
-                .build();
-        HttpResponse response = null;
-        try {
-            response = HttpClient.newHttpClient()
-                    .send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
-            logger.error("Error in HTTP request for URI {}", uri, e);
-        }
-
-        int code = Objects.requireNonNull(response).statusCode();
-        if (code == 200) {
-            return (String) response.body();
-        } else if (code == 304) {
-            logger.error("Error code 304 downloading {}", uri);
-        }
-        return null;
     }
 
     /**
@@ -104,15 +79,51 @@ public class WSInferUtils {
         return cachedModelCollection;
     }
 
+    /**
+     * Check if a directory exists and create it if it does not.
+     * @param path the path of the directory
+     * @return true if the directory exists when the method returns
+     */
+    public static boolean checkPathExists(Path path) {
+        if (!path.toFile().exists()) {
+            try {
+                Files.createDirectories(path);
+            } catch (IOException e) {
+                logger.error("Cannot create directory {}", path, e);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static Path getCachedCollectionFile() {
+        return Paths.get(WSInferPrefs.modelDirectoryProperty().get(), "wsinfer-zoo-registry.json");
+    }
 
     private static WSInferModelCollection downloadModelCollectionImpl() {
-        String json = null;
+        String json;
+        URL url = null;
         try {
-            URI uri = new URI("https://huggingface.co/datasets/kaczmarj/wsinfer-model-zoo-json/raw/main/wsinfer-zoo-registry.json");
-            json = downloadJSON(uri);
-        } catch (URISyntaxException e) {
-            logger.error("Malformed URI", e);
+            url = new URL("https://huggingface.co/datasets/kaczmarj/wsinfer-model-zoo-json/raw/main/wsinfer-zoo-registry.json");
+        } catch (MalformedURLException e) {
+            logger.error("Malformed URL", e);
+        }
+        Path cachedFile = getCachedCollectionFile();
+        try {
+            checkPathExists(Path.of(WSInferPrefs.modelDirectoryProperty().get()));
+            downloadURLToFile(url, cachedFile.toFile());
+            logger.info("Downloaded zoo file {}", cachedFile);
+        } catch (IOException e) {
+            logger.error("Unable to download zoo JSON file {}", cachedFile, e);
+        }
+        try {
+            json = Files.readString(cachedFile);
+            logger.info("Read cached zoo file {}", cachedFile);
+        } catch (IOException e) {
+            logger.error("Unable to read cached zoo JSON file", e);
+            return null;
         }
         return GsonTools.getInstance().fromJson(json, WSInferModelCollection.class);
     }
+
 }
