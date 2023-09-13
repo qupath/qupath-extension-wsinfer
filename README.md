@@ -6,7 +6,7 @@ This helps make deep learning-based patch classification in pathology images eas
 
 See https://wsinfer.readthedocs.io for details.
 
-> **If you use this extension, please cite both the WSInfer preprint and the [QuPath paper](https://qupath.readthedocs.io/en/0.4/docs/intro/citing.html)!**
+> **If you use this extension, please cite both the [WSInfer preprint](https://arxiv.org/abs/2309.04631) and the [QuPath paper](https://qupath.readthedocs.io/en/0.4/docs/intro/citing.html)!**
 
 ## Installation
 
