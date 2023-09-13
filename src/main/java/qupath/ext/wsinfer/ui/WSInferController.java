@@ -41,6 +41,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import org.controlsfx.control.SearchableComboBox;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.control.action.ActionUtils;
 import org.slf4j.Logger;
@@ -87,7 +88,7 @@ public class WSInferController {
     @FXML
     private Label labelMessage;
     @FXML
-    private ChoiceBox<WSInferModel> modelChoiceBox;
+    private SearchableComboBox<WSInferModel> modelChoiceBox;
     @FXML
     private Button runButton;
     @FXML
