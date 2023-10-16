@@ -19,9 +19,11 @@ package qupath.ext.wsinfer.ui;
 import javafx.beans.property.Property;
 import javafx.beans.property.StringProperty;
 import qupath.lib.gui.prefs.PathPrefs;
+import qupath.lib.gui.UserDirectoryManager;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.nio.file.Path;
 
 /**
  * Class to store preferences associated with WSInfer.
@@ -30,7 +32,7 @@ public class WSInferPrefs {
 
     private static final StringProperty modelDirectoryProperty = PathPrefs.createPersistentPreference(
             "wsinfer.model.dir",
-            Paths.get(getUserDir(),"wsinfer").toString()
+            Paths.get(getUserDir().toString(),"wsinfer").toString()
     );
 
     private static final StringProperty deviceProperty = PathPrefs.createPersistentPreference(
@@ -64,9 +66,9 @@ public class WSInferPrefs {
         return numWorkersProperty;
     }
 
-    private static String getUserDir() {
-        String userPath = UserDirectoryManager.getInstance().getUserPath();
+    private static Path getUserDir() {
+        Path userPath = UserDirectoryManager.getInstance().getUserPath();
         Path cachePath = Paths.get(System.getProperty("user.dir"), ".cache", "QuPath");
-        return userPath == null || userPath.isEmpty() ?  cachePath : userPath.toString();
+        return userPath == null || userPath.toString().isEmpty() ?  cachePath : userPath;
     }
 }
