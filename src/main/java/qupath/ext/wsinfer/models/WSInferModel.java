@@ -29,6 +29,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -114,14 +115,11 @@ public class WSInferModel {
     }
 
     private File getFile(String f) {
-        return new File(String.format("%s/%s", getModelDirectory(), f));
+        return Paths.get(getModelDirectory().toString(), f).toFile();
     }
 
     private File getModelDirectory() {
-        return new File(
-                String.format(
-                        "%s" + File.separator + "%s" + File.separator + "/%s",
-                        WSInferPrefs.modelDirectoryProperty().get(), hfRepoId, hfRevision));
+        return Paths.get(WSInferPrefs.modelDirectoryProperty().get(), hfRepoId, hfRevision).toFile();
     }
 
     private WSInferModelConfiguration tryToLoadConfiguration() {
@@ -172,36 +170,22 @@ public class WSInferModel {
     /**
      * Request that the model is downloaded.
      */
-    public synchronized void downloadModel() {
+    public synchronized void downloadModel() throws IOException {
         File modelDirectory = getModelDirectory();
         if (!modelDirectory.exists()) {
-            try {
-                Files.createDirectories(modelDirectory.toPath());
-            } catch (IOException e) {
-                logger.error("Cannot create directory for model files {}", modelDirectory, e);
-            }
+            Files.createDirectories(modelDirectory.toPath());
         }
         downloadFileToCacheDir("torchscript_model.pt");
         downloadFileToCacheDir("config.json");
-        URL url = null;
-        try {
-            url = new URL(String.format("https://huggingface.co/%s/raw/%s/torchscript_model.pt", hfRepoId, hfRevision));
-        } catch (MalformedURLException e) {
-            logger.error("Error downloading URL {}", url, e);
-        }
+        URL url = new URL(String.format("https://huggingface.co/%s/raw/%s/torchscript_model.pt", hfRepoId, hfRevision));
         WSInferUtils.downloadURLToFile(url, getPointerFile());
-        if (!isValid() && checkSHAMatches()) {
-            logger.error("Error downloading model");
+        if (!isValid() || !checkSHAMatches()) {
+            throw new IOException("Error downloading model files");
         }
     }
 
-    private void downloadFileToCacheDir(String file) {
-        URL url;
-        try {
-            url = new URL(String.format("https://huggingface.co/%s/resolve/%s/%s", hfRepoId, hfRevision, file));
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
+    private void downloadFileToCacheDir(String file) throws IOException {
+        URL url = new URL(String.format("https://huggingface.co/%s/resolve/%s/%s", hfRepoId, hfRevision, file));
         WSInferUtils.downloadURLToFile(url, getFile(file));
     }
 }
