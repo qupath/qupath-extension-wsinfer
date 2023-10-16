@@ -66,7 +66,7 @@ public class WSInferPrefs {
 
     private static String getUserDir() {
         String userPath = UserDirectoryManager.getInstance().getUserPath();
-        String cachePath = Paths.get(System.getProperty("user.dir"), ".cache", "QuPath");
-        return userPath == null || userPath.isEmpty() ?  cachePath : userPath;
+        Path cachePath = Paths.get(System.getProperty("user.dir"), ".cache", "QuPath");
+        return userPath == null || userPath.isEmpty() ?  cachePath : userPath.toString();
     }
 }
