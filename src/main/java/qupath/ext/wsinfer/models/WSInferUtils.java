@@ -16,10 +16,10 @@
 
 package qupath.ext.wsinfer.models;
 
-import org.apache.commons.compress.utils.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.ui.WSInferPrefs;
+import qupath.fx.dialogs.Dialogs;
 import qupath.lib.io.GsonTools;
 
 import java.io.File;
@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
+import java.util.ResourceBundle;
 
 /**
  * Utility class to help with working with WSInfer models.
@@ -41,6 +42,7 @@ import java.util.Objects;
 public class WSInferUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(WSInferUtils.class);
+    private static final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 
     private static WSInferModelCollection cachedModelCollection;
 
@@ -78,11 +80,14 @@ public class WSInferUtils {
             return;
         }
         for (var model: Objects.requireNonNull(modelDir.listFiles())) {
-            var localModel = new WSInferModelLocal(model);
-            System.out.println(model);
-            System.out.println(localModel.getName());
-            System.out.println(cachedModelCollection.getModels());
-            cachedModelCollection.getModels().put(localModel.getName(), localModel);
+            if (model.isDirectory()) {
+                try {
+                    var localModel = WSInferModelLocal.createInstance(model);
+                    cachedModelCollection.getModels().put(localModel.getName(), localModel);
+                } catch (IOException e) {
+                    Dialogs.showErrorNotification(resources.getString("title"), e);
+                }
+            }
         }
     }
 
