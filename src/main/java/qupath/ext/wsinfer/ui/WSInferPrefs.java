@@ -16,16 +16,13 @@
 
 package qupath.ext.wsinfer.ui;
 
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.Property;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import qupath.lib.gui.prefs.PathPrefs;
 import qupath.lib.gui.UserDirectoryManager;
+import qupath.lib.gui.prefs.PathPrefs;
 
-import java.io.File;
-import java.nio.file.Paths;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Class to store preferences associated with WSInfer.
@@ -83,6 +80,5 @@ public class WSInferPrefs {
         Path cachePath = Paths.get(System.getProperty("user.dir"), ".cache", "QuPath");
         return userPath == null || userPath.toString().isEmpty() ?  cachePath : userPath;
     }
-
 
 }
