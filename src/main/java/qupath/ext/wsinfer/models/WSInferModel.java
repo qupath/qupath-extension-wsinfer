@@ -1,4 +1,4 @@
-/**
+ /**
  * Copyright 2023 University of Edinburgh
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,10 +42,10 @@ public class WSInferModel {
     private WSInferModelConfiguration configuration;
 
     @SerializedName("hf_repo_id")
-    private String hfRepoId;
+    String hfRepoId;
 
     @SerializedName("hf_revision")
-    private String hfRevision;
+    String hfRevision;
 
     public String getName() {
         return hfRepoId;
@@ -118,7 +118,7 @@ public class WSInferModel {
         return Paths.get(getModelDirectory().toString(), f).toFile();
     }
 
-    private File getModelDirectory() {
+    File getModelDirectory() {
         return Paths.get(WSInferPrefs.modelDirectoryProperty().get(), hfRepoId, hfRevision).toFile();
     }
 

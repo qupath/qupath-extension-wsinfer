@@ -33,6 +33,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 /**
  * Utility class to help with working with WSInfer models.
@@ -64,7 +65,25 @@ public class WSInferUtils {
                     cachedModelCollection = downloadModelCollection();
             }
         }
+        String localModelDirectory = WSInferPrefs.localDirectoryProperty().get();
+        if (localModelDirectory != null) {
+            addLocalModels(cachedModelCollection, localModelDirectory);
+        }
         return cachedModelCollection;
+    }
+
+    private static void addLocalModels(WSInferModelCollection cachedModelCollection, String localModelDirectory) {
+        File modelDir = new File(localModelDirectory);
+        if (!modelDir.exists() || !modelDir.isDirectory()) {
+            return;
+        }
+        for (var model: Objects.requireNonNull(modelDir.listFiles())) {
+            var localModel = new WSInferModelLocal(model);
+            System.out.println(model);
+            System.out.println(localModel.getName());
+            System.out.println(cachedModelCollection.getModels());
+            cachedModelCollection.getModels().put(localModel.getName(), localModel);
+        }
     }
 
     /**

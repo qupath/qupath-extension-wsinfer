@@ -16,7 +16,9 @@
 
 package qupath.ext.wsinfer.ui;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import qupath.lib.gui.prefs.PathPrefs;
 import qupath.lib.gui.UserDirectoryManager;
@@ -44,6 +46,9 @@ public class WSInferPrefs {
             "wsinfer.numWorkers",
             1
     ).asObject();
+    private static StringProperty localDirectoryProperty = PathPrefs.createPersistentPreference(
+            "wsinfer.localDirectory",
+            null);
 
     /**
      * String storing the preferred directory to cache models.
@@ -66,9 +71,18 @@ public class WSInferPrefs {
         return numWorkersProperty;
     }
 
+    /**
+     * String storing the preferred directory for user-supplied model folders.
+     */
+    public static StringProperty localDirectoryProperty() {
+        return localDirectoryProperty;
+    }
+
     private static Path getUserDir() {
         Path userPath = UserDirectoryManager.getInstance().getUserPath();
         Path cachePath = Paths.get(System.getProperty("user.dir"), ".cache", "QuPath");
         return userPath == null || userPath.toString().isEmpty() ?  cachePath : userPath;
     }
+
+
 }

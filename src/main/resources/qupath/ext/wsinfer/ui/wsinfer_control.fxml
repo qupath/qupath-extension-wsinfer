@@ -137,18 +137,28 @@
                         </children>
                     </HBox>
                     <VBox alignment="CENTER" styleClass="standard-spacing">
-                        <children>
-                            <Label styleClass="regular" text="%ui.options.directory" />
-                            <TextField fx:id="tfModelDirectory">
-                                <tooltip><Tooltip text="%ui.options.directory.tooltip" /></tooltip>
-                            </TextField>
-                        </children>
+                        <VBox alignment="CENTER" styleClass="standard-spacing">
+                            <children>
+                                <Label styleClass="regular" text="%ui.options.directory" />
+                                <TextField fx:id="tfModelDirectory">
+                                    <tooltip><Tooltip text="%ui.options.directory.tooltip" /></tooltip>
+                                </TextField>
+                            </children>
+                        </VBox>
+                        <VBox alignment="CENTER" styleClass="standard-spacing">
+                            <children>
+                                <Label styleClass="regular" text="%ui.options.localModelDirectory" />
+                                <TextField fx:id="localModelDirectory">
+                                    <tooltip><Tooltip text="%ui.options.localModelDirectory.tooltip" /></tooltip>
+                                </TextField>
+                            </children>
+                        </VBox>
                     </VBox>
                     <HBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
                             <Label styleClass="regular" text="%ui.options.pworkers" />
                      <Spinner fx:id="spinnerNumWorkers" prefWidth="75.0">
-                         <tooltip><Tooltip text="%ui.options.pworkers.label" /></tooltip>
+                         <tooltip><Tooltip text="%ui.options.pworkers.tooltip" /></tooltip>
                          <valueFactory>
                              <SpinnerValueFactory.IntegerSpinnerValueFactory initialValue="1" max="8" min="1" />
                          </valueFactory>

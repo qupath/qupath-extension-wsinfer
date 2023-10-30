@@ -25,7 +25,6 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
@@ -51,10 +50,10 @@ import qupath.ext.wsinfer.WSInfer;
 import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.ext.wsinfer.models.WSInferModelCollection;
 import qupath.ext.wsinfer.models.WSInferUtils;
+import qupath.fx.dialogs.Dialogs;
 import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
-import qupath.fx.dialogs.Dialogs;
 import qupath.lib.images.ImageData;
 import qupath.lib.objects.PathAnnotationObject;
 import qupath.lib.objects.PathObject;
@@ -83,7 +82,7 @@ public class WSInferController {
     private static final Logger logger = LoggerFactory.getLogger(WSInferController.class);
 
     public QuPathGUI qupath;
-    private ObjectProperty<ImageData<BufferedImage>> imageDataProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<ImageData<BufferedImage>> imageDataProperty = new SimpleObjectProperty<>();
     private MessageTextHelper messageTextHelper;
 
     @FXML
@@ -112,6 +111,8 @@ public class WSInferController {
     private Spinner<Integer> spinnerNumWorkers;
     @FXML
     private TextField tfModelDirectory;
+    @FXML
+    private TextField localModelDirectory;
 
     private final static ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 
@@ -242,6 +243,8 @@ public class WSInferController {
 
     private void configureModelDirectory() {
         tfModelDirectory.textProperty().bindBidirectional(WSInferPrefs.modelDirectoryProperty());
+        localModelDirectory.textProperty().bindBidirectional(WSInferPrefs.localDirectoryProperty());
+        localModelDirectory.textProperty().addListener((v, o, n) -> configureModelChoices());
     }
 
     private void configureNumWorkers() {
@@ -391,7 +394,7 @@ public class WSInferController {
         }
 
         @Override
-        protected Void call() throws Exception {
+        protected Void call() {
             try {
                 // Ensure PyTorch engine is available
                 if (!PytorchManager.hasPyTorchEngine()) {
@@ -428,7 +431,7 @@ public class WSInferController {
      */
     private class MessageTextHelper {
 
-        private SelectedObjectCounter selectedObjectCounter;
+        private final SelectedObjectCounter selectedObjectCounter;
 
         /**
          * Text to display a warning (because inference can't be run)
@@ -516,14 +519,14 @@ public class WSInferController {
      */
     private static class SelectedObjectCounter {
 
-        private ObjectProperty<ImageData<?>> imageDataProperty = new SimpleObjectProperty<>();
+        private final ObjectProperty<ImageData<?>> imageDataProperty = new SimpleObjectProperty<>();
 
-        private PathObjectSelectionListener selectionListener = this::selectedPathObjectChanged;
+        private final PathObjectSelectionListener selectionListener = this::selectedPathObjectChanged;
 
-        private ObservableValue<PathObjectHierarchy> hierarchyProperty;
+        private final ObservableValue<PathObjectHierarchy> hierarchyProperty;
 
-        private IntegerProperty numSelectedAnnotations = new SimpleIntegerProperty();
-        private IntegerProperty numSelectedDetections = new SimpleIntegerProperty();
+        private final IntegerProperty numSelectedAnnotations = new SimpleIntegerProperty();
+        private final IntegerProperty numSelectedDetections = new SimpleIntegerProperty();
 
         SelectedObjectCounter(ObservableValue<ImageData<BufferedImage>> imageDataProperty) {
             this.imageDataProperty.bind(imageDataProperty);
@@ -561,8 +564,16 @@ public class WSInferController {
                 numSelectedDetections.set(0);
             } else {
                 var selected = hierarchy.getSelectionModel().getSelectedObjects();
-                numSelectedAnnotations.set((int)selected.stream().filter(p -> p.isAnnotation()).count());
-                numSelectedDetections.set((int)selected.stream().filter(p -> p.isDetection()).count());
+                numSelectedAnnotations.set(
+                        (int)selected
+                                .stream().filter(PathObject::isAnnotation)
+                                .count()
+                );
+                numSelectedDetections.set(
+                        (int)selected
+                                .stream().filter(PathObject::isDetection)
+                                .count()
+                );
             }
         }
 
@@ -570,7 +581,7 @@ public class WSInferController {
 
     private static class ModelStringConverter extends StringConverter<WSInferModel> {
 
-        private WSInferModelCollection models;
+        private final WSInferModelCollection models;
 
         private ModelStringConverter(WSInferModelCollection models) {
             Objects.requireNonNull(models, "Models cannot be null");

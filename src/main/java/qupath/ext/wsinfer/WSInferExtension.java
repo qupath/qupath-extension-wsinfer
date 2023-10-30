@@ -49,8 +49,6 @@ public class WSInferExtension implements QuPathExtension, GitHubProject {
 	private final BooleanProperty enableExtensionProperty = PathPrefs.createPersistentPreference(
 			"enableExtension", true);
 
-
-
 	@Override
 	public void installExtension(QuPathGUI qupath) {
 		if (isInstalled) {
