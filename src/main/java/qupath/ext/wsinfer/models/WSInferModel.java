@@ -16,22 +16,21 @@
 
 package qupath.ext.wsinfer.models;
 
-import com.google.gson.annotations.SerializedName;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import qupath.ext.wsinfer.ui.WSInferPrefs;
-import qupath.lib.io.GsonTools;
+ import com.google.gson.annotations.SerializedName;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ import qupath.ext.wsinfer.ui.WSInferPrefs;
+ import qupath.lib.io.GsonTools;
 
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+ import java.io.File;
+ import java.io.IOException;
+ import java.math.BigInteger;
+ import java.net.URL;
+ import java.nio.charset.StandardCharsets;
+ import java.nio.file.Files;
+ import java.nio.file.Paths;
+ import java.security.MessageDigest;
+ import java.security.NoSuchAlgorithmException;
 
 // Equivalent to config.json files from hugging face
 public class WSInferModel {
@@ -84,6 +83,15 @@ public class WSInferModel {
      */
     public File getCFFile() {
         return getFile("config.json");
+    }
+
+
+    /**
+     * Get the configuration file. Note that it is not guaranteed that the model has been downloaded.
+     * @return path to model config file in cache dir
+     */
+    public File getREADMEFile() {
+        return getFile("README.md");
     }
 
     /**
@@ -177,11 +185,16 @@ public class WSInferModel {
         }
         downloadFileToCacheDir("torchscript_model.pt");
         downloadFileToCacheDir("config.json");
+        downloadFileToCacheDir("README.md");
+
+        // this downloads the LFS pointer, not the actual .pt file
+        // the LFS pointer contains a SHA256 checksum
         URL url = new URL(String.format("https://huggingface.co/%s/raw/%s/torchscript_model.pt", hfRepoId, hfRevision));
         WSInferUtils.downloadURLToFile(url, getPointerFile());
         if (!isValid() || !checkSHAMatches()) {
             throw new IOException("Error downloading model files");
         }
+
     }
 
     private void downloadFileToCacheDir(String file) throws IOException {

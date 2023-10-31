@@ -38,8 +38,12 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
+import org.controlsfx.control.PopOver;
 import org.controlsfx.control.SearchableComboBox;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.control.action.ActionUtils;
@@ -49,11 +53,13 @@ import qupath.ext.wsinfer.ProgressListener;
 import qupath.ext.wsinfer.WSInfer;
 import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.ext.wsinfer.models.WSInferModelCollection;
+import qupath.ext.wsinfer.models.WSInferModelLocal;
 import qupath.ext.wsinfer.models.WSInferUtils;
 import qupath.fx.dialogs.Dialogs;
 import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
+import qupath.lib.gui.tools.IconFactory;
 import qupath.lib.images.ImageData;
 import qupath.lib.objects.PathAnnotationObject;
 import qupath.lib.objects.PathObject;
@@ -64,6 +70,8 @@ import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -81,7 +89,7 @@ public class WSInferController {
 
     private static final Logger logger = LoggerFactory.getLogger(WSInferController.class);
 
-    public QuPathGUI qupath;
+    private QuPathGUI qupath;
     private final ObjectProperty<ImageData<BufferedImage>> imageDataProperty = new SimpleObjectProperty<>();
     private MessageTextHelper messageTextHelper;
 
@@ -93,6 +101,8 @@ public class WSInferController {
     private Button runButton;
     @FXML
     private Button downloadButton;
+    @FXML
+    private Button infoButton;
     @FXML
     private ChoiceBox<String> deviceChoices;
     @FXML
@@ -113,6 +123,8 @@ public class WSInferController {
     private TextField tfModelDirectory;
     @FXML
     private TextField localModelDirectory;
+    @FXML
+    private PopOver infoPopover;
 
     private final static ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 
@@ -128,6 +140,7 @@ public class WSInferController {
 
         this.qupath = QuPathGUI.getInstance();
         this.imageDataProperty.bind(qupath.imageDataProperty());
+        infoButton.setGraphic(IconFactory.createNode(20, 20, IconFactory.PathIcons.INFO));
 
         configureModelChoices();
 
@@ -169,7 +182,11 @@ public class WSInferController {
         modelChoiceBox.getItems().setAll(models.getModels().values());
         modelChoiceBox.setConverter(new ModelStringConverter(models));
         modelChoiceBox.getSelectionModel().selectedItemProperty().addListener(
-                (v, o, n) -> downloadButton.setDisable((n == null) || n.isValid()));
+                (v, o, n) -> {
+                    downloadButton.setDisable((n == null) || n.isValid());
+                    infoButton.setDisable((n == null) || (!n.isValid()) || n instanceof WSInferModelLocal);
+                    infoPopover.hide();
+                });
     }
 
     private void configureAvailableDevices() {
@@ -337,7 +354,22 @@ public class WSInferController {
             }
             showModelAvailableNotification(model.getName());
             downloadButton.setDisable(true);
+            infoButton.setDisable(model instanceof WSInferModelLocal);
         });
+    }
+
+    public void showInfo() throws IOException {
+        if (infoPopover.isShowing()) {
+            infoPopover.hide();
+            return;
+        }
+        WSInferModel model = modelChoiceBox.getSelectionModel().getSelectedItem();
+        Path mdFile = model.getREADMEFile().toPath();
+        var doc = Parser.builder().build().parse(Files.readString(mdFile));
+        WebView webView = new WebView();
+        webView.getEngine().loadContent(HtmlRenderer.builder().build().render(doc));
+        infoPopover.setContentNode(webView);
+        infoPopover.show(infoButton);
     }
 
     @FXML

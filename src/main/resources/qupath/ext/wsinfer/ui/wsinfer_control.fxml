@@ -6,18 +6,18 @@
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.Spinner?>
-<?import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
+<?import org.controlsfx.control.PopOver?>
 <?import org.controlsfx.control.SearchableComboBox?>
 <?import org.controlsfx.control.SegmentedButton?>
-
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="330" stylesheets="@wsinferstyles.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
 <!--    Processing Pane************************************************************-->
         <TitledPane fx:id="pane1" animated="false" collapsible="false" text="%ui.processing.pane" VBox.vgrow="NEVER">
@@ -29,10 +29,17 @@
                             <Label styleClass="regular" text="%ui.model" />
                             <HBox alignment="CENTER" styleClass="standard-spacing standard-padding">
                                 <children>
+                                    <Button fx:id="infoButton" onAction="#showInfo" disable="true" prefHeight="31.0" prefWidth="39.0">
+                                        <tooltip><Tooltip text="%ui.model.download.tooltip" /></tooltip>
+                                    </Button>
+                                    <fx:define>
+                                        <PopOver fx:id="infoPopover">
+                                        </PopOver>
+                                    </fx:define>
                                     <SearchableComboBox id="deviceChoices" fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0">
                                         <tooltip><Tooltip text="%ui.model.tooltip" /></tooltip>
                                     </SearchableComboBox>
-                                    <Button fx:id="downloadButton" mnemonicParsing="false" onAction="#downloadModel" prefHeight="31.0" prefWidth="39.0">
+                                    <Button fx:id="downloadButton" onAction="#downloadModel" disable="true" mnemonicParsing="false" prefHeight="31.0" prefWidth="39.0">
                                         <tooltip><Tooltip text="%ui.model.download.tooltip" /></tooltip>
                                         <graphic>
                                             <Text styleClass="download-icon"></Text>
