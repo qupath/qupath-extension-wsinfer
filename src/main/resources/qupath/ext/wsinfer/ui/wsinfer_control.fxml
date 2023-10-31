@@ -29,13 +29,6 @@
                             <Label styleClass="regular" text="%ui.model" />
                             <HBox alignment="CENTER" styleClass="standard-spacing standard-padding">
                                 <children>
-                                    <Button fx:id="infoButton" onAction="#showInfo" disable="true" prefHeight="31.0" prefWidth="39.0">
-                                        <tooltip><Tooltip text="%ui.model.download.tooltip" /></tooltip>
-                                    </Button>
-                                    <fx:define>
-                                        <PopOver fx:id="infoPopover">
-                                        </PopOver>
-                                    </fx:define>
                                     <SearchableComboBox id="deviceChoices" fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0">
                                         <tooltip><Tooltip text="%ui.model.tooltip" /></tooltip>
                                     </SearchableComboBox>
@@ -45,6 +38,13 @@
                                             <Text styleClass="download-icon"></Text>
                                         </graphic>
                                     </Button>
+                                    <Button fx:id="infoButton" onAction="#showInfo" disable="true" prefHeight="31.0" prefWidth="39.0">
+                                        <tooltip><Tooltip text="%ui.model.download.tooltip" /></tooltip>
+                                    </Button>
+                                    <fx:define>
+                                        <PopOver fx:id="infoPopover">
+                                        </PopOver>
+                                    </fx:define>
                                 </children>
                             </HBox>
                         </children>
