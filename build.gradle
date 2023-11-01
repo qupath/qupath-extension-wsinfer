@@ -1,11 +1,11 @@
 plugins {
-  // Main gradle plugin for building a Java library
-  id 'java-library'
-  // To create a shadow/fat jar that bundle up all dependencies
-  id 'com.github.johnrengelman.shadow' version '7.1.2'
-  // Include this plugin to avoid downloading JavaCPP dependencies for all platforms
-  id 'org.bytedeco.gradle-javacpp-platform'
-  id 'org.openjfx.javafxplugin' version '0.1.0'
+    // Main gradle plugin for building a Java library
+    id 'java-library'
+    // To create a shadow/fat jar that bundle up all dependencies
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    // Include this plugin to avoid downloading JavaCPP dependencies for all platforms
+    id 'org.bytedeco.gradle-javacpp-platform'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 ext.moduleName = 'io.github.qupath.extension.wsinfer'
