@@ -42,6 +42,7 @@ class PytorchManager {
         boolean includesMPS = false; // Don't add MPS twice
         var engine = getEngineOffline();
         if (engine != null) {
+            // This is expected to return GPUs if available, or CPU otherwise
             for (var device : engine.getDevices()) {
                 String name = device.getDeviceType();
                 availableDevices.add(name);
