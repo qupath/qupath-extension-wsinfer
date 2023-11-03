@@ -50,7 +50,7 @@ class PytorchManager {
             }
         }
         // CPU should always be available
-        if (availableDevices.isEmpty())
+        if (!availableDevices.contains("cpu"))
             availableDevices.add("cpu");
 
         // If we could use MPS, but don't have it already, add it
