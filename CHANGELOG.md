@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.2.1
+
+* Fix CPU/GPU support (https://github.com/qupath/qupath-extension-wsinfer/issues/41)
+
 ## v0.2.0
 
 * [Preprint on arXiv](https://arxiv.org/abs/2309.04631)
