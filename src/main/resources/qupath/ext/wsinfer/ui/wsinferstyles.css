@@ -37,15 +37,15 @@
 }
 
 .standard-padding {
-  -fx-padding: 5;
-  }
+  -fx-padding: 4;
+}
 
 /*download button*/
 /*.download-btn {
     -fx-background-image: url("icons/download.png");
 }*/
 
-.download-icon {
+.fa-icon {
     -fx-font-family: FontAwesome;
     -fx-font-size: 14px;
     -fx-fill: -fx-text-base-color;

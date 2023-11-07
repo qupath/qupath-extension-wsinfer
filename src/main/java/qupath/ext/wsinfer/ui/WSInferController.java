@@ -60,6 +60,7 @@ import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
 import qupath.lib.gui.tools.IconFactory;
+import qupath.lib.gui.tools.WebViews;
 import qupath.lib.images.ImageData;
 import qupath.lib.objects.PathAnnotationObject;
 import qupath.lib.objects.PathObject;
@@ -140,7 +141,6 @@ public class WSInferController {
 
         this.qupath = QuPathGUI.getInstance();
         this.imageDataProperty.bind(qupath.imageDataProperty());
-        infoButton.setGraphic(IconFactory.createNode(20, 20, IconFactory.PathIcons.INFO));
 
         configureModelChoices();
 
@@ -366,7 +366,7 @@ public class WSInferController {
         WSInferModel model = modelChoiceBox.getSelectionModel().getSelectedItem();
         Path mdFile = model.getREADMEFile().toPath();
         var doc = Parser.builder().build().parse(Files.readString(mdFile));
-        WebView webView = new WebView();
+        WebView webView = WebViews.create(true);
         webView.getEngine().loadContent(HtmlRenderer.builder().build().render(doc));
         infoPopover.setContentNode(webView);
         infoPopover.show(infoButton);
@@ -418,11 +418,21 @@ public class WSInferController {
             this.imageData = imageData;
             this.model = model;
             this.progressListener = new WSInferProgressDialog(QuPathGUI.getInstance().getStage(), e -> {
-                if (Dialogs.showYesNoDialog(getTitle(), resources.getString("ui.stop-tasks"))) {
+                if (Dialogs.showYesNoDialog(getDialogTitle(), resources.getString("ui.stop-tasks"))) {
                     cancel(true);
                     e.consume();
                 }
             });
+        }
+
+        private String getDialogTitle() {
+            try {
+                return ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings")
+                        .getString("title");
+            } catch (Exception e) {
+                logger.debug("Exception attempting to request title resource");
+                return "WSInfer";
+            }
         }
 
         @Override
@@ -430,7 +440,7 @@ public class WSInferController {
             try {
                 // Ensure PyTorch engine is available
                 if (!PytorchManager.hasPyTorchEngine()) {
-                    Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), resources.getString("ui.pytorch-downloading")));
+                    Platform.runLater(() -> Dialogs.showInfoNotification(getDialogTitle(), resources.getString("ui.pytorch-downloading")));
                     PytorchManager.getEngineOnline();
                 }
                 // Ensure model is available - any prompts allowing the user to cancel
@@ -449,9 +459,9 @@ public class WSInferController {
                 WSInfer.runInference(imageData, model, progressListener);
                 addToHistoryWorkflow(imageData, model.getName());
             } catch (InterruptedException e) {
-                Platform.runLater(() -> Dialogs.showErrorNotification(getTitle(), e.getLocalizedMessage()));
+                Platform.runLater(() -> Dialogs.showErrorNotification(getDialogTitle(), e.getLocalizedMessage()));
             } catch (Exception e) {
-                Platform.runLater(() -> Dialogs.showErrorMessage(getTitle(), e.getLocalizedMessage()));
+                Platform.runLater(() -> Dialogs.showErrorMessage(getDialogTitle(), e.getLocalizedMessage()));
             }
             return null;
         }

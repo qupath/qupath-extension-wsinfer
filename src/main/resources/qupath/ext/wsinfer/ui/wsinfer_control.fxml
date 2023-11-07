@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.String?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.TitledPane?>
-<?import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
-<?import org.controlsfx.control.PopOver?>
 <?import org.controlsfx.control.SearchableComboBox?>
 <?import org.controlsfx.control.SegmentedButton?>
+
+<?import org.controlsfx.control.PopOver?>
 <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefWidth="330" stylesheets="@wsinferstyles.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/20.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="qupath.ext.wsinfer.ui.WSInferController">
 <!--    Processing Pane************************************************************-->
         <TitledPane fx:id="pane1" animated="false" collapsible="false" text="%ui.processing.pane" VBox.vgrow="NEVER">
@@ -27,25 +29,36 @@
                     <VBox alignment="CENTER">
                         <children>
                             <Label styleClass="regular" text="%ui.model" />
-                            <HBox alignment="CENTER" styleClass="standard-spacing standard-padding">
+                            <HBox alignment="CENTER">
                                 <children>
-                                    <SearchableComboBox id="deviceChoices" fx:id="modelChoiceBox" prefHeight="31.0" prefWidth="344.0">
+                                    <SearchableComboBox id="deviceChoices" fx:id="modelChoiceBox" prefWidth="344.0">
                                         <tooltip><Tooltip text="%ui.model.tooltip" /></tooltip>
                                     </SearchableComboBox>
-                                    <Button fx:id="downloadButton" onAction="#downloadModel" disable="true" mnemonicParsing="false" prefHeight="31.0" prefWidth="39.0">
-                                        <tooltip><Tooltip text="%ui.model.download.tooltip" /></tooltip>
+                                    <Button fx:id="downloadButton" disable="true" mnemonicParsing="false" onAction="#downloadModel">
+                                        <tooltip>
+                              <Tooltip text="%ui.model.download.tooltip" />
+                           </tooltip>
                                         <graphic>
-                                            <Text styleClass="download-icon"></Text>
+                                            <Text styleClass="fa-icon" text=""></Text>
                                         </graphic>
                                     </Button>
-                                    <Button fx:id="infoButton" onAction="#showInfo" disable="true" prefHeight="31.0" prefWidth="39.0">
-                                        <tooltip><Tooltip text="%ui.model.download.tooltip" /></tooltip>
+                                    <Button fx:id="infoButton" disable="true" onAction="#showInfo">
+                                        <tooltip>
+                              <Tooltip text="%ui.model.info.tooltip" />
+                           </tooltip>
+                           <graphic>
+                              <Text styleClass="fa-icon" text="" />
+                           </graphic>
                                     </Button>
                                     <fx:define>
                                         <PopOver fx:id="infoPopover">
                                         </PopOver>
                                     </fx:define>
                                 </children>
+                     <styleClass>
+                        <String fx:value="standard-spacing" />
+                        <String fx:value="standard-padding" />
+                     </styleClass>
                             </HBox>
                         </children>
                     </VBox>
@@ -54,7 +67,7 @@
                     <!--**********************Selections**********************-->
                     <VBox alignment="CENTER" styleClass="standard-spacing standard-padding">
                         <children>
-                            <VBox alignment="CENTER" styleClass="standard-spacing">
+                            <VBox alignment="CENTER">
                                 <Label styleClass="regular" text="%ui.selection.label" />
                                 <Label alignment="CENTER" styleClass="wsinfer-sub-title" text="%ui.selection.alt" textAlignment="CENTER" />
                                 <HBox alignment="CENTER" styleClass="standard-spacing">
@@ -72,21 +85,29 @@
                                        </SegmentedButton>
                                    </children>
                                 </HBox>
+                     <styleClass>
+                        <String fx:value="standard-spacing" />
+                        <String fx:value="standard-padding" />
+                     </styleClass>
                             </VBox>
                         </children>
                     </VBox>
                     <Separator prefWidth="200.0" />
 
                     <!--**********************Run**********************-->
-                    <VBox alignment="CENTER" styleClass="standard-spacing standard-padding">
+                    <VBox alignment="CENTER">
                         <HBox alignment="CENTER" styleClass="standard-spacing">
                             <children>
-                                <Button fx:id="runButton" disable="true" onAction="#runInference" prefHeight="31.0" prefWidth="252.0" text="%ui.run">
+                                <Button fx:id="runButton" disable="true" onAction="#runInference" prefWidth="252.0" text="%ui.run">
                                     <tooltip><Tooltip text="%ui.run.tooltip" /></tooltip>
                                 </Button>
                             </children>
                         </HBox>
                         <Label id="labelWarning" fx:id="labelMessage" prefHeight="30.0" styleClass="error-message" text="%ui.error.no-selection" VBox.vgrow="ALWAYS" />
+               <styleClass>
+                  <String fx:value="standard-spacing" />
+                  <String fx:value="standard-padding" />
+               </styleClass>
                     </VBox>
                 </children>
             </VBox>
@@ -109,14 +130,18 @@
                                     </Button>
                                 </children>
                             </HBox>
-                            <HBox alignment="CENTER" styleClass="standard-spacing">
+                            <HBox alignment="CENTER">
                                 <children>
                                     <ToggleButton fx:id="toggleAnnotations" mnemonicParsing="false" />
                                     <ToggleButton fx:id="toggleDetections" mnemonicParsing="false" />
                                     <ToggleButton fx:id="toggleDetectionFill" mnemonicParsing="false" />
                                 </children>
+                     <styleClass>
+                        <String fx:value="standard-spacing" />
+                        <String fx:value="standard-padding" />
+                     </styleClass>
                             </HBox>
-                            <VBox alignment="CENTER" styleClass="standard-spacing">
+                            <VBox alignment="CENTER">
                                 <Label styleClass="regular" text="%ui.results.slider" />
                                 <Slider fx:id="sliderOpacity" blockIncrement="0.1" majorTickUnit="0.1" max="1.0" maxWidth="200.0" minorTickCount="0" prefHeight="19.0" prefWidth="200.0">
                         <tooltip>
@@ -143,6 +168,18 @@
                             </ChoiceBox>
                         </children>
                     </HBox>
+                    <HBox alignment="CENTER" styleClass="standard-spacing">
+                        <children>
+                            <Label styleClass="regular" text="%ui.options.pworkers" />
+                     <Spinner fx:id="spinnerNumWorkers" prefWidth="75.0">
+                         <tooltip><Tooltip text="%ui.options.pworkers.tooltip" /></tooltip>
+                         <valueFactory>
+                             <SpinnerValueFactory.IntegerSpinnerValueFactory initialValue="1" max="8" min="1" />
+                         </valueFactory>
+                     </Spinner>
+                        </children>
+                    </HBox>
+            <Separator prefWidth="200.0" />
                     <VBox alignment="CENTER" styleClass="standard-spacing">
                         <VBox alignment="CENTER" styleClass="standard-spacing">
                             <children>
@@ -161,17 +198,6 @@
                             </children>
                         </VBox>
                     </VBox>
-                    <HBox alignment="CENTER" styleClass="standard-spacing">
-                        <children>
-                            <Label styleClass="regular" text="%ui.options.pworkers" />
-                     <Spinner fx:id="spinnerNumWorkers" prefWidth="75.0">
-                         <tooltip><Tooltip text="%ui.options.pworkers.tooltip" /></tooltip>
-                         <valueFactory>
-                             <SpinnerValueFactory.IntegerSpinnerValueFactory initialValue="1" max="8" min="1" />
-                         </valueFactory>
-                     </Spinner>
-                        </children>
-                    </HBox>
                 </children>
             </VBox>
         </TitledPane>

@@ -41,7 +41,7 @@ public class WSInferPrefs {
 
     private static final Property<Integer> numWorkersProperty = PathPrefs.createPersistentPreference(
             "wsinfer.numWorkers",
-            1
+            2
     ).asObject();
     private static StringProperty localDirectoryProperty = PathPrefs.createPersistentPreference(
             "wsinfer.localDirectory",
