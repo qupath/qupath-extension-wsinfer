@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.0
+
+* Add support for QuPath v0.5
+* Enable auto-updating (see https://github.com/qupath/qupath-extension-wsinfer/issues/40)
+* Add support for local models (see https://github.com/qupath/qupath-extension-wsinfer/issues/32)
+
 ## v0.2.1
 
 * Fix CPU/GPU support (https://github.com/qupath/qupath-extension-wsinfer/issues/41)
