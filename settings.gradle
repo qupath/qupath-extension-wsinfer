@@ -1,6 +1,6 @@
 pluginManagement {
     plugins {
-        id 'org.bytedeco.gradle-javacpp-platform' version '1.5.8'
+        id 'org.bytedeco.gradle-javacpp-platform' version '1.5.9'
     }
 }
 

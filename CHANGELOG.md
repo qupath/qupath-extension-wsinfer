@@ -2,9 +2,11 @@
 
 ## v0.3.0
 
-* Add support for QuPath v0.5
-* Enable auto-updating (see https://github.com/qupath/qupath-extension-wsinfer/issues/40)
-* Add support for local models (see https://github.com/qupath/qupath-extension-wsinfer/issues/32)
+* Compatibility with QuPath v0.5 (now the minimum version required)
+* Enable auto-updating the extension (https://github.com/qupath/qupath-extension-wsinfer/issues/40)
+* Support for local models (https://github.com/qupath/qupath-extension-wsinfer/issues/32)
+* Show model information, where available
+* Code refactoring and UI improvements
 
 ## v0.2.1
 

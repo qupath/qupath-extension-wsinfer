@@ -46,8 +46,20 @@ public class WSInferModel {
     @SerializedName("hf_revision")
     String hfRevision;
 
+    /**
+     * Get a displayable name for the model.
+     * @return
+     */
     public String getName() {
         return hfRepoId;
+    }
+
+    /**
+     * Get a description, if available (may be null).
+     * @return
+     */
+    public String getDescription() {
+        return description;
     }
 
     /**
@@ -65,15 +77,27 @@ public class WSInferModel {
      * Remove the cached model files.
      */
     public synchronized void removeCache() {
-        getTSFile().delete();
-        getCFFile().delete();
+        removeIfFound(getTorchScriptFile(), getConfigFile(), getReadMeFile());
+    }
+
+    private static void removeIfFound(File... files) {
+        for (var file : files) {
+            if (file != null && file.isFile()) {
+                try {
+                    logger.debug("Deleting file {}", file);
+                    file.delete();
+                } catch (Exception e) {
+                    logger.error("Unable to delete file {}", file, e);
+                }
+            }
+        }
     }
 
     /**
      * Get the torchscript file. Note that it is not guaranteed that the model has been downloaded.
      * @return path to torchscript pt file in cache dir
      */
-    public File getTSFile() {
+    public File getTorchScriptFile() {
         return getFile("torchscript_model.pt");
     }
 
@@ -81,7 +105,7 @@ public class WSInferModel {
      * Get the configuration file. Note that it is not guaranteed that the model has been downloaded.
      * @return path to model config file in cache dir
      */
-    public File getCFFile() {
+    public File getConfigFile() {
         return getFile("config.json");
     }
 
@@ -90,7 +114,7 @@ public class WSInferModel {
      * Get the configuration file. Note that it is not guaranteed that the model has been downloaded.
      * @return path to model config file in cache dir
      */
-    public File getREADMEFile() {
+    public File getReadMeFile() {
         return getFile("README.md");
     }
 
@@ -99,7 +123,7 @@ public class WSInferModel {
      * @return true if the files exist and the SHA matches, and the config is valid.
      */
     public boolean isValid() {
-        return getTSFile().exists() && checkModifiedTimes() && getConfiguration() != null;
+        return getTorchScriptFile().exists() && checkModifiedTimes() && getConfiguration() != null;
     }
 
     /**
@@ -110,7 +134,7 @@ public class WSInferModel {
      */
     private boolean checkModifiedTimes() {
         try {
-            return Files.getLastModifiedTime(getTSFile().toPath())
+            return Files.getLastModifiedTime(getTorchScriptFile().toPath())
                     .compareTo(Files.getLastModifiedTime(getPointerFile().toPath())) < 0;
         } catch (IOException e) {
             logger.error("Cannot get last modified time");
@@ -131,7 +155,7 @@ public class WSInferModel {
     }
 
     private WSInferModelConfiguration tryToLoadConfiguration() {
-        var cfFile = getCFFile();
+        var cfFile = getConfigFile();
         if (cfFile.exists()) {
             try (var reader = Files.newBufferedReader(cfFile.toPath(), StandardCharsets.UTF_8)) {
                 return GsonTools.getInstance().fromJson(reader, WSInferModelConfiguration.class);
@@ -155,7 +179,7 @@ public class WSInferModel {
      */
     private boolean checkSHAMatches() {
         try {
-            String shaDown = checkSumSHA256(getTSFile());
+            String shaDown = checkSumSHA256(getTorchScriptFile());
             // this is the format
             //        Result: version https://git-lfs.github.com/spec/v1
             //        oid sha256:fffeeecb4282b61b2b699c6dfcd8f76c30c8ca1af9800fa78f5d81fc0b78a4e2
@@ -167,7 +191,7 @@ public class WSInferModel {
                 return false;
             }
         } catch (IOException | NoSuchAlgorithmException e) {
-            logger.error("Unable to generate SHA for {}", getTSFile(), e);
+            logger.error("Unable to generate SHA for {}", getTorchScriptFile(), e);
             return false;
         }
         return true;

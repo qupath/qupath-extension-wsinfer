@@ -25,6 +25,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
@@ -41,6 +42,8 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
+import org.commonmark.ext.front.matter.YamlFrontMatterVisitor;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.controlsfx.control.PopOver;
@@ -56,10 +59,11 @@ import qupath.ext.wsinfer.models.WSInferModelCollection;
 import qupath.ext.wsinfer.models.WSInferModelLocal;
 import qupath.ext.wsinfer.models.WSInferUtils;
 import qupath.fx.dialogs.Dialogs;
+import qupath.fx.dialogs.FileChoosers;
+import qupath.fx.utils.FXUtils;
 import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
-import qupath.lib.gui.tools.IconFactory;
 import qupath.lib.gui.tools.WebViews;
 import qupath.lib.images.ImageData;
 import qupath.lib.objects.PathAnnotationObject;
@@ -70,9 +74,10 @@ import qupath.lib.objects.hierarchy.events.PathObjectSelectionListener;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -124,8 +129,9 @@ public class WSInferController {
     private TextField tfModelDirectory;
     @FXML
     private TextField localModelDirectory;
-    @FXML
-    private PopOver infoPopover;
+
+    private WebView infoWebView = WebViews.create(true);
+    private PopOver infoPopover = new PopOver(infoWebView);
 
     private final static ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 
@@ -184,9 +190,13 @@ public class WSInferController {
         modelChoiceBox.getSelectionModel().selectedItemProperty().addListener(
                 (v, o, n) -> {
                     downloadButton.setDisable((n == null) || n.isValid());
-                    infoButton.setDisable((n == null) || (!n.isValid()) || n instanceof WSInferModelLocal);
+                    infoButton.setDisable((n == null) || (!n.isValid()) || !checkFileExists(n.getReadMeFile()));
                     infoPopover.hide();
                 });
+    }
+
+    private static boolean checkFileExists(File file) {
+        return file != null && file.isFile();
     }
 
     private void configureAvailableDevices() {
@@ -358,19 +368,90 @@ public class WSInferController {
         });
     }
 
+    public void promptForModelDirectory() {
+        promptToUpdateDirectory(WSInferPrefs.modelDirectoryProperty());
+    }
+
+    public void promptForLocalModelDirectory() {
+        promptToUpdateDirectory(WSInferPrefs.localDirectoryProperty());
+    }
+
+    private void promptToUpdateDirectory(StringProperty dirPath) {
+        var modelDirPath = dirPath.get();
+        var dir = modelDirPath == null || modelDirPath.isEmpty() ? null : new File(modelDirPath);
+        if (dir != null) {
+            if (dir.isFile())
+                dir = dir.getParentFile();
+            else if (!dir.exists())
+                dir = null;
+        }
+        var newDir = FileChoosers.promptForDirectory(
+                FXUtils.getWindow(tfModelDirectory), // Get window from any node here
+                resources.getString("ui.model-directory.choose-directory"),
+                dir);
+        if (newDir == null)
+            return;
+        dirPath.set(newDir.getAbsolutePath());
+    }
+
     public void showInfo() throws IOException {
         if (infoPopover.isShowing()) {
             infoPopover.hide();
             return;
         }
         WSInferModel model = modelChoiceBox.getSelectionModel().getSelectedItem();
-        Path mdFile = model.getREADMEFile().toPath();
-        var doc = Parser.builder().build().parse(Files.readString(mdFile));
-        WebView webView = WebViews.create(true);
-        webView.getEngine().loadContent(HtmlRenderer.builder().build().render(doc));
-        infoPopover.setContentNode(webView);
-        infoPopover.show(infoButton);
+        var file = model.getReadMeFile();
+        if (!checkFileExists(file)) {
+            logger.warn("ReadMe file not available: {}", file);
+            return;
+        }
+        try {
+            var markdown = Files.readString(file.toPath());
+
+            // Parse the initial markdown only, to extract any YAML front matter
+            var parser = Parser.builder()
+                    .extensions(
+                            Arrays.asList(YamlFrontMatterExtension.create())
+                    ).build();
+            var doc = parser.parse(markdown);
+            var visitor = new YamlFrontMatterVisitor();
+            doc.accept(visitor);
+            var metadata = visitor.getData();
+
+            // If we have YAML metadata, remove from the start (since it renders weirdly) and append at the end
+            if (!metadata.isEmpty()) {
+                doc.getFirstChild().unlink();
+                var sb = new StringBuilder();
+                sb.append("----\n\n");
+                sb.append("### Metadata\n\n");
+                for (var entry : metadata.entrySet()) {
+                    sb.append("\n* **").append(entry.getKey()).append("**: ").append(entry.getValue());
+                }
+                doc.appendChild(parser.parse(sb.toString()));
+            }
+
+            // If the markdown doesn't start with a title, pre-pending the model title & description (if available)
+            if (!markdown.startsWith("#")) {
+                var sb = new StringBuilder();
+                sb.append("## ").append(model.getName()).append("\n\n");
+                var description = model.getDescription();
+                if (description != null && !description.isEmpty()) {
+                    sb.append("_").append(description).append("_").append("\n\n");
+                }
+                sb.append("----\n\n");
+                doc.prependChild(parser.parse(sb.toString()));
+            }
+
+            infoWebView.getEngine().loadContent(
+                    HtmlRenderer.builder().build().render(doc));
+            infoPopover.show(infoButton);
+        } catch (IOException e) {
+            logger.error("Error parsing readme file", e);
+        }
     }
+
+
+
 
     @FXML
     private void selectAllAnnotations() {

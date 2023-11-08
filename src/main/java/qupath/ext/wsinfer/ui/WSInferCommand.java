@@ -23,7 +23,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import qupath.lib.gui.ExtensionClassLoader;
+import qupath.fx.utils.FXUtils;
 import qupath.lib.gui.QuPathGUI;
 import qupath.fx.dialogs.Dialogs;
 
@@ -54,14 +54,16 @@ public class WSInferCommand implements Runnable {
         if (stage == null) {
             try {
                 stage = createStage();
+                stage.show();
+                FXUtils.retainWindowPosition(stage);
             } catch (IOException e) {
                 Dialogs.showErrorMessage(resources.getString("title"),
                         resources.getString("error.window"));
                 logger.error(e.getMessage(), e);
                 return;
             }
-        }
-        stage.show();
+        } else
+            stage.show();
     }
 
     private Stage createStage() throws IOException {
@@ -87,9 +89,17 @@ public class WSInferCommand implements Runnable {
         stage.setScene(scene);
         stage.setResizable(false);
 
-        root.heightProperty().addListener((v, o, n) -> stage.sizeToScene());
+        root.heightProperty().addListener((v, o, n) -> handleStageHeightChange());
 
         return stage;
+    }
+
+    private void handleStageHeightChange() {
+        stage.sizeToScene();
+        // This fixes a bug where the stage would migrate to the corner of a screen if it is
+        // resized, hidden, then shown again
+        if (stage.isShowing() && Double.isFinite(stage.getX()) && Double.isFinite(stage.getY()))
+            FXUtils.retainWindowPosition(stage);
     }
 
 
