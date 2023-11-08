@@ -307,7 +307,7 @@ public class WSInfer {
     private static Criteria<Image, Classifications> buildCriteria(WSInferModel wsiModel, Translator<Image, Classifications> translator, Device device) {
         return Criteria.builder()
                 .optApplication(Application.CV.IMAGE_CLASSIFICATION)
-                .optModelPath(wsiModel.getTSFile().toPath())
+                .optModelPath(wsiModel.getTorchScriptFile().toPath())
                 .optEngine("PyTorch")
                 .setTypes(Image.class, Classifications.class)
                 .optTranslator(translator)

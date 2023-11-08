@@ -43,11 +43,11 @@ public class WSInferModelLocal extends WSInferModel {
         this.modelDirectory = modelDirectory;
         this.hfRepoId = modelDirectory.getName();
         List<File> files = Arrays.asList(Objects.requireNonNull(modelDirectory.listFiles()));
-        if (!files.contains(getCFFile())) {
-            throw new IOException(resources.getString("error.localModel") + ": " + getCFFile().toString());
+        if (!files.contains(getConfigFile())) {
+            throw new IOException(resources.getString("error.localModel") + ": " + getConfigFile().toString());
         }
-        if (!files.contains(getTSFile())) {
-            throw new IOException(resources.getString("error.localModel") + ": " + getTSFile().toString());
+        if (!files.contains(getTorchScriptFile())) {
+            throw new IOException(resources.getString("error.localModel") + ": " + getTorchScriptFile().toString());
         }
     }
 
@@ -58,7 +58,7 @@ public class WSInferModelLocal extends WSInferModel {
 
     @Override
     public boolean isValid() {
-        return getTSFile().exists() && getConfiguration() != null;
+        return getTorchScriptFile().exists() && getConfiguration() != null;
     }
 
     @Override

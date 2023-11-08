@@ -25,6 +25,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
@@ -56,10 +57,11 @@ import qupath.ext.wsinfer.models.WSInferModelCollection;
 import qupath.ext.wsinfer.models.WSInferModelLocal;
 import qupath.ext.wsinfer.models.WSInferUtils;
 import qupath.fx.dialogs.Dialogs;
+import qupath.fx.dialogs.FileChoosers;
+import qupath.fx.utils.FXUtils;
 import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
-import qupath.lib.gui.tools.IconFactory;
 import qupath.lib.gui.tools.WebViews;
 import qupath.lib.images.ImageData;
 import qupath.lib.objects.PathAnnotationObject;
@@ -70,6 +72,7 @@ import qupath.lib.objects.hierarchy.events.PathObjectSelectionListener;
 import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -358,13 +361,39 @@ public class WSInferController {
         });
     }
 
+    public void promptForModelDirectory() {
+        promptToUpdateDirectory(WSInferPrefs.modelDirectoryProperty());
+    }
+
+    public void promptForLocalModelDirectory() {
+        promptToUpdateDirectory(WSInferPrefs.localDirectoryProperty());
+    }
+
+    private void promptToUpdateDirectory(StringProperty dirPath) {
+        var modelDirPath = dirPath.get();
+        var dir = modelDirPath == null || modelDirPath.isEmpty() ? null : new File(modelDirPath);
+        if (dir != null) {
+            if (dir.isFile())
+                dir = dir.getParentFile();
+            else if (!dir.exists())
+                dir = null;
+        }
+        var newDir = FileChoosers.promptForDirectory(
+                FXUtils.getWindow(tfModelDirectory), // Get window from any node here
+                resources.getString("ui.model-directory.choose-directory"),
+                dir);
+        if (newDir == null)
+            return;
+        dirPath.set(newDir.getAbsolutePath());
+    }
+
     public void showInfo() throws IOException {
         if (infoPopover.isShowing()) {
             infoPopover.hide();
             return;
         }
         WSInferModel model = modelChoiceBox.getSelectionModel().getSelectedItem();
-        Path mdFile = model.getREADMEFile().toPath();
+        Path mdFile = model.getReadMeFile().toPath();
         var doc = Parser.builder().build().parse(Files.readString(mdFile));
         WebView webView = WebViews.create(true);
         webView.getEngine().loadContent(HtmlRenderer.builder().build().render(doc));

@@ -19,7 +19,6 @@ package qupath.ext.wsinfer.models;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.ui.WSInferPrefs;
-import qupath.fx.dialogs.Dialogs;
 import qupath.lib.io.GsonTools;
 
 import java.io.File;
@@ -83,9 +82,17 @@ public class WSInferUtils {
             if (model.isDirectory()) {
                 try {
                     var localModel = WSInferModelLocal.createInstance(model);
-                    cachedModelCollection.getModels().put(localModel.getName(), localModel);
+                    if (cachedModelCollection.getModels().put(localModel.getName(), localModel) != null) {
+                        logger.warn("Replaced model {} with local version", localModel.getName());
+                    } else {
+                        logger.info("Added local model {}", localModel.getName());
+                    }
                 } catch (IOException e) {
-                    Dialogs.showErrorNotification(resources.getString("title"), e);
+                    // This can occur if non-model directories are found in the current directory -
+                    // especially if the user is *typing* the directory, so there are intermediate
+                    // steps with directories that don't contain models; that's why we log rather than
+                    // show a dialog or notification.
+                    logger.warn(e.getMessage(), e);
                 }
             }
         }
