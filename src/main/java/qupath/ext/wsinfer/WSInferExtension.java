@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.ui.WSInferCommand;
 import qupath.lib.common.Version;
 import qupath.lib.gui.QuPathGUI;
+import qupath.lib.gui.extensions.GitHubProject;
 import qupath.lib.gui.extensions.QuPathExtension;
 import qupath.lib.gui.prefs.PathPrefs;
 
@@ -32,7 +33,7 @@ import java.util.ResourceBundle;
  * QuPath extension to run patch-based deep learning inference with WSInfer.
  * See https://wsinfer.readthedocs.io for more info.
  */
-public class WSInferExtension implements QuPathExtension {
+public class WSInferExtension implements QuPathExtension, GitHubProject {
 	private final static ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 	
 	private final static Logger logger = LoggerFactory.getLogger(WSInferExtension.class);
@@ -47,8 +48,6 @@ public class WSInferExtension implements QuPathExtension {
 
 	private final BooleanProperty enableExtensionProperty = PathPrefs.createPersistentPreference(
 			"enableExtension", true);
-
-
 
 	@Override
 	public void installExtension(QuPathGUI qupath) {
@@ -84,4 +83,8 @@ public class WSInferExtension implements QuPathExtension {
 		return EXTENSION_QUPATH_VERSION;
 	}
 
+	@Override
+	public GitHubRepo getRepository() {
+		return GitHubRepo.create(getName(), "qupath", "qupath-extension-wsinfer");
+	}
 }

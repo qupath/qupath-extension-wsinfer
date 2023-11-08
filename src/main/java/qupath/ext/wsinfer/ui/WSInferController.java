@@ -25,7 +25,6 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.Task;
 import javafx.concurrent.Worker;
@@ -39,8 +38,12 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
+import org.controlsfx.control.PopOver;
 import org.controlsfx.control.SearchableComboBox;
 import org.controlsfx.control.action.Action;
 import org.controlsfx.control.action.ActionUtils;
@@ -50,11 +53,14 @@ import qupath.ext.wsinfer.ProgressListener;
 import qupath.ext.wsinfer.WSInfer;
 import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.ext.wsinfer.models.WSInferModelCollection;
+import qupath.ext.wsinfer.models.WSInferModelLocal;
 import qupath.ext.wsinfer.models.WSInferUtils;
+import qupath.fx.dialogs.Dialogs;
 import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
-import qupath.lib.gui.dialogs.Dialogs;
+import qupath.lib.gui.tools.IconFactory;
+import qupath.lib.gui.tools.WebViews;
 import qupath.lib.images.ImageData;
 import qupath.lib.objects.PathAnnotationObject;
 import qupath.lib.objects.PathObject;
@@ -65,6 +71,8 @@ import qupath.lib.plugins.workflow.DefaultScriptableWorkflowStep;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -82,8 +90,8 @@ public class WSInferController {
 
     private static final Logger logger = LoggerFactory.getLogger(WSInferController.class);
 
-    public QuPathGUI qupath;
-    private ObjectProperty<ImageData<BufferedImage>> imageDataProperty = new SimpleObjectProperty<>();
+    private QuPathGUI qupath;
+    private final ObjectProperty<ImageData<BufferedImage>> imageDataProperty = new SimpleObjectProperty<>();
     private MessageTextHelper messageTextHelper;
 
     @FXML
@@ -94,6 +102,8 @@ public class WSInferController {
     private Button runButton;
     @FXML
     private Button downloadButton;
+    @FXML
+    private Button infoButton;
     @FXML
     private ChoiceBox<String> deviceChoices;
     @FXML
@@ -112,6 +122,10 @@ public class WSInferController {
     private Spinner<Integer> spinnerNumWorkers;
     @FXML
     private TextField tfModelDirectory;
+    @FXML
+    private TextField localModelDirectory;
+    @FXML
+    private PopOver infoPopover;
 
     private final static ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 
@@ -168,7 +182,11 @@ public class WSInferController {
         modelChoiceBox.getItems().setAll(models.getModels().values());
         modelChoiceBox.setConverter(new ModelStringConverter(models));
         modelChoiceBox.getSelectionModel().selectedItemProperty().addListener(
-                (v, o, n) -> downloadButton.setDisable((n == null) || n.isValid()));
+                (v, o, n) -> {
+                    downloadButton.setDisable((n == null) || n.isValid());
+                    infoButton.setDisable((n == null) || (!n.isValid()) || n instanceof WSInferModelLocal);
+                    infoPopover.hide();
+                });
     }
 
     private void configureAvailableDevices() {
@@ -206,7 +224,7 @@ public class WSInferController {
     }
 
     private void configureDisplayToggleButtons() {
-        var actions = qupath.getDefaultActions();
+        var actions = qupath.getOverlayActions();
         configureActionToggleButton(actions.FILL_DETECTIONS, toggleDetectionFill);
         configureActionToggleButton(actions.SHOW_DETECTIONS, toggleDetections);
         configureActionToggleButton(actions.SHOW_ANNOTATIONS, toggleAnnotations);
@@ -242,6 +260,8 @@ public class WSInferController {
 
     private void configureModelDirectory() {
         tfModelDirectory.textProperty().bindBidirectional(WSInferPrefs.modelDirectoryProperty());
+        localModelDirectory.textProperty().bindBidirectional(WSInferPrefs.localDirectoryProperty());
+        localModelDirectory.textProperty().addListener((v, o, n) -> configureModelChoices());
     }
 
     private void configureNumWorkers() {
@@ -334,7 +354,22 @@ public class WSInferController {
             }
             showModelAvailableNotification(model.getName());
             downloadButton.setDisable(true);
+            infoButton.setDisable(model instanceof WSInferModelLocal);
         });
+    }
+
+    public void showInfo() throws IOException {
+        if (infoPopover.isShowing()) {
+            infoPopover.hide();
+            return;
+        }
+        WSInferModel model = modelChoiceBox.getSelectionModel().getSelectedItem();
+        Path mdFile = model.getREADMEFile().toPath();
+        var doc = Parser.builder().build().parse(Files.readString(mdFile));
+        WebView webView = WebViews.create(true);
+        webView.getEngine().loadContent(HtmlRenderer.builder().build().render(doc));
+        infoPopover.setContentNode(webView);
+        infoPopover.show(infoButton);
     }
 
     @FXML
@@ -383,19 +418,29 @@ public class WSInferController {
             this.imageData = imageData;
             this.model = model;
             this.progressListener = new WSInferProgressDialog(QuPathGUI.getInstance().getStage(), e -> {
-                if (Dialogs.showYesNoDialog(getTitle(), resources.getString("ui.stop-tasks"))) {
+                if (Dialogs.showYesNoDialog(getDialogTitle(), resources.getString("ui.stop-tasks"))) {
                     cancel(true);
                     e.consume();
                 }
             });
         }
 
+        private String getDialogTitle() {
+            try {
+                return ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings")
+                        .getString("title");
+            } catch (Exception e) {
+                logger.debug("Exception attempting to request title resource");
+                return "WSInfer";
+            }
+        }
+
         @Override
-        protected Void call() throws Exception {
+        protected Void call() {
             try {
                 // Ensure PyTorch engine is available
                 if (!PytorchManager.hasPyTorchEngine()) {
-                    Platform.runLater(() -> Dialogs.showInfoNotification(getTitle(), resources.getString("ui.pytorch-downloading")));
+                    Platform.runLater(() -> Dialogs.showInfoNotification(getDialogTitle(), resources.getString("ui.pytorch-downloading")));
                     PytorchManager.getEngineOnline();
                 }
                 // Ensure model is available - any prompts allowing the user to cancel
@@ -414,9 +459,9 @@ public class WSInferController {
                 WSInfer.runInference(imageData, model, progressListener);
                 addToHistoryWorkflow(imageData, model.getName());
             } catch (InterruptedException e) {
-                Platform.runLater(() -> Dialogs.showErrorNotification(getTitle(), e.getLocalizedMessage()));
+                Platform.runLater(() -> Dialogs.showErrorNotification(getDialogTitle(), e.getLocalizedMessage()));
             } catch (Exception e) {
-                Platform.runLater(() -> Dialogs.showErrorMessage(getTitle(), e.getLocalizedMessage()));
+                Platform.runLater(() -> Dialogs.showErrorMessage(getDialogTitle(), e.getLocalizedMessage()));
             }
             return null;
         }
@@ -428,7 +473,7 @@ public class WSInferController {
      */
     private class MessageTextHelper {
 
-        private SelectedObjectCounter selectedObjectCounter;
+        private final SelectedObjectCounter selectedObjectCounter;
 
         /**
          * Text to display a warning (because inference can't be run)
@@ -516,14 +561,14 @@ public class WSInferController {
      */
     private static class SelectedObjectCounter {
 
-        private ObjectProperty<ImageData<?>> imageDataProperty = new SimpleObjectProperty<>();
+        private final ObjectProperty<ImageData<?>> imageDataProperty = new SimpleObjectProperty<>();
 
-        private PathObjectSelectionListener selectionListener = this::selectedPathObjectChanged;
+        private final PathObjectSelectionListener selectionListener = this::selectedPathObjectChanged;
 
-        private ObservableValue<PathObjectHierarchy> hierarchyProperty;
+        private final ObservableValue<PathObjectHierarchy> hierarchyProperty;
 
-        private IntegerProperty numSelectedAnnotations = new SimpleIntegerProperty();
-        private IntegerProperty numSelectedDetections = new SimpleIntegerProperty();
+        private final IntegerProperty numSelectedAnnotations = new SimpleIntegerProperty();
+        private final IntegerProperty numSelectedDetections = new SimpleIntegerProperty();
 
         SelectedObjectCounter(ObservableValue<ImageData<BufferedImage>> imageDataProperty) {
             this.imageDataProperty.bind(imageDataProperty);
@@ -561,8 +606,16 @@ public class WSInferController {
                 numSelectedDetections.set(0);
             } else {
                 var selected = hierarchy.getSelectionModel().getSelectedObjects();
-                numSelectedAnnotations.set((int)selected.stream().filter(p -> p.isAnnotation()).count());
-                numSelectedDetections.set((int)selected.stream().filter(p -> p.isDetection()).count());
+                numSelectedAnnotations.set(
+                        (int)selected
+                                .stream().filter(PathObject::isAnnotation)
+                                .count()
+                );
+                numSelectedDetections.set(
+                        (int)selected
+                                .stream().filter(PathObject::isDetection)
+                                .count()
+                );
             }
         }
 
@@ -570,7 +623,7 @@ public class WSInferController {
 
     private static class ModelStringConverter extends StringConverter<WSInferModel> {
 
-        private WSInferModelCollection models;
+        private final WSInferModelCollection models;
 
         private ModelStringConverter(WSInferModelCollection models) {
             Objects.requireNonNull(models, "Models cannot be null");

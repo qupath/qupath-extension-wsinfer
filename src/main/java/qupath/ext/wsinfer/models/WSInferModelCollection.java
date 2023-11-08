@@ -33,6 +33,6 @@ public class WSInferModelCollection {
      * @return
      */
     public Map<String, WSInferModel> getModels() {
-        return Collections.unmodifiableMap(models);
+        return Collections.synchronizedMap(models);
     }
 }

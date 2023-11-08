@@ -18,9 +18,10 @@ package qupath.ext.wsinfer.ui;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.StringProperty;
+import qupath.lib.gui.UserDirectoryManager;
 import qupath.lib.gui.prefs.PathPrefs;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -30,7 +31,7 @@ public class WSInferPrefs {
 
     private static final StringProperty modelDirectoryProperty = PathPrefs.createPersistentPreference(
             "wsinfer.model.dir",
-            Paths.get(getUserDir(),"wsinfer").toString()
+            Paths.get(getUserDir().toString(),"wsinfer").toString()
     );
 
     private static final StringProperty deviceProperty = PathPrefs.createPersistentPreference(
@@ -40,8 +41,11 @@ public class WSInferPrefs {
 
     private static final Property<Integer> numWorkersProperty = PathPrefs.createPersistentPreference(
             "wsinfer.numWorkers",
-            1
+            2
     ).asObject();
+    private static StringProperty localDirectoryProperty = PathPrefs.createPersistentPreference(
+            "wsinfer.localDirectory",
+            null);
 
     /**
      * String storing the preferred directory to cache models.
@@ -64,9 +68,17 @@ public class WSInferPrefs {
         return numWorkersProperty;
     }
 
-    private static String getUserDir() {
-        String userPath = PathPrefs.getUserPath();
-        String cachePath = Paths.get(System.getProperty("user.dir"), ".cache", "QuPath").toString();
-        return userPath == null || userPath.isEmpty() ?  cachePath : userPath;
+    /**
+     * String storing the preferred directory for user-supplied model folders.
+     */
+    public static StringProperty localDirectoryProperty() {
+        return localDirectoryProperty;
     }
+
+    private static Path getUserDir() {
+        Path userPath = UserDirectoryManager.getInstance().getUserPath();
+        Path cachePath = Paths.get(System.getProperty("user.dir"), ".cache", "QuPath");
+        return userPath == null || userPath.toString().isEmpty() ?  cachePath : userPath;
+    }
+
 }
