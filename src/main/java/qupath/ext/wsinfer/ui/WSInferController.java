@@ -42,6 +42,8 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import org.commonmark.ext.front.matter.YamlFrontMatterExtension;
+import org.commonmark.ext.front.matter.YamlFrontMatterVisitor;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.controlsfx.control.PopOver;
@@ -75,7 +77,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.ResourceBundle;
@@ -127,8 +129,9 @@ public class WSInferController {
     private TextField tfModelDirectory;
     @FXML
     private TextField localModelDirectory;
-    @FXML
-    private PopOver infoPopover;
+
+    private WebView infoWebView = WebViews.create(true);
+    private PopOver infoPopover = new PopOver(infoWebView);
 
     private final static ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 
@@ -187,9 +190,13 @@ public class WSInferController {
         modelChoiceBox.getSelectionModel().selectedItemProperty().addListener(
                 (v, o, n) -> {
                     downloadButton.setDisable((n == null) || n.isValid());
-                    infoButton.setDisable((n == null) || (!n.isValid()) || n instanceof WSInferModelLocal);
+                    infoButton.setDisable((n == null) || (!n.isValid()) || !checkFileExists(n.getReadMeFile()));
                     infoPopover.hide();
                 });
+    }
+
+    private static boolean checkFileExists(File file) {
+        return file != null && file.isFile();
     }
 
     private void configureAvailableDevices() {
@@ -393,13 +400,58 @@ public class WSInferController {
             return;
         }
         WSInferModel model = modelChoiceBox.getSelectionModel().getSelectedItem();
-        Path mdFile = model.getReadMeFile().toPath();
-        var doc = Parser.builder().build().parse(Files.readString(mdFile));
-        WebView webView = WebViews.create(true);
-        webView.getEngine().loadContent(HtmlRenderer.builder().build().render(doc));
-        infoPopover.setContentNode(webView);
-        infoPopover.show(infoButton);
+        var file = model.getReadMeFile();
+        if (!checkFileExists(file)) {
+            logger.warn("ReadMe file not available: {}", file);
+            return;
+        }
+        try {
+            var markdown = Files.readString(file.toPath());
+
+            // Parse the initial markdown only, to extract any YAML front matter
+            var parser = Parser.builder()
+                    .extensions(
+                            Arrays.asList(YamlFrontMatterExtension.create())
+                    ).build();
+            var doc = parser.parse(markdown);
+            var visitor = new YamlFrontMatterVisitor();
+            doc.accept(visitor);
+            var metadata = visitor.getData();
+
+            // If we have YAML metadata, remove from the start (since it renders weirdly) and append at the end
+            if (!metadata.isEmpty()) {
+                doc.getFirstChild().unlink();
+                var sb = new StringBuilder();
+                sb.append("----\n\n");
+                sb.append("### Metadata\n\n");
+                for (var entry : metadata.entrySet()) {
+                    sb.append("\n* **").append(entry.getKey()).append("**: ").append(entry.getValue());
+                }
+                doc.appendChild(parser.parse(sb.toString()));
+            }
+
+            // If the markdown doesn't start with a title, pre-pending the model title & description (if available)
+            if (!markdown.startsWith("#")) {
+                var sb = new StringBuilder();
+                sb.append("## ").append(model.getName()).append("\n\n");
+                var description = model.getDescription();
+                if (description != null && !description.isEmpty()) {
+                    sb.append("_").append(description).append("_").append("\n\n");
+                }
+                sb.append("----\n\n");
+                doc.prependChild(parser.parse(sb.toString()));
+            }
+
+            infoWebView.getEngine().loadContent(
+                    HtmlRenderer.builder().build().render(doc));
+            infoPopover.show(infoButton);
+        } catch (IOException e) {
+            logger.error("Error parsing readme file", e);
+        }
     }
+
+
+
 
     @FXML
     private void selectAllAnnotations() {

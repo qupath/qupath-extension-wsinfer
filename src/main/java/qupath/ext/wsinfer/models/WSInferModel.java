@@ -55,6 +55,14 @@ public class WSInferModel {
     }
 
     /**
+     * Get a description, if available (may be null).
+     * @return
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
      * Get the configuration. Note that this may be null.
      * @return the model configuration, or null.
      */
@@ -69,8 +77,20 @@ public class WSInferModel {
      * Remove the cached model files.
      */
     public synchronized void removeCache() {
-        getTorchScriptFile().delete();
-        getConfigFile().delete();
+        removeIfFound(getTorchScriptFile(), getConfigFile(), getReadMeFile());
+    }
+
+    private static void removeIfFound(File... files) {
+        for (var file : files) {
+            if (file != null && file.isFile()) {
+                try {
+                    logger.debug("Deleting file {}", file);
+                    file.delete();
+                } catch (Exception e) {
+                    logger.error("Unable to delete file {}", file, e);
+                }
+            }
+        }
     }
 
     /**
