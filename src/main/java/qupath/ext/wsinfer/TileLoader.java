@@ -110,43 +110,43 @@ class TileLoader {
     }
 
     private TileBatch nextBatch() {
-            List<Image> inputs = new ArrayList<>();
-            List<PathObject> pathObjectBatch = new ArrayList<>();
-            while (!pathObjects.isEmpty() && inputs.size() < maxBatchSize) {
-                PathObject pathObject = pathObjects.poll();
-                if (pathObject == null) {
-                    break;
-                }
-
-                ROI roi = pathObject.getROI();
-                int x = (int) Math.round(roi.getCentroidX() - width / 2.0);
-                int y = (int) Math.round(roi.getCentroidY() - height / 2.0);
-                try {
-                    BufferedImage img;
-                    if (x < 0 || y < 0 || x + width >= server.getWidth() || y + height >= server.getHeight()) {
-                        // Handle out-of-bounds coordinates
-                        // This reuses code from DnnTools.readPatch, but is not ideal since it uses a trip through OpenCV
-                        var mat = DnnTools.readPatch(server, roi, downsample, width, height);
-                        img = OpenCVTools.matToBufferedImage(mat);
-                        mat.close();
-                        logger.warn("Detected out-of-bounds tile request - results may be influenced by padding ({}, {}, {}, {})", x, y, width, height);
-                    } else {
-                        // Handle normal case of within-bounds coordinates
-                        img = server.readRegion(downsample, x, y, width, height);
-                        if (resizeWidth > 0 && resizeHeight > 0)
-                            img = BufferedImageTools.resize(img, resizeWidth, resizeHeight, true);
-                    }
-                    Image input = BufferedImageFactory.getInstance().fromImage(img);
-                    pathObjectBatch.add(pathObject);
-                    inputs.add(input);
-                } catch (IOException e) {
-                    logger.error("Failed to read tile: {}", e.getMessage(), e);
-                }
+        List<Image> inputs = new ArrayList<>();
+        List<PathObject> pathObjectBatch = new ArrayList<>();
+        while (!pathObjects.isEmpty() && inputs.size() < maxBatchSize) {
+            PathObject pathObject = pathObjects.poll();
+            if (pathObject == null) {
+                break;
             }
-            if (inputs.isEmpty())
-                return new TileBatch();
-            else
-                return new TileBatch(inputs, pathObjectBatch);
+
+            ROI roi = pathObject.getROI();
+            int x = (int) Math.round(roi.getCentroidX() - width / 2.0);
+            int y = (int) Math.round(roi.getCentroidY() - height / 2.0);
+            try {
+                BufferedImage img;
+                if (x < 0 || y < 0 || x + width >= server.getWidth() || y + height >= server.getHeight()) {
+                    // Handle out-of-bounds coordinates
+                    // This reuses code from DnnTools.readPatch, but is not ideal since it uses a trip through OpenCV
+                    var mat = DnnTools.readPatch(server, roi, downsample, width, height);
+                    img = OpenCVTools.matToBufferedImage(mat);
+                    mat.close();
+                    logger.warn("Detected out-of-bounds tile request - results may be influenced by padding ({}, {}, {}, {})", x, y, width, height);
+                } else {
+                    // Handle normal case of within-bounds coordinates
+                    img = server.readRegion(downsample, x, y, width, height);
+                    if (resizeWidth > 0 && resizeHeight > 0)
+                        img = BufferedImageTools.resize(img, resizeWidth, resizeHeight, true);
+                }
+                Image input = BufferedImageFactory.getInstance().fromImage(img);
+                pathObjectBatch.add(pathObject);
+                inputs.add(input);
+            } catch (IOException e) {
+                logger.error("Failed to read tile: {}", e.getMessage(), e);
+            }
+        }
+        if (inputs.isEmpty())
+            return new TileBatch();
+        else
+            return new TileBatch(inputs, pathObjectBatch);
     }
 
     class TileWorker implements Runnable {

@@ -205,15 +205,17 @@ public class WSInfer {
             // Number of workers who will be busy fetching tiles for us while we're busy inferring
             int nWorkers = Math.max(1, WSInferPrefs.numWorkersProperty().getValue());
 
-            // Make a guess at a batch size currently... *must* be 1 for MPS
-            // FIXME: Make batch size adjustable when using a GPU (or CPU?)
-            int batchSize = isMPS(device) || !device.isGpu() ? 1 : 4;
-            if (device == Device.cpu())
-                batchSize = 4;
+            // Set batch size
+            // Previously, this *had* to be 1 for MPS - but since DJL 0.24.0 that doesn't seem necessary any more
+            int batchSize = Math.max(1, WSInferPrefs.batchSizeProperty().getValue());
+
+            // Number of tiles each worker should prefetch
+            int numPrefetch = (int)Math.max(2, Math.ceil((double)batchSize * 2 / nWorkers));
 
             var tileLoader = TileLoader.builder()
                     .batchSize(batchSize)
                     .numWorkers(nWorkers)
+                    .numPrefetch(numPrefetch)
                     .server(server)
                     .tileSize(width, height)
                     .downsample(downsample)
@@ -221,11 +223,9 @@ public class WSInfer {
                     .resizeTile(resize, resize)
                     .build();
 
-            double completedTiles = 0;
-            double totalTiles = tiles.size();
-            progressListener.updateProgress(
-                    String.format(resources.getString("ui.processing-progress"), Math.round(completedTiles), Math.round(totalTiles)),
-                    completedTiles/totalTiles);
+            int completedTiles = 0;
+            int totalTiles = tiles.size();
+            updateProgressForTiles(progressListener, completedTiles, totalTiles, startTime);
 
             try (Predictor<Image, Classifications> predictor = model.newPredictor()) {
                 var batchQueue = tileLoader.getBatchQueue();
@@ -257,16 +257,12 @@ public class WSInfer {
                             pathObject.setPathClass(PathClass.fromString(name));
                     }
                     completedTiles += inputs.size();
-                    progressListener.updateProgress(
-                            String.format(resources.getString("ui.processing-progress"), Math.round(completedTiles), Math.round(totalTiles)),
-                            completedTiles/totalTiles);
+                    updateProgressForTiles(progressListener, completedTiles, totalTiles, startTime);
                 }
             }
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
-            progressListener.updateProgress(
-                    String.format(resources.getString("ui.processing-completed"), Math.round(completedTiles), Math.round(totalTiles)),
-                    1.0);
+            updateProgressForTiles(progressListener, completedTiles, totalTiles, startTime);
 
             imageData.getHierarchy().fireObjectClassificationsChangedEvent(WSInfer.class, tiles);
             long durationSeconds = duration/1000;
@@ -280,6 +276,19 @@ public class WSInfer {
             logger.error("Error running model {}", wsiModel.getName(), e);
             progressListener.updateProgress("Inference failed!", 1.0);
             throw e;
+        }
+    }
+
+    private static void updateProgressForTiles(ProgressListener progress, int completedTiles, int totalTiles, long startTime) {
+        double timeSeconds = (System.currentTimeMillis() - startTime) / 1000.0;
+        if (completedTiles == totalTiles)
+            progress.updateProgress(
+                    String.format(resources.getString("ui.processing-completed"), completedTiles, totalTiles, completedTiles/timeSeconds),
+                    (double)completedTiles/totalTiles);
+        else {
+            progress.updateProgress(
+                    String.format(resources.getString("ui.processing-progress"), completedTiles, totalTiles, completedTiles / timeSeconds),
+                    (double)completedTiles / totalTiles);
         }
     }
 

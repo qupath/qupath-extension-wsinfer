@@ -126,6 +126,8 @@ public class WSInferController {
     @FXML
     private Spinner<Integer> spinnerNumWorkers;
     @FXML
+    private Spinner<Integer> spinnerBatchSize;
+    @FXML
     private TextField tfModelDirectory;
     @FXML
     private TextField localModelDirectory;
@@ -157,6 +159,7 @@ public class WSInferController {
         configureAvailableDevices();
         configureModelDirectory();
         configureNumWorkers();
+        configureBatchSize();
 
         configureMessageLabel();
         configureRunInferenceButton();
@@ -276,6 +279,10 @@ public class WSInferController {
 
     private void configureNumWorkers() {
         spinnerNumWorkers.getValueFactory().valueProperty().bindBidirectional(WSInferPrefs.numWorkersProperty());
+    }
+
+    private void configureBatchSize() {
+        spinnerBatchSize.getValueFactory().valueProperty().bindBidirectional(WSInferPrefs.batchSizeProperty());
     }
 
     /**
@@ -493,7 +500,7 @@ public class WSInferController {
 
         private final ImageData<BufferedImage> imageData;
         private final WSInferModel model;
-        private final ProgressListener progressListener;
+        private final WSInferProgressDialog progressListener;
 
         private WSInferTask(ImageData<BufferedImage> imageData, WSInferModel model) {
             this.imageData = imageData;
@@ -504,6 +511,12 @@ public class WSInferController {
                     e.consume();
                 }
             });
+            this.stateProperty().addListener(this::handleStateChange);
+        }
+
+        private void handleStateChange(ObservableValue<? extends Worker.State> value, Worker.State oldValue, Worker.State newValue) {
+            if (progressListener != null && newValue == Worker.State.CANCELLED)
+                progressListener.cancel();
         }
 
         private String getDialogTitle() {

@@ -52,6 +52,8 @@ class WSInferProgressDialog extends AnchorPane implements ProgressListener {
     @FXML
     private Button btnCancel;
 
+    private boolean isCancelled = false;
+
     public WSInferProgressDialog(Window owner, EventHandler<ActionEvent> cancelHandler) {
         URL url = getClass().getResource("progress_dialog.fxml");
         ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
@@ -76,6 +78,8 @@ class WSInferProgressDialog extends AnchorPane implements ProgressListener {
 
     @Override
     public void updateProgress(String message, Double progress) {
+        if (isCancelled)
+            return;
         if (Platform.isFxApplicationThread()) {
             if (message != null)
                 progressLabel.setText(message);
@@ -90,6 +94,17 @@ class WSInferProgressDialog extends AnchorPane implements ProgressListener {
         } else {
             Platform.runLater(() -> updateProgress(message, progress));
         }
+    }
+
+    /**
+     * Immediately cancel and hide the progress dialog.
+     * Subsequent calls to updateProgress will be ignored.
+     */
+    public void cancel() {
+        isCancelled = true;
+        stage.hide();
+        progressLabel.setText("Cancelled");
+        progressBar.setProgress(1.0);
     }
 
 }

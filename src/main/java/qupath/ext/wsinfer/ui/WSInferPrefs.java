@@ -41,8 +41,14 @@ public class WSInferPrefs {
 
     private static final Property<Integer> numWorkersProperty = PathPrefs.createPersistentPreference(
             "wsinfer.numWorkers",
-            1
+            Math.min(4, Runtime.getRuntime().availableProcessors())
     ).asObject();
+
+    private static final Property<Integer> batchSizeProperty = PathPrefs.createPersistentPreference(
+            "wsinfer.batchSize",
+            4
+    ).asObject();
+
     private static StringProperty localDirectoryProperty = PathPrefs.createPersistentPreference(
             "wsinfer.localDirectory",
             null);
@@ -66,6 +72,13 @@ public class WSInferPrefs {
      */
     public static Property<Integer> numWorkersProperty() {
         return numWorkersProperty;
+    }
+
+    /**
+     * Integer storing the batch size for inference.
+     */
+    public static Property<Integer> batchSizeProperty() {
+        return batchSizeProperty;
     }
 
     /**
