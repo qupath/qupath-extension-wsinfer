@@ -36,6 +36,11 @@
   -fx-spacing: 7.5;
 }
 
+/* spacing - current use in VBox*/
+.standard-vertical-spacing {
+  -fx-spacing: 5;
+}
+
 .standard-padding {
   -fx-padding: 2;
 }

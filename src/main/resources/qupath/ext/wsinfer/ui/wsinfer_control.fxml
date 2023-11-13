@@ -80,10 +80,10 @@
                                     </SegmentedButton>
                                 </children>
                             </HBox>
-                            <styleClass>
-                                <String fx:value="standard-spacing" />
-                                <String fx:value="standard-padding" />
-                            </styleClass>
+                     <styleClass>
+                        <String fx:value="standard-padding" />
+                        <String fx:value="standard-vertical-spacing" />
+                     </styleClass>
                         </VBox>
                     </children>
                 </VBox>
@@ -100,7 +100,7 @@
                     </HBox>
                     <Label id="labelWarning" fx:id="labelMessage" styleClass="error-message" text="%ui.error.no-selection" VBox.vgrow="ALWAYS" />
                     <styleClass>
-                        <String fx:value="standard-spacing" />
+                        <String fx:value="standard-vertical-spacing" />
                         <String fx:value="standard-padding" />
                     </styleClass>
                 </VBox>
@@ -113,7 +113,7 @@
         <!--**********************Results**********************-->
         <VBox alignment="TOP_CENTER" styleClass="standard-spacing standard-padding">
             <children>
-                <VBox alignment="CENTER" styleClass="standard-spacing">
+                <VBox alignment="CENTER" styleClass="standard-vertical-spacing">
                     <children>
                         <HBox alignment="CENTER" styleClass="standard-spacing">
                             <children>
@@ -150,7 +150,7 @@
     </TitledPane>
 
     <!--    Hardware Pane************************************************************-->
-    <TitledPane fx:id="pane3" animated="false" expanded="false" maxHeight="Infinity" text="%ui.options.pane" VBox.vgrow="NEVER">
+    <TitledPane fx:id="pane3" animated="false" maxHeight="Infinity" text="%ui.options.pane" VBox.vgrow="NEVER">
         <VBox alignment="TOP_CENTER" spacing="7.5" styleClass="standard-padding">
             <children>
                 <HBox alignment="CENTER" styleClass="standard-spacing">
@@ -163,7 +163,7 @@
                         </ChoiceBox>
                     </children>
                 </HBox>
-            <HBox alignment="CENTER" styleClass="standard-spacing">
+            <HBox alignment="CENTER">
                <children>
                   <Label styleClass="regular" text="%ui.options.batchSize" />
                   <Spinner fx:id="spinnerBatchSize" prefWidth="75.0">
@@ -175,6 +175,10 @@
                      </valueFactory>
                   </Spinner>
                </children>
+               <styleClass>
+                  <String fx:value="standard-vertical-spacing" />
+                  <String fx:value="standard-padding" />
+               </styleClass>
             </HBox>
                 <HBox alignment="CENTER" styleClass="standard-spacing">
                     <children>
@@ -189,9 +193,9 @@
                 </HBox>
                 <Separator prefWidth="200.0" />
                 <VBox alignment="CENTER" styleClass="standard-spacing">
-                    <VBox alignment="CENTER" styleClass="standard-spacing">
+                    <VBox alignment="CENTER" styleClass="standard-vertical-spacing">
                         <children>
-                            <Label styleClass="regular" text="%ui.options.directory" />
+                            <Label onMouseClicked="#handleModelDirectoryLabelClick" styleClass="regular" text="%ui.options.directory" />
                             <HBox styleClass="standard-spacing">
                                 <children>
                                     <TextField fx:id="tfModelDirectory" HBox.hgrow="ALWAYS">
@@ -213,24 +217,7 @@
                     </VBox>
                     <VBox alignment="CENTER" styleClass="standard-spacing">
                         <children>
-                            <Label styleClass="regular" text="%ui.options.localModelDirectory" />
-                            <HBox styleClass="standard-spacing">
-                                <children>
-                                    <TextField fx:id="localModelDirectory" HBox.hgrow="ALWAYS">
-                                        <tooltip>
-                                            <Tooltip text="%ui.options.localModelDirectory.tooltip" />
-                                        </tooltip>
-                                    </TextField>
-                                    <Button fx:id="userModelDirButton" mnemonicParsing="false" onAction="#promptForLocalModelDirectory">
-                                        <tooltip>
-                                            <Tooltip text="%ui.options.localModelDirectory.tooltip" />
-                                        </tooltip>
-                                        <graphic>
-                                            <Text styleClass="fa-icon" text="" />
-                                        </graphic>
-                                    </Button>
-                                </children>
-                            </HBox>
+                            <HBox styleClass="standard-spacing" />
                         </children>
                     </VBox>
                 </VBox>

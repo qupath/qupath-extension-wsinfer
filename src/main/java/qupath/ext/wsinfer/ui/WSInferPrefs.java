@@ -49,10 +49,6 @@ public class WSInferPrefs {
             4
     ).asObject();
 
-    private static StringProperty localDirectoryProperty = PathPrefs.createPersistentPreference(
-            "wsinfer.localDirectory",
-            null);
-
     /**
      * String storing the preferred directory to cache models.
      */
@@ -79,13 +75,6 @@ public class WSInferPrefs {
      */
     public static Property<Integer> batchSizeProperty() {
         return batchSizeProperty;
-    }
-
-    /**
-     * String storing the preferred directory for user-supplied model folders.
-     */
-    public static StringProperty localDirectoryProperty() {
-        return localDirectoryProperty;
     }
 
     private static Path getUserDir() {

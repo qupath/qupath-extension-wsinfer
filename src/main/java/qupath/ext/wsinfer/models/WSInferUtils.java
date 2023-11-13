@@ -32,6 +32,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
@@ -66,15 +67,20 @@ public class WSInferUtils {
                     cachedModelCollection = downloadModelCollection();
             }
         }
-        String localModelDirectory = WSInferPrefs.localDirectoryProperty().get();
-        if (localModelDirectory != null) {
-            addLocalModels(cachedModelCollection, localModelDirectory);
+        String pathModels = WSInferPrefs.modelDirectoryProperty().get();
+        if (pathModels != null) {
+            File dirModels = new File(pathModels);
+            if (dirModels.isDirectory()) {
+                // Search for local models in 'local' or 'user' subdirectories
+                for (var name : Arrays.asList("local", "user")) {
+                    addLocalModels(cachedModelCollection, new File(dirModels, name));
+                }
+            }
         }
         return cachedModelCollection;
     }
 
-    private static void addLocalModels(WSInferModelCollection cachedModelCollection, String localModelDirectory) {
-        File modelDir = new File(localModelDirectory);
+    private static void addLocalModels(WSInferModelCollection cachedModelCollection, File modelDir) {
         if (!modelDir.exists() || !modelDir.isDirectory()) {
             return;
         }
