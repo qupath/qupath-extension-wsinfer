@@ -694,6 +694,10 @@ public class WSInferController {
         }
 
         private void updateSelectedObjectCounts() {
+            if (!Platform.isFxApplicationThread()) {
+                Platform.runLater(this::updateSelectedObjectCounts);
+                return;
+            }
             var hierarchy = hierarchyProperty.getValue();
             if (hierarchy == null) {
                 numSelectedAnnotations.set(0);

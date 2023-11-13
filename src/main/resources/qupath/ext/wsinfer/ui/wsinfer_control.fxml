@@ -98,7 +98,7 @@
                             </Button>
                         </children>
                     </HBox>
-                    <Label id="labelWarning" fx:id="labelMessage" prefHeight="30.0" styleClass="error-message" text="%ui.error.no-selection" VBox.vgrow="ALWAYS" />
+                    <Label id="labelWarning" fx:id="labelMessage" styleClass="error-message" text="%ui.error.no-selection" VBox.vgrow="ALWAYS" />
                     <styleClass>
                         <String fx:value="standard-spacing" />
                         <String fx:value="standard-padding" />
