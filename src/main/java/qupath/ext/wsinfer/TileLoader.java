@@ -133,9 +133,26 @@ class TileLoader {
                 } else {
                     // Handle normal case of within-bounds coordinates
                     img = server.readRegion(downsample, x, y, width, height);
-                    if (resizeWidth > 0 && resizeHeight > 0)
-                        img = BufferedImageTools.resize(img, resizeWidth, resizeHeight, true);
                 }
+                if (resizeWidth > 0 && resizeHeight > 0) {
+                    // Using OpenCV is much faster tha BufferedImageTools/ImageJ,
+                    // but using BufferedImageTools (and ImageJ) seems to give more similar results to WSInfer Python.
+                    // For example, using the Python WSInfer 0.5.0 output for the image at
+                    // https://github.com/qupath/qupath-docs/issues/89 (30619 tiles):
+                    //  BufferedImageTools Tumor prob Mean Absolute Difference: 0.0026328298250342763
+                    //  OpenCV Tumor prob Mean Absolute Difference:             0.07625036735485102
+                    //
+                    // Note: If we activate this, then we should handle the if/else above separately to avoid
+                    // regenerating a Mat unnecessarily.
+//                        var mat = OpenCVTools.imageToMat(img);
+//                        var size = new Size(resizeWidth, resizeHeight);
+//                        opencv_imgproc.resize(mat, mat, size, 0, 0, opencv_imgproc.INTER_LINEAR);
+//                        img = OpenCVTools.matToBufferedImage(mat);
+//                        size.close();
+//                        mat.close();
+                    img = BufferedImageTools.resize(img, resizeWidth, resizeHeight, true);
+                }
+
                 Image input = BufferedImageFactory.getInstance().fromImage(img);
                 pathObjectBatch.add(pathObject);
                 inputs.add(input);
