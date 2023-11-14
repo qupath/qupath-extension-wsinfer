@@ -39,6 +39,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -52,7 +53,6 @@ import org.controlsfx.control.action.Action;
 import org.controlsfx.control.action.ActionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import qupath.ext.wsinfer.ProgressListener;
 import qupath.ext.wsinfer.WSInfer;
 import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.ext.wsinfer.models.WSInferModelCollection;
@@ -64,6 +64,7 @@ import qupath.fx.utils.FXUtils;
 import qupath.lib.common.ThreadTools;
 import qupath.lib.gui.QuPathGUI;
 import qupath.lib.gui.commands.Commands;
+import qupath.lib.gui.tools.GuiTools;
 import qupath.lib.gui.tools.WebViews;
 import qupath.lib.images.ImageData;
 import qupath.lib.objects.PathAnnotationObject;
@@ -129,8 +130,6 @@ public class WSInferController {
     private Spinner<Integer> spinnerBatchSize;
     @FXML
     private TextField tfModelDirectory;
-    @FXML
-    private TextField localModelDirectory;
 
     private WebView infoWebView = WebViews.create(true);
     private PopOver infoPopover = new PopOver(infoWebView);
@@ -150,7 +149,7 @@ public class WSInferController {
         this.qupath = QuPathGUI.getInstance();
         this.imageDataProperty.bind(qupath.imageDataProperty());
 
-        configureModelChoices();
+        refreshAvailableModels();
 
         configureSelectionButtons();
         configureDisplayToggleButtons();
@@ -186,7 +185,7 @@ public class WSInferController {
     /**
      * Populate the available models & configure the UI elements to select and download models.
      */
-    private void configureModelChoices() {
+    void refreshAvailableModels() {
         WSInferModelCollection models = WSInferUtils.getModelCollection();
         modelChoiceBox.getItems().setAll(models.getModels().values());
         modelChoiceBox.setConverter(new ModelStringConverter(models));
@@ -273,8 +272,6 @@ public class WSInferController {
 
     private void configureModelDirectory() {
         tfModelDirectory.textProperty().bindBidirectional(WSInferPrefs.modelDirectoryProperty());
-        localModelDirectory.textProperty().bindBidirectional(WSInferPrefs.localDirectoryProperty());
-        localModelDirectory.textProperty().addListener((v, o, n) -> configureModelChoices());
     }
 
     private void configureNumWorkers() {
@@ -375,12 +372,25 @@ public class WSInferController {
         });
     }
 
-    public void promptForModelDirectory() {
-        promptToUpdateDirectory(WSInferPrefs.modelDirectoryProperty());
+    /**
+     * Open the model directory in the system file browser when double-clicked.
+     * @param event
+     */
+    public void handleModelDirectoryLabelClick(MouseEvent event) {
+        if (event.getClickCount() != 2)
+            return;
+        var path = WSInferPrefs.modelDirectoryProperty().get();
+        if (path == null || path.isEmpty())
+            return;
+        var file = new File(path);
+        if (file.exists())
+            GuiTools.browseDirectory(file);
+        else
+            logger.debug("Can't browse directory for {}", file);
     }
 
-    public void promptForLocalModelDirectory() {
-        promptToUpdateDirectory(WSInferPrefs.localDirectoryProperty());
+    public void promptForModelDirectory() {
+        promptToUpdateDirectory(WSInferPrefs.modelDirectoryProperty());
     }
 
     private void promptToUpdateDirectory(StringProperty dirPath) {

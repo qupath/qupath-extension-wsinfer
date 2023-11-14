@@ -44,6 +44,7 @@ public class WSInferCommand implements Runnable {
     private final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 
     private Stage stage;
+    private WSInferController controller;
 
     public WSInferCommand(QuPathGUI qupath) {
         this.qupath = qupath;
@@ -62,8 +63,10 @@ public class WSInferCommand implements Runnable {
                 logger.error(e.getMessage(), e);
                 return;
             }
-        } else
+        } else {
+            controller.refreshAvailableModels();
             stage.show();
+        }
     }
 
     private Stage createStage() throws IOException {
@@ -77,6 +80,7 @@ public class WSInferCommand implements Runnable {
         var loader = new FXMLLoader(url, resources);
         loader.setClassLoader(this.getClass().getClassLoader());
         VBox root = loader.load();
+        controller = loader.getController();
 
         // There's probably a better approach... but wrapping in a border pane
         // helped me get the resizing to behave
