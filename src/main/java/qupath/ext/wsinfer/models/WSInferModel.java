@@ -169,8 +169,14 @@ public class WSInferModel {
     private static String checkSumSHA256(File file) throws IOException, NoSuchAlgorithmException {
         byte[] data = Files.readAllBytes(file.toPath());
         byte[] hash = MessageDigest.getInstance("SHA-256").digest(data);
-        return new BigInteger(1, hash).toString(16);
+        StringBuilder hexString = new StringBuilder(new BigInteger(1, hash).toString(16));
+
+        while (hexString.length() < 64) {
+            hexString.insert(0, '0');
+        }
+        return hexString.toString();
     }
+
 
     /**
      * Check that the SHA-256 checksum in the LFS pointer file matches one
