@@ -165,7 +165,7 @@ public class WSInferModel {
         }
         return null;
     }
- 
+
     private static String checkSumSHA256(File file) throws IOException, NoSuchAlgorithmException {
         byte[] data = Files.readAllBytes(file.toPath());
         byte[] hash = MessageDigest.getInstance("SHA-256").digest(data);
