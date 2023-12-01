@@ -25,6 +25,8 @@ Download the latest version of the extension from the [releases page](https://gi
 
 Then drag & drop the downloaded .jar file onto the main QuPath window to install it.
 
+See [the QuPath docs](https://qupath.readthedocs.io/en/0.5/docs/intro/extensions.html) for more info about installing & updating extensions.
+
 ## Usage
 
 The WSInfer extension adds a new menu item to QuPath's **Extensions** menu, which can be used to open a WSInfer dialog.
