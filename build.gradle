@@ -2,7 +2,7 @@ plugins {
     // Main gradle plugin for building a Java library
     id 'java-library'
     // To create a shadow/fat jar that bundle up all dependencies
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
     // Include this plugin to avoid downloading JavaCPP dependencies for all platforms
     id 'org.bytedeco.gradle-javacpp-platform'
     id 'org.openjfx.javafxplugin' version '0.1.0'
@@ -10,8 +10,11 @@ plugins {
 
 ext.moduleName = 'io.github.qupath.extension.wsinfer'
 
-version = "0.3.0"
-description = 'An extension to run WSInfer in QuPath'
+base {
+    description = 'QuPath extension to run WSInfer models in QuPath'
+    version = "0.3.0"
+    group = 'io.github.qupath'
+}
 
 // The default 'gradle.ext.qupathVersion' reads this from settings.gradle.
 ext.qupathVersion = gradle.ext.qupathVersion
