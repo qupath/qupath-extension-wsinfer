@@ -7,6 +7,10 @@
 * Support for local models (https://github.com/qupath/qupath-extension-wsinfer/issues/32)
 * Show model information, where available
 * Code refactoring and UI improvements
+* Show tile predictions per second to help with performance tuning
+* Support for custom batch sizes
+  * Can substantially improve performance with GPU acceleration
+  * Requires PyTorch 2.0.1 or later for Apple Silicon MPS
 
 ## v0.2.1
 
