@@ -17,12 +17,15 @@
 package qupath.ext.wsinfer.ui;
 
 import ai.djl.engine.Engine;
+import ai.djl.engine.EngineException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.lib.common.GeneralTools;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -39,26 +42,28 @@ class PytorchManager {
      */
     static Collection<String> getAvailableDevices() {
         Set<String> availableDevices = new LinkedHashSet<>();
-        boolean includesMPS = false; // Don't add MPS twice
-        var engine = getEngineOffline();
-        if (engine != null) {
-            // This is expected to return GPUs if available, or CPU otherwise
-            for (var device : engine.getDevices()) {
-                String name = device.getDeviceType();
-                availableDevices.add(name);
-                if (name.toLowerCase().startsWith("mps"))
-                    includesMPS = true;
+        try {
+
+            var engine = getEngineOffline();
+            if (engine != null) {
+                // This is expected to return GPUs if available, or CPU otherwise
+                for (var device : engine.getDevices()) {
+                    String name = device.getDeviceType();
+                    availableDevices.add(name);
+                }
             }
-        }
-        // CPU should always be available
-        if (!availableDevices.contains("cpu"))
+            // CPU should always be available
             availableDevices.add("cpu");
 
-        // If we could use MPS, but don't have it already, add it
-        if (!includesMPS && GeneralTools.isMac() && "aarch64".equals(System.getProperty("os.arch"))) {
-            availableDevices.add("mps");
+            // If we could use MPS, but don't have it already, add it
+            if (GeneralTools.isMac() && "aarch64".equals(System.getProperty("os.arch"))) {
+                availableDevices.add("mps");
+            }
+            return availableDevices;
+        } catch (Exception e) {
+            logger.info("Unable to load engine", e);
+            return List.of();
         }
-        return availableDevices;
     }
 
     /**
@@ -76,6 +81,9 @@ class PytorchManager {
     static Engine getEngineOffline() {
         try {
             return callOffline(() -> Engine.getEngine("PyTorch"));
+        } catch (EngineException | IOException e) {
+            logger.info("Unable to load PyTorch", e);
+            return null;
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
             return null;
@@ -97,13 +105,13 @@ class PytorchManager {
 
     /**
      * Call a function with the "offline" property set to true (to block automatic downloads).
-     * @param callable
+     * @param callable Function that'll be called offline.
      * @return
      * @param <T>
-     * @throws Exception
+     * @throws EngineException If the engine can't be loaded (probably because it can't be downloaded)
      */
     private static <T> T callOffline(Callable<T> callable) throws Exception {
-        return callWithTempProperty("offline", "true", callable);
+        return callWithTempProperty("ai.djl.offline", "true", callable);
     }
 
     /**
@@ -114,7 +122,7 @@ class PytorchManager {
      * @throws Exception
      */
     private static <T> T callOnline(Callable<T> callable) throws Exception {
-        return callWithTempProperty("offline", "false", callable);
+        return callWithTempProperty("ai.djl.offline", "false", callable);
     }
 
 
