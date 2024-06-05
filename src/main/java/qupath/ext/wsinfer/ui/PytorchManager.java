@@ -108,7 +108,7 @@ class PytorchManager {
      * @param callable Function that'll be called offline.
      * @return
      * @param <T>
-     * @throws EngineException If the engine can't be loaded (probably because it can't be downloaded)
+     * @throws EngineException If the engine can't be loaded (probably because it hasn't been downloaded)
      */
     private static <T> T callOffline(Callable<T> callable) throws Exception {
         return callWithTempProperty("ai.djl.offline", "true", callable);
