@@ -131,8 +131,8 @@ public class WSInferController {
     @FXML
     private TextField tfModelDirectory;
 
-    private WebView infoWebView = WebViews.create(true);
-    private PopOver infoPopover = new PopOver(infoWebView);
+    private final WebView infoWebView = WebViews.create(true);
+    private final PopOver infoPopover = new PopOver(infoWebView);
 
     private final static ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
 
@@ -541,25 +541,25 @@ public class WSInferController {
 
         @Override
         protected Void call() {
+            // Ensure PyTorch engine is available
+            if (!PytorchManager.hasPyTorchEngine()) {
+                Platform.runLater(() -> Dialogs.showInfoNotification(getDialogTitle(), resources.getString("ui.pytorch-downloading")));
+                PytorchManager.getEngineOnline();
+            }
+            // Ensure model is available - any prompts allowing the user to cancel
+            // should have been displayed already
+            if (!model.isValid()) {
+                showDownloadingModelNotification(model.getName());
+                try {
+                    model.downloadModel();
+                } catch (IOException e) {
+                    Platform.runLater(() -> Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.downloading")));
+                    return null;
+                }
+                showModelAvailableNotification(model.getName());
+            }
+            // Run inference
             try {
-                // Ensure PyTorch engine is available
-                if (!PytorchManager.hasPyTorchEngine()) {
-                    Platform.runLater(() -> Dialogs.showInfoNotification(getDialogTitle(), resources.getString("ui.pytorch-downloading")));
-                    PytorchManager.getEngineOnline();
-                }
-                // Ensure model is available - any prompts allowing the user to cancel
-                // should have been displayed already
-                if (!model.isValid()) {
-                    showDownloadingModelNotification(model.getName());
-                    try {
-                        model.downloadModel();
-                    } catch (IOException e) {
-                        Platform.runLater(() -> Dialogs.showErrorMessage(resources.getString("title"), resources.getString("error.downloading")));
-                        return null;
-                    }
-                    showModelAvailableNotification(model.getName());
-                }
-                // Run inference
                 WSInfer.runInference(imageData, model, progressListener);
                 addToHistoryWorkflow(imageData, model.getName());
             } catch (InterruptedException e) {
