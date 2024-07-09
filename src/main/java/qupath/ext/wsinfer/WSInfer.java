@@ -44,11 +44,17 @@ import qupath.lib.images.servers.ImageServer;
 import qupath.lib.images.servers.PixelCalibration;
 import qupath.lib.objects.PathObject;
 import qupath.lib.objects.classes.PathClass;
+import qupath.lib.objects.utils.Tiler;
 import qupath.lib.scripting.QP;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 /**
@@ -191,42 +197,42 @@ public class WSInfer {
         Translator translator = buildTranslator(wsiModel, pipeline, applySoftmax);
         Criteria<Image, Classifications> criteria = buildCriteria(wsiModel, translator, device);
         List<String> classNames = wsiModel.getConfiguration().getClassNames();
-
         long startTime = System.currentTimeMillis();
+
+        ImageServer<BufferedImage> server = imageData.getServer();
+        double downsample = wsiModel.getConfiguration().getSpacingMicronPerPixel() / (double)server.getPixelCalibration().getAveragedPixelSize();
+        int width = (int) Math.round(wsiModel.getConfiguration().getPatchSizePixels() * downsample);
+        int height = (int) Math.round(wsiModel.getConfiguration().getPatchSizePixels() * downsample);
+
+        // Number of workers who will be busy fetching tiles for us while we're busy inferring
+        int nWorkers = Math.max(1, WSInferPrefs.numWorkersProperty().getValue());
+
+        // Set batch size
+        // Previously, this *had* to be 1 for MPS - but since DJL 0.24.0 that doesn't seem necessary any more
+        int batchSize = Math.max(1, WSInferPrefs.batchSizeProperty().getValue());
+
+        // Number of tiles each worker should prefetch
+        int numPrefetch = (int)Math.max(2, Math.ceil((double)batchSize * 2 / nWorkers));
+
+        int nTiles = tiles.size();
+        logger.info("Running {} for {} tiles", wsiModel.getName(), nTiles);
+
+        var tileLoader = TileLoader.builder()
+                .batchSize(batchSize)
+                .numWorkers(nWorkers)
+                .numPrefetch(numPrefetch)
+                .server(server)
+                .tileSize(width, height)
+                .downsample(downsample)
+                .tiles(tiles)
+                .resizeTile(resize, resize)
+                .build();
+
+        int completedTiles = 0;
+        int totalTiles = tiles.size();
+        updateProgressForTiles(progressListener, completedTiles, totalTiles, startTime);
+
         try (ZooModel<Image, Classifications> model = criteria.loadModel()) {
-            int nTiles = tiles.size();
-            logger.info("Running {} for {} tiles", wsiModel.getName(), nTiles);
-
-            ImageServer<BufferedImage> server = imageData.getServer();
-            double downsample = wsiModel.getConfiguration().getSpacingMicronPerPixel() / (double)server.getPixelCalibration().getAveragedPixelSize();
-            int width = (int) Math.round(wsiModel.getConfiguration().getPatchSizePixels() * downsample);
-            int height = (int) Math.round(wsiModel.getConfiguration().getPatchSizePixels() * downsample);
-
-            // Number of workers who will be busy fetching tiles for us while we're busy inferring
-            int nWorkers = Math.max(1, WSInferPrefs.numWorkersProperty().getValue());
-
-            // Set batch size
-            // Previously, this *had* to be 1 for MPS - but since DJL 0.24.0 that doesn't seem necessary any more
-            int batchSize = Math.max(1, WSInferPrefs.batchSizeProperty().getValue());
-
-            // Number of tiles each worker should prefetch
-            int numPrefetch = (int)Math.max(2, Math.ceil((double)batchSize * 2 / nWorkers));
-
-            var tileLoader = TileLoader.builder()
-                    .batchSize(batchSize)
-                    .numWorkers(nWorkers)
-                    .numPrefetch(numPrefetch)
-                    .server(server)
-                    .tileSize(width, height)
-                    .downsample(downsample)
-                    .tiles(tiles)
-                    .resizeTile(resize, resize)
-                    .build();
-
-            int completedTiles = 0;
-            int totalTiles = tiles.size();
-            updateProgressForTiles(progressListener, completedTiles, totalTiles, startTime);
-
             try (Predictor<Image, Classifications> predictor = model.newPredictor()) {
                 var batchQueue = tileLoader.getBatchQueue();
                 int pendingWorkers = nWorkers;
@@ -373,9 +379,8 @@ public class WSInfer {
 
         // If we have annotations selected, create tiles inside them
         Collection<PathObject> selectedAnnotations = selectedObjects.stream()
-                .filter(p -> p.isAnnotation())
-                .collect(Collectors.toList());
-
+                .filter(PathObject::isAnnotation)
+                .toList();
         if (selectedAnnotations.isEmpty()) {
             throw new IllegalArgumentException(resources.getString("No tiles or annotations selected!"));
         }
@@ -392,16 +397,14 @@ public class WSInfer {
             tileWidth = Math.round(config.getPatchSizePixels());
             tileHeight = tileWidth;
         }
-        var tiler = new Tiler(
-                (int)tileWidth,
-                (int)tileHeight);
-        tiler.setTrimToParent(false);
-        tiler.setFilterByCentroid(false);
-        tiler.setSymmetric(true);
 
+        var tiler = Tiler.builder((int)tileWidth, (int)tileHeight)
+                .cropTiles(false)
+                .filterByCentroid(false)
+                .alignCenter()
+                .build();
         for (var annotation: selectedAnnotations) {
             var tiles = tiler.createTiles(annotation.getROI());
-
             // add tiles to the hierarchy
             annotation.clearChildObjects();
             for (int i = 0; i < tiles.size(); i++) {
@@ -412,7 +415,6 @@ public class WSInfer {
             annotation.setLocked(true);
             imageData.getHierarchy().fireHierarchyChangedEvent(annotation);
         }
-
         // We want our new tiles to be selected... but we also want to ensure that any tile object
         // has a selected annotation as a parent (in case there were other tiles already)
         return imageData.getHierarchy().getTileObjects()

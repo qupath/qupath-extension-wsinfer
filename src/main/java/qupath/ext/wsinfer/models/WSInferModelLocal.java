@@ -16,6 +16,8 @@
 
 package qupath.ext.wsinfer.models;
 
+import org.apache.commons.compress.utils.FileNameUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -27,6 +29,7 @@ public class WSInferModelLocal extends WSInferModel {
 
     private final File modelDirectory;
     private static final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.wsinfer.ui.strings");
+    private File torchscriptFile;
 
     /**
      * Try to create a WSInfer model from a user directory.
@@ -43,11 +46,16 @@ public class WSInferModelLocal extends WSInferModel {
         this.modelDirectory = modelDirectory;
         this.hfRepoId = modelDirectory.getName();
         List<File> files = Arrays.asList(Objects.requireNonNull(modelDirectory.listFiles()));
+        for (File f: files) {
+            if (FileNameUtils.getExtension(f.toPath()).equals("pt")) {
+                this.torchscriptFile = f;
+            }
+        }
         if (!files.contains(getConfigFile())) {
             throw new IOException(resources.getString("error.localModel") + ": " + getConfigFile().toString());
         }
-        if (!files.contains(getTorchScriptFile())) {
-            throw new IOException(resources.getString("error.localModel") + ": " + getTorchScriptFile().toString());
+        if (torchscriptFile == null) {
+            throw new IOException(resources.getString("error.localModel") + ": " + "torchscript model (.pt)");
         }
     }
 
@@ -59,6 +67,11 @@ public class WSInferModelLocal extends WSInferModel {
     @Override
     public boolean isValid() {
         return getTorchScriptFile().exists() && getConfiguration() != null;
+    }
+
+    @Override
+    public File getTorchScriptFile() {
+        return this.torchscriptFile;
     }
 
     @Override
