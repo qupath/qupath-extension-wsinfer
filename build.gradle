@@ -19,8 +19,7 @@ base {
 // The default 'gradle.ext.qupathVersion' reads this from settings.gradle.
 ext.qupathVersion = gradle.ext.qupathVersion
 
-// Generally 11 for QuPath v0.4.3, but will be 17 for QuPath v0.5.0
-ext.qupathJavaVersion = 17
+ext.qupathJavaVersion = libs.versions.jdk.get() as Integer
 
 def djlVersion = libs.versions.deepJavaLibrary.get()
 
