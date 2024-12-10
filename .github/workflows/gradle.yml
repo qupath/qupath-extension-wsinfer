@@ -28,7 +28,7 @@ jobs:
       with:
         arguments: build
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ github.event.repository.name }}-${{ github.event.pull_request && github.head_ref || github.ref_name }}
         path: build/libs
