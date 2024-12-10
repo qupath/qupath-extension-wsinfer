@@ -8,7 +8,7 @@ qupathExtension {
 	version = "0.4.0-SNAPSHOT"
 	group = "io.github.qupath"
 	description = "QuPath extension to run WSInfer models in QuPath"
-	automaticModule = "qupath.extension.py4j"
+	automaticModule = "qupath.extension.wsinfer"
 }
 
 dependencies {
