@@ -21,8 +21,10 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.StringBinding;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.StringProperty;
@@ -56,7 +58,6 @@ import org.slf4j.LoggerFactory;
 import qupath.ext.wsinfer.WSInfer;
 import qupath.ext.wsinfer.models.WSInferModel;
 import qupath.ext.wsinfer.models.WSInferModelCollection;
-import qupath.ext.wsinfer.models.WSInferModelLocal;
 import qupath.ext.wsinfer.models.WSInferUtils;
 import qupath.fx.dialogs.Dialogs;
 import qupath.fx.dialogs.FileChoosers;
@@ -85,7 +86,6 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
 
 
 /**
@@ -141,6 +141,7 @@ public class WSInferController {
     private final ExecutorService pool = Executors.newSingleThreadExecutor(ThreadTools.createThreadFactory("wsinfer", true));
 
     private final ObjectProperty<Task<?>> pendingTask = new SimpleObjectProperty<>();
+    private final BooleanProperty downloadPending = new SimpleBooleanProperty(false);
 
     @FXML
     private void initialize() {
@@ -161,7 +162,7 @@ public class WSInferController {
         configureBatchSize();
 
         configureMessageLabel();
-        configureRunInferenceButton();
+        configureButtons();
 
         configurePendingTaskProperty();
     }
@@ -191,8 +192,6 @@ public class WSInferController {
         modelChoiceBox.setConverter(new ModelStringConverter(models));
         modelChoiceBox.getSelectionModel().selectedItemProperty().addListener(
                 (v, o, n) -> {
-                    downloadButton.setDisable((n == null) || n.isValid());
-                    infoButton.setDisable((n == null) || (!n.isValid()) || !checkFileExists(n.getReadMeFile()));
                     infoPopover.hide();
                 });
     }
@@ -216,13 +215,28 @@ public class WSInferController {
                 (value, oldValue, newValue) -> WSInferPrefs.deviceProperty().set(newValue));
     }
 
-    private void configureRunInferenceButton() {
+    private void configureButtons() {
         // Disable the run button while a task is pending, or we have no model selected, or download is required
         runButton.disableProperty().bind(
                 imageDataProperty.isNull()
                         .or(pendingTask.isNotNull())
                         .or(modelChoiceBox.getSelectionModel().selectedItemProperty().isNull())
                         .or(messageTextHelper.warningText.isNotEmpty())
+        );
+        downloadButton.disableProperty().bind(
+                Bindings.createBooleanBinding(
+                    () -> modelChoiceBox.getSelectionModel().getSelectedItem() == null || modelChoiceBox.getSelectionModel().getSelectedItem().isValid(),
+                    modelChoiceBox.getSelectionModel().selectedItemProperty(),
+                    downloadPending)
+        );
+        infoButton.disableProperty().bind(
+                Bindings.createBooleanBinding(
+                        () -> {
+                            var n = modelChoiceBox.getSelectionModel().getSelectedItem();
+                            return n == null || !n.isValid() || !checkFileExists(n.getReadMeFile());
+                        },
+                        modelChoiceBox.getSelectionModel().selectedItemProperty(),
+                        downloadPending)
         );
     }
 
@@ -357,7 +371,7 @@ public class WSInferController {
             return;
         }
 
-        ForkJoinPool.commonPool().execute(() -> {
+        Thread.ofVirtual().start(() -> {
             model.removeCache();
             showDownloadingModelNotification(model.getName());
             try {
@@ -367,9 +381,9 @@ public class WSInferController {
                 return;
             }
             showModelAvailableNotification(model.getName());
-            downloadButton.setDisable(true);
-            infoButton.setDisable(model instanceof WSInferModelLocal);
+            downloadPending.set(false);
         });
+        downloadPending.set(true);
     }
 
     /**
