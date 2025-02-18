@@ -60,7 +60,7 @@ public class WSInferExtension implements QuPathExtension, GitHubProject {
 	}
 
 	private void addMenuItems(QuPathGUI qupath) {
-		var menu = qupath.getMenu("Extensions>" + EXTENSION_NAME, true);
+		var menu = qupath.getMenu("Extensions", false);
 		MenuItem menuItem = new MenuItem(resources.getString("title"));
 		WSInferCommand command = new WSInferCommand(qupath);
 		menuItem.setOnAction(e -> command.run());
