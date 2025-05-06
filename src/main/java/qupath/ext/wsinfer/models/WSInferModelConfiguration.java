@@ -45,6 +45,9 @@ public class WSInferModelConfiguration {
     @SerializedName("spacing_um_px")
     private double spacingUmPx;
 
+    @SerializedName("apply_softmax")
+    private boolean applySoftmax = true;
+
     private List<WSInferTransform> transform;
 
     /**
@@ -77,5 +80,13 @@ public class WSInferModelConfiguration {
      */
     public double getSpacingMicronPerPixel() {
         return spacingUmPx;
+    }
+
+    /**
+     * Whether to apply softmax to model output
+     * @return
+     */
+    public boolean isApplySoftmax() {
+        return applySoftmax;
     }
 }
