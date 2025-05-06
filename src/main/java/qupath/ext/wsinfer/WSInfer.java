@@ -193,8 +193,7 @@ public class WSInfer {
             }
         }
 
-        boolean applySoftmax = true;
-        Translator translator = buildTranslator(wsiModel, pipeline, applySoftmax);
+        Translator translator = buildTranslator(wsiModel, pipeline);
         Criteria<Image, Classifications> criteria = buildCriteria(wsiModel, translator, device);
         List<String> classNames = wsiModel.getConfiguration().getClassNames();
         long startTime = System.currentTimeMillis();
@@ -308,13 +307,13 @@ public class WSInfer {
     }
 
 
-    private static Translator<Image, Classifications> buildTranslator(WSInferModel wsiModel, Pipeline pipeline, boolean applySoftmax) {
+    private static Translator<Image, Classifications> buildTranslator(WSInferModel wsiModel, Pipeline pipeline) {
         // We should use ImageClassificationTranslator.builder() in the future if this is updated to work with MPS
         // (See javadocs for MpsSupport.WSInferClassificationTranslator for details)
         //        ImageClassificationTranslator.Builder builder = ImageClassificationTranslator.builder()
         return MpsSupport.WSInferClassificationTranslator.builder()
                 .optSynset(wsiModel.getConfiguration().getClassNames())
-                .optApplySoftmax(applySoftmax)
+                .optApplySoftmax(wsiModel.getConfiguration().isApplySoftmax())
                 .setPipeline(pipeline)
                 .build();
     }
