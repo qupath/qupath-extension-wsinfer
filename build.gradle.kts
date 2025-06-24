@@ -5,7 +5,7 @@ plugins {
 
 qupathExtension {
 	name = "qupath-extension-wsinfer"
-	version = "0.4.0-SNAPSHOT"
+	version = "0.4.0"
 	group = "io.github.qupath"
 	description = "QuPath extension to run WSInfer models in QuPath"
 	automaticModule = "qupath.extension.wsinfer"
