@@ -1,4 +1,4 @@
-[![Preprint](https://zenodo.org/badge/DOI/10.48550/arXiv.2309.04631.svg)](https://doi.org/10.48550/arXiv.2309.04631)
+[![Paper](https://zenodo.org/badge/DOI/10.1038/s41698-024-00499-9.svg)](https://doi.org/10.1038/s41698-024-00499-9)
 [![Extension docs](https://img.shields.io/badge/docs-qupath_wsinfer-red)](https://qupath.readthedocs.io/en/stable/docs/deep/wsinfer.html)
 [![Forum](https://img.shields.io/badge/forum-image.sc-green)](https://forum.image.sc/tag/wsinfer)
 [![Downloads (latest release)](https://img.shields.io/github/downloads-pre/qupath/qupath-extension-wsinfer/latest/total)](https://github.com/qupath/qupath-extension-wsinfer/releases/latest)
@@ -11,13 +11,13 @@ This repo contains the QuPath extension that adds support for the [WSInfer Model
 
 Together, QuPath & WSInfer aim to make deep learning-based patch classification easy and interactive for pathology images.
 
-To find out more, check out our preprint on arXiv:
+To find out more, check out the paper:
 
-> [Jakub R. Kaczmarzyk, Alan O'Callaghan, Fiona Inglis, Tahsin Kurc, Rajarsi Gupta, Erich Bremer, Peter Bankhead, Joel H. Saltz <br/>
-> *Open and reusable deep learning for pathology with WSInfer and QuPath*.  <br/>
-> arXiv, 2023](https://arxiv.org/abs/2309.04631)
+> Kaczmarzyk, J.R., O’Callaghan, A., Inglis, F. et al.  
+> Open and reusable deep learning for pathology with WSInfer and QuPath.  
+> npj Precis. Onc. 8, 9 (2024). https://doi.org/10.1038/s41698-024-00499-9
 
-**If you use this extension, please cite both the [WSInfer preprint](https://arxiv.org/abs/2309.04631) and the [QuPath paper](https://qupath.readthedocs.io/en/0.4/docs/intro/citing.html)!**
+**If you use this extension, please cite both the [WSInfer paper](https://doi.org/10.1038/s41698-024-00499-9) and the [QuPath paper](https://qupath.readthedocs.io/en/0.4/docs/intro/citing.html)!**
 
 ## Installation
 
